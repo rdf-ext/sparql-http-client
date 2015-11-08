@@ -29,7 +29,7 @@ SparqlHttp.prototype.postQueryDirect = function (query, callback, options) {
     'Content-Type': options.contentType || 'application/sparql-query'
   }
 
-  this.request('POST', url, headers, query, callback)
+  return this.request('POST', url, headers, query, callback)
 }
 
 SparqlHttp.prototype.postQueryUrlencoded = function (query, callback, options) {
@@ -42,7 +42,7 @@ SparqlHttp.prototype.postQueryUrlencoded = function (query, callback, options) {
   }
   var body = 'query=' + encodeURIComponent(query)
 
-  this.request('POST', url, headers, body, callback)
+  return this.request('POST', url, headers, body, callback)
 }
 
 SparqlHttp.prototype.postQuery = SparqlHttp.prototype.postQueryUrlencoded
