@@ -4,82 +4,75 @@ function SparqlHttp (options) {
   this.endpointUrl = options.endpointUrl
   this.updateUrl = options.updateUrl
 
-  this.request = options.request || SparqlHttp.request
+  this.fetch = options.fetch || SparqlHttp.fetch
 
   this.types = SparqlHttp.types
 }
 
-SparqlHttp.prototype.getQuery = function (query, callback, options) {
+SparqlHttp.prototype.getQuery = function (query, options) {
   options = options || {}
+  options.headers = options.headers || {}
 
   var url = (options.endpointUrl || this.endpointUrl) + '?query=' + encodeURIComponent(query)
-  var headers = {
-    'Accept': options.accept
-  }
 
-  return this.request('GET', url, headers, null, callback)
+  options.method = 'get'
+  options.headers['Accept'] = options.headers['Accept'] || options.accept
+
+  return this.fetch(url, options)
 }
 
-SparqlHttp.prototype.postQueryDirect = function (query, callback, options) {
+SparqlHttp.prototype.postQueryDirect = function (query, options) {
   options = options || {}
+  options.headers = options.headers || {}
 
   var url = options.updateUrl || this.updateUrl
-  var headers = {
-    'Accept': options.accept,
-    'Content-Type': options.contentType || 'application/sparql-query'
-  }
 
-  return this.request('POST', url, headers, query, callback)
+  options.method = 'post'
+  options.headers['Accept'] = options.headers['Accept'] || options.accept
+  options.headers['Content-Type'] = options.headers['Content-Type'] || options.contentType || 'application/sparql-query'
+  options.body = query
+
+  return this.fetch(url, options)
 }
 
-SparqlHttp.prototype.postQueryUrlencoded = function (query, callback, options) {
+SparqlHttp.prototype.postQueryUrlencoded = function (query, options) {
   options = options || {}
+  options.headers = options.headers || {}
 
   var url = options.updateUrl || this.updateUrl
-  var headers = {
-    'Accept': options.accept,
-    'Content-Type': options.contentType || 'application/x-www-form-urlencoded'
-  }
-  var body = 'query=' + encodeURIComponent(query)
 
-  return this.request('POST', url, headers, body, callback)
+  options.method = 'post'
+  options.headers['Accept'] = options.headers['Accept'] || options.accept
+  options.headers['Content-Type'] = options.headers['Content-Type'] || options.contentType || 'application/x-www-form-urlencoded'
+  options.body = 'query=' + encodeURIComponent(query)
+
+  return this.fetch(url, options)
 }
 
 SparqlHttp.prototype.postQuery = SparqlHttp.prototype.postQueryUrlencoded
 
-SparqlHttp.prototype.constructQuery = function (query, callback, options) {
+SparqlHttp.prototype.constructQuery = function (query, options) {
   options = options || {}
 
   options.accept = options.accept || this.types.construct.accept
 
-  return this.types.construct.operation.call(this, query, callback, options)
+  return this.types.construct.operation.call(this, query, options)
 }
 
-SparqlHttp.prototype.selectQuery = function (query, callback, options) {
+SparqlHttp.prototype.selectQuery = function (query, options) {
   options = options || {}
 
   options.accept = options.accept || this.types.select.accept
 
-  return this.types.select.operation.call(this, query, callback, options)
+  return this.types.select.operation.call(this, query, options)
 }
 
-SparqlHttp.prototype.updateQuery = function (query, callback, options) {
+SparqlHttp.prototype.updateQuery = function (query, options) {
   options = options || {}
 
   options.accept = options.accept || this.types.update.accept
 
-  return this.types.update.operation.call(this, query, callback, options)
-}
-
-SparqlHttp.requestModuleRequest = function (request) {
-  return function (method, url, headers, content, callback) {
-    return request({
-      method: method,
-      url: url,
-      headers: headers,
-      body: content
-    }, callback)
-  }
+  return this.types.update.operation.call(this, query, options)
 }
 
 SparqlHttp.types = {

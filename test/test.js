@@ -1,7 +1,7 @@
 /* global describe, it */
 var assert = require('assert')
+var fetch = require('isomorphic-fetch')
 var nock = require('nock')
-var request = require('request')
 var SparqlHttp = require('../')
 
 describe('sparql-http-client', function () {
@@ -9,11 +9,10 @@ describe('sparql-http-client', function () {
   var simpleSelectQuery = 'SELECT * WHERE {?s ?p ?o}'
   var simpleUpdateQuery = 'INSERT {<http://example.org/subject> <http://example.org/predicate> "object"} WHERE {}'
 
-  SparqlHttp.request = SparqlHttp.requestModuleRequest(request)
+  SparqlHttp.fetch = fetch
 
   it('interface', function () {
     assert.equal(typeof SparqlHttp, 'function')
-    assert.equal(typeof SparqlHttp.requestModuleRequest, 'function')
     assert.equal(typeof SparqlHttp.types, 'object')
 
     assert.equal(typeof SparqlHttp.prototype.getQuery, 'function')
@@ -26,46 +25,40 @@ describe('sparql-http-client', function () {
   })
 
   describe('.getQuery', function () {
-    it('should return a request object', function (done) {
+    it('should return a response object via Promise', function () {
       var endpoint = new SparqlHttp({endpointUrl: 'http://example.org/sparql'})
 
       nock('http://example.org')
         .get('/sparql?query=' + encodeURIComponent(simpleSelectQuery))
         .reply(200)
 
-      var requestObject = endpoint.getQuery(simpleSelectQuery, function (error) {
-        assert.equal(typeof requestObject.req, 'object')
-        assert.equal(typeof requestObject.response, 'object')
-
-        done(error)
+      return endpoint.getQuery(simpleSelectQuery).then(function (res) {
+        assert.equal(typeof res, 'object')
+        assert.equal(typeof res.text, 'function')
       })
     })
 
-    it('should send a GET request with query parameter to instance option .endpointUrl', function (done) {
+    it('should send a GET request with query parameter to instance option .endpointUrl', function () {
       var endpoint = new SparqlHttp({endpointUrl: 'http://example.org/sparql'})
 
       nock('http://example.org')
         .get('/sparql?query=' + encodeURIComponent(simpleSelectQuery))
         .reply(200)
 
-      endpoint.getQuery(simpleSelectQuery, function (error) {
-        done(error)
-      })
+      return endpoint.getQuery(simpleSelectQuery)
     })
 
-    it('should send a GET request with query parameter to option .endpointUrl', function (done) {
+    it('should send a GET request with query parameter to option .endpointUrl', function () {
       var endpoint = new SparqlHttp()
 
       nock('http://example.org')
         .get('/sparql?query=' + encodeURIComponent(simpleSelectQuery))
         .reply(200)
 
-      endpoint.getQuery(simpleSelectQuery, function (error) {
-        done(error)
-      }, {endpointUrl: 'http://example.org/sparql'})
+      return endpoint.getQuery(simpleSelectQuery, {endpointUrl: 'http://example.org/sparql'})
     })
 
-    it('should send .accept option as Accept header field', function (done) {
+    it('should send .accept option as Accept header field', function () {
       var endpoint = new SparqlHttp({endpointUrl: 'http://example.org/sparql'})
       var accept = 'text/plain'
 
@@ -75,53 +68,45 @@ describe('sparql-http-client', function () {
           assert.equal(this.req.headers.accept, accept)
         })
 
-      endpoint.getQuery(simpleSelectQuery, function (error) {
-        done(error)
-      }, {accept: accept})
+      endpoint.getQuery(simpleSelectQuery, {accept: accept})
     })
   })
 
   describe('.postQueryDirect', function () {
-    it('should return a request object', function (done) {
+    it('should return a request object', function () {
       var endpoint = new SparqlHttp({updateUrl: 'http://example.org/update'})
 
       nock('http://example.org')
         .post('/update')
         .reply(200)
 
-      var requestObject = endpoint.postQueryDirect(simpleSelectQuery, function (error) {
-        assert.equal(typeof requestObject.req, 'object')
-        assert.equal(typeof requestObject.response, 'object')
-
-        done(error)
+      return endpoint.postQueryDirect(simpleSelectQuery).then(function (res) {
+        assert.equal(typeof res, 'object')
+        assert.equal(typeof res.text, 'function')
       })
     })
 
-    it('should send a POST request to instance option .updateUrl', function (done) {
+    it('should send a POST request to instance option .updateUrl', function () {
       var endpoint = new SparqlHttp({updateUrl: 'http://example.org/update'})
 
       nock('http://example.org')
         .post('/update')
         .reply(200)
 
-      endpoint.postQueryDirect(simpleSelectQuery, function (error) {
-        done(error)
-      })
+      return endpoint.postQueryDirect(simpleSelectQuery)
     })
 
-    it('should send a POST request to option .updateUrl', function (done) {
+    it('should send a POST request to option .updateUrl', function () {
       var endpoint = new SparqlHttp()
 
       nock('http://example.org')
         .post('/update')
         .reply(200)
 
-      endpoint.postQueryDirect(simpleSelectQuery, function (error) {
-        done(error)
-      }, {updateUrl: 'http://example.org/update'})
+      return endpoint.postQueryDirect(simpleSelectQuery, {updateUrl: 'http://example.org/update'})
     })
 
-    it('should send Content-Type application/sparql-query', function (done) {
+    it('should send Content-Type application/sparql-query', function () {
       var endpoint = new SparqlHttp({updateUrl: 'http://example.org/update'})
 
       nock('http://example.org')
@@ -130,12 +115,10 @@ describe('sparql-http-client', function () {
           assert.equal(this.req.headers['content-type'], 'application/sparql-query')
         })
 
-      endpoint.postQueryDirect(simpleSelectQuery, function (error) {
-        done(error)
-      })
+      return endpoint.postQueryDirect(simpleSelectQuery)
     })
 
-    it('should send the query in request body', function (done) {
+    it('should send the query in request body', function () {
       var endpoint = new SparqlHttp({updateUrl: 'http://example.org/update'})
 
       nock('http://example.org')
@@ -144,12 +127,10 @@ describe('sparql-http-client', function () {
           assert.equal(body, simpleSelectQuery)
         })
 
-      endpoint.postQueryDirect(simpleSelectQuery, function (error) {
-        done(error)
-      })
+      return endpoint.postQueryDirect(simpleSelectQuery)
     })
 
-    it('should send .accept option as Accept header field', function (done) {
+    it('should send .accept option as Accept header field', function () {
       var endpoint = new SparqlHttp({updateUrl: 'http://example.org/update'})
       var accept = 'text/plain'
 
@@ -159,12 +140,10 @@ describe('sparql-http-client', function () {
           assert.equal(this.req.headers.accept, accept)
         })
 
-      endpoint.postQueryDirect(simpleSelectQuery, function (error) {
-        done(error)
-      }, {accept: accept})
+      endpoint.postQueryDirect(simpleSelectQuery, {accept: accept})
     })
 
-    it('should send .contentType option as Accept header field', function (done) {
+    it('should send .contentType option as Accept header field', function () {
       var endpoint = new SparqlHttp({updateUrl: 'http://example.org/update'})
       var contentType = 'text/plain'
 
@@ -174,53 +153,45 @@ describe('sparql-http-client', function () {
           assert.equal(this.req.headers['content-type'], contentType)
         })
 
-      endpoint.postQueryDirect(simpleSelectQuery, function (error) {
-        done(error)
-      }, {contentType: contentType})
+      endpoint.postQueryDirect(simpleSelectQuery, {contentType: contentType})
     })
   })
 
   describe('.postQueryUrlencoded', function () {
-    it('should return a request object', function (done) {
+    it('should return a request object', function () {
       var endpoint = new SparqlHttp({updateUrl: 'http://example.org/update'})
 
       nock('http://example.org')
         .post('/update')
         .reply(200)
 
-      var requestObject = endpoint.postQueryUrlencoded(simpleSelectQuery, function (error) {
-        assert.equal(typeof requestObject.req, 'object')
-        assert.equal(typeof requestObject.response, 'object')
-
-        done(error)
+      return endpoint.postQueryUrlencoded(simpleSelectQuery).then(function (res) {
+        assert.equal(typeof res, 'object')
+        assert.equal(typeof res.text, 'function')
       })
     })
 
-    it('should send a POST request to instance option .updateUrl', function (done) {
+    it('should send a POST request to instance option .updateUrl', function () {
       var endpoint = new SparqlHttp({updateUrl: 'http://example.org/update'})
 
       nock('http://example.org')
         .post('/update')
         .reply(200)
 
-      endpoint.postQueryUrlencoded(simpleSelectQuery, function (error) {
-        done(error)
-      })
+      return endpoint.postQueryUrlencoded(simpleSelectQuery)
     })
 
-    it('should send a POST request to option .updateUrl', function (done) {
+    it('should send a POST request to option .updateUrl', function () {
       var endpoint = new SparqlHttp()
 
       nock('http://example.org')
         .post('/update')
         .reply(200)
 
-      endpoint.postQueryUrlencoded(simpleSelectQuery, function (error) {
-        done(error)
-      }, {updateUrl: 'http://example.org/update'})
+      return endpoint.postQueryUrlencoded(simpleSelectQuery, {updateUrl: 'http://example.org/update'})
     })
 
-    it('should send Content-Type application/sparql-query', function (done) {
+    it('should send Content-Type application/sparql-query', function () {
       var endpoint = new SparqlHttp({updateUrl: 'http://example.org/update'})
 
       nock('http://example.org')
@@ -229,12 +200,10 @@ describe('sparql-http-client', function () {
           assert.equal(this.req.headers['content-type'], 'application/x-www-form-urlencoded')
         })
 
-      endpoint.postQueryUrlencoded(simpleSelectQuery, function (error) {
-        done(error)
-      })
+      return endpoint.postQueryUrlencoded(simpleSelectQuery)
     })
 
-    it('should send the query urlencoded in request body', function (done) {
+    it('should send the query urlencoded in request body', function () {
       var endpoint = new SparqlHttp({updateUrl: 'http://example.org/update'})
 
       nock('http://example.org')
@@ -243,12 +212,10 @@ describe('sparql-http-client', function () {
           assert.equal(body, 'query=' + encodeURIComponent(simpleSelectQuery))
         })
 
-      endpoint.postQueryUrlencoded(simpleSelectQuery, function (error) {
-        done(error)
-      })
+      return endpoint.postQueryUrlencoded(simpleSelectQuery)
     })
 
-    it('should send .accept option as Accept header field', function (done) {
+    it('should send .accept option as Accept header field', function () {
       var endpoint = new SparqlHttp({updateUrl: 'http://example.org/update'})
       var accept = 'text/plain'
 
@@ -258,12 +225,10 @@ describe('sparql-http-client', function () {
           assert.equal(this.req.headers.accept, accept)
         })
 
-      endpoint.postQueryUrlencoded(simpleSelectQuery, function (error) {
-        done(error)
-      }, {accept: accept})
+      return endpoint.postQueryUrlencoded(simpleSelectQuery, {accept: accept})
     })
 
-    it('should send .contentType option as Accept header field', function (done) {
+    it('should send .contentType option as Accept header field', function () {
       var endpoint = new SparqlHttp({updateUrl: 'http://example.org/update'})
       var contentType = 'text/plain'
 
@@ -273,9 +238,7 @@ describe('sparql-http-client', function () {
           assert.equal(this.req.headers['content-type'], contentType)
         })
 
-      endpoint.postQueryUrlencoded(simpleSelectQuery, function (error) {
-        done(error)
-      }, {contentType: contentType})
+      return endpoint.postQueryUrlencoded(simpleSelectQuery, {contentType: contentType})
     })
   })
 
@@ -288,22 +251,20 @@ describe('sparql-http-client', function () {
   })
 
   describe('.constructQuery', function () {
-    it('should return a request object', function (done) {
+    it('should return a request object', function () {
       var endpoint = new SparqlHttp({endpointUrl: 'http://example.org/sparql'})
 
       nock('http://example.org')
         .get('/sparql?query=' + encodeURIComponent(simpleConstructQuery))
         .reply(200)
 
-      var requestObject = endpoint.constructQuery(simpleConstructQuery, function (error) {
-        assert.equal(typeof requestObject.req, 'object')
-        assert.equal(typeof requestObject.response, 'object')
-
-        done(error)
+      return endpoint.constructQuery(simpleConstructQuery).then(function (res) {
+        assert.equal(typeof res, 'object')
+        assert.equal(typeof res.text, 'function')
       })
     })
 
-    it('should send a GET request with Accept header application/n-triples', function (done) {
+    it('should send a GET request with Accept header application/n-triples', function () {
       var endpoint = new SparqlHttp({endpointUrl: 'http://example.org/sparql'})
 
       nock('http://example.org')
@@ -312,12 +273,10 @@ describe('sparql-http-client', function () {
           assert.equal(this.req.headers.accept, 'application/n-triples')
         })
 
-      endpoint.constructQuery(simpleConstructQuery, function (error) {
-        done(error)
-      })
+      return endpoint.constructQuery(simpleConstructQuery)
     })
 
-    it('should send .accept option as Accept header field', function (done) {
+    it('should send .accept option as Accept header field', function () {
       var endpoint = new SparqlHttp({endpointUrl: 'http://example.org/sparql'})
       var accept = 'text/plain'
 
@@ -327,29 +286,25 @@ describe('sparql-http-client', function () {
           assert.equal(this.req.headers.accept, accept)
         })
 
-      endpoint.constructQuery(simpleConstructQuery, function (error) {
-        done(error)
-      }, {accept: accept})
+      return endpoint.constructQuery(simpleConstructQuery, {accept: accept})
     })
   })
 
   describe('.selectQuery', function () {
-    it('should return a request object', function (done) {
+    it('should return a request object', function () {
       var endpoint = new SparqlHttp({endpointUrl: 'http://example.org/sparql'})
 
       nock('http://example.org')
         .get('/sparql?query=' + encodeURIComponent(simpleSelectQuery))
         .reply(200)
 
-      var requestObject = endpoint.selectQuery(simpleSelectQuery, function (error) {
-        assert.equal(typeof requestObject.req, 'object')
-        assert.equal(typeof requestObject.response, 'object')
-
-        done(error)
+      return endpoint.selectQuery(simpleSelectQuery).then(function (res) {
+        assert.equal(typeof res, 'object')
+        assert.equal(typeof res.text, 'function')
       })
     })
 
-    it('should send a GET request with Accept header application/sparql-results+json', function (done) {
+    it('should send a GET request with Accept header application/sparql-results+json', function () {
       var endpoint = new SparqlHttp({endpointUrl: 'http://example.org/sparql'})
 
       nock('http://example.org')
@@ -358,12 +313,10 @@ describe('sparql-http-client', function () {
           assert.equal(this.req.headers.accept, 'application/sparql-results+json')
         })
 
-      endpoint.selectQuery(simpleSelectQuery, function (error) {
-        done(error)
-      })
+      return endpoint.selectQuery(simpleSelectQuery)
     })
 
-    it('should send .accept option as Accept header field', function (done) {
+    it('should send .accept option as Accept header field', function () {
       var endpoint = new SparqlHttp({endpointUrl: 'http://example.org/sparql'})
       var accept = 'text/plain'
 
@@ -373,29 +326,25 @@ describe('sparql-http-client', function () {
           assert.equal(this.req.headers.accept, accept)
         })
 
-      endpoint.selectQuery(simpleSelectQuery, function (error) {
-        done(error)
-      }, {accept: accept})
+      return endpoint.selectQuery(simpleSelectQuery, {accept: accept})
     })
   })
 
   describe('.updateQuery', function () {
-    it('should return a request object', function (done) {
+    it('should return a request object', function () {
       var endpoint = new SparqlHttp({updateUrl: 'http://example.org/update'})
 
       nock('http://example.org')
         .post('/update')
         .reply(200)
 
-      var requestObject = endpoint.updateQuery(simpleUpdateQuery, function (error) {
-        assert.equal(typeof requestObject.req, 'object')
-        assert.equal(typeof requestObject.response, 'object')
-
-        done(error)
+      return endpoint.updateQuery(simpleUpdateQuery).then(function (res) {
+        assert.equal(typeof res, 'object')
+        assert.equal(typeof res.text, 'function')
       })
     })
 
-    it('should send a POST request with Accept header */*', function (done) {
+    it('should send a POST request with Accept header */*', function () {
       var endpoint = new SparqlHttp({updateUrl: 'http://example.org/update'})
 
       nock('http://example.org')
@@ -405,12 +354,10 @@ describe('sparql-http-client', function () {
           assert.equal(body, 'query=' + encodeURIComponent(simpleUpdateQuery))
         })
 
-      endpoint.updateQuery(simpleUpdateQuery, function (error) {
-        done(error)
-      })
+      return endpoint.updateQuery(simpleUpdateQuery)
     })
 
-    it('should send .accept option as Accept header field', function (done) {
+    it('should send .accept option as Accept header field', function () {
       var endpoint = new SparqlHttp({updateUrl: 'http://example.org/update'})
       var accept = 'text/plain'
 
@@ -420,9 +367,7 @@ describe('sparql-http-client', function () {
           assert.equal(this.req.headers.accept, accept)
         })
 
-      endpoint.updateQuery(simpleUpdateQuery, function (error) {
-        done(error)
-      }, {accept: accept})
+      return endpoint.updateQuery(simpleUpdateQuery, {accept: accept})
     })
   })
 })

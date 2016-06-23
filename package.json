@@ -23,8 +23,8 @@
   },
   "homepage": "https://github.com/zazukoians/sparql-http-client",
   "devDependencies": {
+    "isomorphic-fetch": "^2.2.1",
     "mocha": "^2.3.3",
-    "nock": "^2.17.0",
-    "request": "^2.65.0"
+    "nock": "^2.17.0"
   }
 }
