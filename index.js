@@ -13,7 +13,13 @@ SparqlHttp.prototype.getQuery = function (query, options) {
   options = options || {}
   options.headers = options.headers || {}
 
-  var url = (options.endpointUrl || this.endpointUrl) + '?query=' + encodeURIComponent(query)
+  var url = null
+
+  if (!options.update) {
+    url = (options.endpointUrl || this.endpointUrl) + '?query=' + encodeURIComponent(query)
+  } else {
+    url = (options.updateUrl || this.updateUrl) + '?update=' + encodeURIComponent(query)
+  }
 
   options.method = 'get'
   options.headers['Accept'] = options.headers['Accept'] || options.accept
@@ -25,7 +31,13 @@ SparqlHttp.prototype.postQueryDirect = function (query, options) {
   options = options || {}
   options.headers = options.headers || {}
 
-  var url = options.updateUrl || this.updateUrl
+  var url = null
+
+  if (!options.update) {
+    url = options.endpointUrl || this.endpointUrl
+  } else {
+    url = options.updateUrl || this.updateUrl
+  }
 
   options.method = 'post'
   options.headers['Accept'] = options.headers['Accept'] || options.accept
@@ -39,12 +51,19 @@ SparqlHttp.prototype.postQueryUrlencoded = function (query, options) {
   options = options || {}
   options.headers = options.headers || {}
 
-  var url = options.updateUrl || this.updateUrl
+  var url = null
+
+  if (!options.update) {
+    url = options.endpointUrl || this.endpointUrl
+    options.body = 'query=' + encodeURIComponent(query)
+  } else {
+    url = options.updateUrl || this.updateUrl
+    options.body = 'update=' + encodeURIComponent(query)
+  }
 
   options.method = 'post'
   options.headers['Accept'] = options.headers['Accept'] || options.accept
   options.headers['Content-Type'] = options.headers['Content-Type'] || options.contentType || 'application/x-www-form-urlencoded'
-  options.body = 'query=' + encodeURIComponent(query)
 
   return this.fetch(url, options)
 }
@@ -70,6 +89,7 @@ SparqlHttp.prototype.selectQuery = function (query, options) {
 SparqlHttp.prototype.updateQuery = function (query, options) {
   options = options || {}
 
+  options.update = true
   options.accept = options.accept || this.types.update.accept
 
   return this.types.update.operation.call(this, query, options)
