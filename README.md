@@ -12,15 +12,26 @@ var fetch = require('isomorphic-fetch')
 
 var SparqlHttp = require('sparql-http-client')
 
-// use the request module for all requests
 SparqlHttp.fetch = fetch
 
-// create an object instance for the endpoint 
+// which endpoint to query
 var endpoint = new SparqlHttp({endpointUrl: 'http://dbpedia.org/sparql'})
+// the SPARQL query itself
+var query = 'SELECT ?height WHERE { <http://dbpedia.org/resource/Eiffel_Tower> <http://dbpedia.org/property/height> ?height }'
 
-// do the SELECT query 
-endpoint.selectQuery('SELECT * WHERE {?s ?p ?o}', function (error, response) {
-  console.log(response.body)
+// run query with promises
+endpoint.selectQuery(query).then(function (res) {
+  return res.text()
+// result body of the query
+}).then(function (body) {
+  // parse the body for pretty print
+  var result = JSON.parse(body)
+
+  // output the complete result object
+  console.log(JSON.stringify(result, null, ' '))
+// necessary catch the error
+}).catch(function (err) {
+  console.error(err)
 })
 ```
 
