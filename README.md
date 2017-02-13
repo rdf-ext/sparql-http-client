@@ -8,11 +8,12 @@ Simplified SPARQL HTTP request client
 ## Usage
 
 ```
-var fetch = require('fetch')
+var fetch = require('isomorphic-fetch')
+
 var SparqlHttp = require('sparql-http-client')
 
 // use the request module for all requests
-SparqlHttp.request = SparqlHttp.requestModuleRequest(fetch)
+SparqlHttp.fetch = fetch
 
 // create an object instance for the endpoint 
 var endpoint = new SparqlHttp({endpointUrl: 'http://dbpedia.org/sparql'})
