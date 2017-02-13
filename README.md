@@ -9,19 +9,21 @@ Simplified SPARQL HTTP request client
 
 ```
 var fetch = require('isomorphic-fetch')
-
 var SparqlHttp = require('sparql-http-client')
 
 SparqlHttp.fetch = fetch
 
 // which endpoint to query
 var endpoint = new SparqlHttp({endpointUrl: 'http://dbpedia.org/sparql'})
+
 // the SPARQL query itself
 var query = 'SELECT ?height WHERE { <http://dbpedia.org/resource/Eiffel_Tower> <http://dbpedia.org/property/height> ?height }'
 
 // run query with promises
 endpoint.selectQuery(query).then(function (res) {
+
   return res.text()
+  
 // result body of the query
 }).then(function (body) {
   // parse the body for pretty print
@@ -29,9 +31,12 @@ endpoint.selectQuery(query).then(function (res) {
 
   // output the complete result object
   console.log(JSON.stringify(result, null, ' '))
+  
 // necessary catch the error
 }).catch(function (err) {
+
   console.error(err)
+  
 })
 ```
 
