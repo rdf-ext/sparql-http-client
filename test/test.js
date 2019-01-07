@@ -146,13 +146,13 @@ describe('sparql-http-client', function () {
       return endpoint.postQueryDirect(simpleUpdateQuery, {update: true, updateUrl: 'http://example.org/update'})
     })
 
-    it('should send Content-Type application/sparql-query', function () {
+    it('should send Content-Type application/sparql-query and charset=utf-8', function () {
       var endpoint = new SparqlHttp({endpointUrl: 'http://example.org/sparql'})
 
       nock('http://example.org')
         .post('/sparql')
         .reply(200, function (url, body) {
-          assert.equal(this.req.headers['content-type'], 'application/sparql-query')
+          assert.equal(this.req.headers['content-type'], 'application/sparql-query; charset=utf-8')
         })
 
       return endpoint.postQueryDirect(simpleSelectQuery)

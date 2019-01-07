@@ -41,7 +41,7 @@ SparqlHttp.prototype.postQueryDirect = function (query, options) {
 
   options.method = 'post'
   options.headers['Accept'] = options.headers['Accept'] || options.accept
-  options.headers['Content-Type'] = options.headers['Content-Type'] || options.contentType || 'application/sparql-query'
+  options.headers['Content-Type'] = options.headers['Content-Type'] || options.contentType || 'application/sparql-query; charset=utf-8'
   options.body = query
 
   return this.fetch(url, options)
