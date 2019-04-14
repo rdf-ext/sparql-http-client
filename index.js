@@ -16,15 +16,17 @@ SparqlHttp.prototype.getQuery = function (query, options) {
   var url = null
 
   if (!options.update) {
-    url = (options.endpointUrl || this.endpointUrl) + '?query=' + encodeURIComponent(query)
+    url = new URL(options.endpointUrl || this.endpointUrl)
+    url.searchParams.append('query', query)
   } else {
-    url = (options.updateUrl || this.updateUrl) + '?update=' + encodeURIComponent(query)
+    url = new URL(options.updateUrl || this.updateUrl)
+    url.searchParams.append('update', query)
   }
 
   options.method = 'get'
   options.headers['Accept'] = options.headers['Accept'] || options.accept
 
-  return this.fetch(url, options)
+  return this.fetch(url.toString().replace(/\+/g, '%20'), options)
 }
 
 SparqlHttp.prototype.postQueryDirect = function (query, options) {
