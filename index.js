@@ -16,7 +16,10 @@ SparqlHttp.prototype.getQuery = function (query, options) {
   var url = null
 
   if (!options.update) {
-    url = (options.endpointUrl || this.endpointUrl) + '?query=' + encodeURIComponent(query)
+    url = (options.endpointUrl || this.endpointUrl)
+    if (typeof query === 'string') {
+      url += '?query=' + encodeURIComponent(query)
+    }
   } else {
     url = (options.updateUrl || this.updateUrl) + '?update=' + encodeURIComponent(query)
   }
