@@ -1,6 +1,6 @@
 # sparql-http-client
 
-[![Build Status](https://travis-ci.org/zazukoians/sparql-http-client.svg?branch=master)](https://travis-ci.org/zazukoians/sparql-http-client)
+[![Build Status](https://travis-ci.org/zazuko/sparql-http-client.svg?branch=master)](https://travis-ci.org/zazuko/sparql-http-client)
 [![NPM Version](https://img.shields.io/npm/v/sparql-http-client.svg?style=flat)](https://npm.im/sparql-http-client)
 
 Simplified SPARQL HTTP request client
