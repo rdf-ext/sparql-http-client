@@ -1,6 +1,6 @@
 {
   "name": "sparql-http-client",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Simplified SPARQL HTTP request client",
   "main": "index.js",
   "scripts": {
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/zazukoians/sparql-http-client.git"
+    "url": "https://github.com/zazuko/sparql-http-client.git"
   },
   "keywords": [
     "sparql",
@@ -19,11 +19,11 @@
   "author": "Thomas Bergwinkl <bergi@axolotlfarm.org> (https://www.bergnet.org/people/bergi/card#me)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/zazukoians/sparql-http-client/issues"
+    "url": "https://github.com/zazuko/sparql-http-client/issues"
   },
-  "homepage": "https://github.com/zazukoians/sparql-http-client",
+  "homepage": "https://github.com/zazuko/sparql-http-client",
   "devDependencies": {
-    "mocha": "^2.3.3",
+    "mocha": "^6.1.4",
     "nock": "^10.0.6"
   },
   "dependencies": {
