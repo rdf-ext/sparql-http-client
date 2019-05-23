@@ -1,6 +1,6 @@
 /* global describe, it */
 var assert = require('assert')
-var fetch = require('isomorphic-fetch')
+var fetch = require('whatwg-fetch')
 var nock = require('nock')
 var SparqlHttp = require('../')
 
