@@ -3,6 +3,7 @@ function SparqlHttp (options) {
 
   this.endpointUrl = options.endpointUrl
   this.updateUrl = options.updateUrl
+  this.URL = options.URL || SparqlHttp.URL || URL
 
   this.fetch = options.fetch || SparqlHttp.fetch
 
@@ -16,12 +17,12 @@ SparqlHttp.prototype.getQuery = function (query, options) {
   var url = null
 
   if (!options.update) {
-    url = new URL(options.endpointUrl || this.endpointUrl)
+    url = new this.URL(options.endpointUrl || this.endpointUrl)
     if (typeof query === 'string') {
       url.searchParams.append('query', query)
     }
   } else {
-    url = new URL(options.updateUrl || this.updateUrl)
+    url = new this.URL(options.updateUrl || this.updateUrl)
     url.searchParams.append('update', query)
   }
 

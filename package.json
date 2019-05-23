@@ -23,11 +23,9 @@
   },
   "homepage": "https://github.com/zazuko/sparql-http-client",
   "devDependencies": {
+    "isomorphic-fetch": "^2.2.1",
     "mocha": "^6.1.4",
-    "nock": "^10.0.6"
-  },
-  "dependencies": {
-    "whatwg-url": "^7.0.0",
-    "whatwg-fetch": "^3.0.0"
+    "nock": "^10.0.6",
+    "whatwg-url": "^7.0.0"
   }
 }

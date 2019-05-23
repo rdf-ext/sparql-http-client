@@ -1,6 +1,7 @@
 /* global describe, it */
 var assert = require('assert')
-var fetch = require('whatwg-fetch')
+var fetch = require('isomorphic-fetch')
+var URL = require('whatwg-url').URL
 var nock = require('nock')
 var SparqlHttp = require('../')
 
@@ -10,6 +11,7 @@ describe('sparql-http-client', function () {
   var simpleUpdateQuery = 'INSERT {<http://example.org/subject> <http://example.org/predicate> "object"} WHERE {}'
 
   SparqlHttp.fetch = fetch
+  SparqlHttp.URL = URL
 
   it('interface', function () {
     assert.equal(typeof SparqlHttp, 'function')
