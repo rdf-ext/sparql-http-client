@@ -3,6 +3,7 @@ function SparqlHttp (options) {
 
   this.endpointUrl = options.endpointUrl
   this.updateUrl = options.updateUrl
+  this.URL = options.URL || SparqlHttp.URL || URL
 
   this.fetch = options.fetch || SparqlHttp.fetch
 
@@ -16,18 +17,19 @@ SparqlHttp.prototype.getQuery = function (query, options) {
   var url = null
 
   if (!options.update) {
-    url = (options.endpointUrl || this.endpointUrl)
+    url = new this.URL(options.endpointUrl || this.endpointUrl)
     if (typeof query === 'string') {
-      url += '?query=' + encodeURIComponent(query)
+      url.searchParams.append('query', query)
     }
   } else {
-    url = (options.updateUrl || this.updateUrl) + '?update=' + encodeURIComponent(query)
+    url = new this.URL(options.updateUrl || this.updateUrl)
+    url.searchParams.append('update', query)
   }
 
   options.method = 'get'
   options.headers['Accept'] = options.headers['Accept'] || options.accept
 
-  return this.fetch(url, options)
+  return this.fetch(url.toString().replace(/\+/g, '%20'), options)
 }
 
 SparqlHttp.prototype.postQueryDirect = function (query, options) {

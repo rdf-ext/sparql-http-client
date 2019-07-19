@@ -1,6 +1,7 @@
 /* global describe, it */
 var assert = require('assert')
 var fetch = require('isomorphic-fetch')
+var URL = require('whatwg-url').URL
 var nock = require('nock')
 var SparqlHttp = require('../')
 
@@ -10,6 +11,7 @@ describe('sparql-http-client', function () {
   var simpleUpdateQuery = 'INSERT {<http://example.org/subject> <http://example.org/predicate> "object"} WHERE {}'
 
   SparqlHttp.fetch = fetch
+  SparqlHttp.URL = URL
 
   it('interface', function () {
     assert.equal(typeof SparqlHttp, 'function')
@@ -48,6 +50,16 @@ describe('sparql-http-client', function () {
       return endpoint.getQuery(simpleSelectQuery)
     })
 
+    it('should keep existing query params in .endpointUrl when sending GET request', function () {
+      var endpoint = new SparqlHttp({endpointUrl: 'http://example.org/sparql?auth_token=12345'})
+
+      nock('http://example.org')
+          .get('/sparql?auth_token=12345&query=' + encodeURIComponent(simpleSelectQuery))
+          .reply(200)
+
+      return endpoint.getQuery(simpleSelectQuery)
+    })
+
     it('should send a GET request with query parameter to option .endpointUrl', function () {
       var endpoint = new SparqlHttp()
 
@@ -76,6 +88,16 @@ describe('sparql-http-client', function () {
         .reply(200)
 
       return endpoint.getQuery(simpleUpdateQuery, {update: true, updateUrl: 'http://example.org/update'})
+    })
+
+    it('should preserve existing query params when sending update request', function () {
+      var endpoint = new SparqlHttp()
+
+      nock('http://example.org')
+        .get('/update?auth_token=1234&update=' + encodeURIComponent(simpleUpdateQuery))
+        .reply(200)
+
+      return endpoint.getQuery(simpleUpdateQuery, {update: true, updateUrl: 'http://example.org/update?auth_token=1234'})
     })
 
     it('should send .accept option as Accept header field', function () {

@@ -9,9 +9,11 @@ Simplified SPARQL HTTP request client
 
 ```
 var fetch = require('isomorphic-fetch')
+var URL = require('whatwg-url')
 var SparqlHttp = require('sparql-http-client')
 
 SparqlHttp.fetch = fetch
+SparqlHttp.URL = URL
 
 // which endpoint to query
 var endpoint = new SparqlHttp({endpointUrl: 'https://query.wikidata.org/sparql'})
@@ -42,6 +44,20 @@ endpoint.selectQuery(query).then(function (res) {
 ```
 
 See the examples folder for more complex examples.
+
+## Note on polyfills
+
+`sparql-http-client` does not install `URL` and `fetch` implementation. It will work
+out of the box in modern environments. In older browsers or version of node it may be
+necessary to provide it manually using static fields of `SparqlHttp` (as seen above)
+or by passing them to the constructor.
+
+```js
+new SparqlHttp({
+  fetch,
+  URL,
+})
+```
 
 ## Licence
 
