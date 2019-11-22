@@ -8,11 +8,13 @@ function SparqlHttp (options) {
   this.fetch = options.fetch || SparqlHttp.fetch
 
   this.types = SparqlHttp.types
+  this.defaultHeaders = options.defaultHeaders || {}
 }
 
 SparqlHttp.prototype.getQuery = function (query, options) {
   options = options || {}
   options.headers = options.headers || {}
+  options.headers = { ...this.defaultHeaders, ...options.headers }
 
   var url = null
 
@@ -35,6 +37,7 @@ SparqlHttp.prototype.getQuery = function (query, options) {
 SparqlHttp.prototype.postQueryDirect = function (query, options) {
   options = options || {}
   options.headers = options.headers || {}
+  options.headers = { ...this.defaultHeaders, ...options.headers }
 
   var url = null
 
@@ -55,6 +58,7 @@ SparqlHttp.prototype.postQueryDirect = function (query, options) {
 SparqlHttp.prototype.postQueryUrlencoded = function (query, options) {
   options = options || {}
   options.headers = options.headers || {}
+  options.headers = { ...this.defaultHeaders, ...options.headers }
 
   var url = null
 
