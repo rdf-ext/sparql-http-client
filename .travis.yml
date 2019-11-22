@@ -3,3 +3,9 @@ node_js:
   - "8"
   - "10"
   - "12"
+
+script:
+  - npx istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec
+
+after_success:
+  - npx codecov
