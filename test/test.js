@@ -388,7 +388,7 @@ describe('sparql-http-client', () => {
       return endpoint.constructQuery(simpleConstructQuery)
     })
 
-    it('should override default headers with passed to function', function () {
+    it('should override default headers with argument passed to function', function () {
       var endpoint = new SparqlHttp({
         endpointUrl: 'http://example.org/sparql',
         defaultHeaders: {
