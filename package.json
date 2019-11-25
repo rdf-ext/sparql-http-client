@@ -4,8 +4,7 @@
   "description": "Simplified SPARQL HTTP request client",
   "main": "index.js",
   "scripts": {
-    "lint": "standard",
-    "test": "node_modules/.bin/mocha"
+    "test": "standard && mocha"
   },
   "repository": {
     "type": "git",
@@ -24,8 +23,9 @@
   "homepage": "https://github.com/zazuko/sparql-http-client",
   "devDependencies": {
     "isomorphic-fetch": "^2.2.1",
-    "mocha": "^6.1.4",
+    "mocha": "^6.2.2",
     "nock": "^10.0.6",
+    "standard": "^14.3.1",
     "whatwg-url": "^7.0.0"
   }
 }
