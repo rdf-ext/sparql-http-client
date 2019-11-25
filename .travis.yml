@@ -5,6 +5,7 @@ node_js:
   - "12"
 
 script:
+  - npm run lint
   - npx nyc --reporter=lcov mocha
 
 after_success:

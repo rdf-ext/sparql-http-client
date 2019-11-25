@@ -4,7 +4,8 @@
   "description": "Simplified SPARQL HTTP request client",
   "main": "index.js",
   "scripts": {
-    "test": "standard && mocha"
+    "lint": "standard",
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
