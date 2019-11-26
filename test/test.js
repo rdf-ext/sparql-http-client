@@ -370,6 +370,40 @@ describe('sparql-http-client', () => {
 
       await endpoint.constructQuery(simpleConstructQuery, { accept: accept })
     })
+
+    it('should request with default headers', function () {
+      var endpoint = new SparqlHttp({
+        endpointUrl: 'http://example.org/sparql',
+        defaultHeaders: {
+          Authorization: 'Bearer foo'
+        }
+      })
+
+      nock('http://example.org')
+        .get('/sparql?query=' + encodeURIComponent(simpleConstructQuery))
+        .reply(200, function () {
+          assert.deepStrictEqual(this.req.headers.authorization, ['Bearer foo'])
+        })
+
+      return endpoint.constructQuery(simpleConstructQuery)
+    })
+
+    it('should override default headers with argument passed to function', function () {
+      var endpoint = new SparqlHttp({
+        endpointUrl: 'http://example.org/sparql',
+        defaultHeaders: {
+          Authorization: 'Bearer foo'
+        }
+      })
+
+      nock('http://example.org')
+        .get('/sparql?query=' + encodeURIComponent(simpleConstructQuery))
+        .reply(200, function () {
+          assert.deepStrictEqual(this.req.headers.authorization, ['Bearer bar'])
+        })
+
+      return endpoint.constructQuery(simpleConstructQuery, { headers: { Authorization: 'Bearer bar' } })
+    })
   })
 
   describe('.selectQuery', () => {
@@ -409,6 +443,40 @@ describe('sparql-http-client', () => {
         })
 
       await endpoint.selectQuery(simpleSelectQuery, { accept: accept })
+    })
+
+    it('should request with default headers', async () => {
+      const endpoint = new SparqlHttp({
+        endpointUrl: 'http://example.org/sparql',
+        defaultHeaders: {
+          Authorization: 'Bearer foo'
+        }
+      })
+
+      nock('http://example.org')
+        .get('/sparql?query=' + encodeURIComponent(simpleSelectQuery))
+        .reply(200, function () {
+          assert.deepStrictEqual(this.req.headers.authorization, ['Bearer foo'])
+        })
+
+      await endpoint.selectQuery(simpleSelectQuery)
+    })
+
+    it('should override default headers with those passed to function', async () => {
+      const endpoint = new SparqlHttp({
+        endpointUrl: 'http://example.org/sparql',
+        defaultHeaders: {
+          Authorization: 'Bearer foo'
+        }
+      })
+
+      nock('http://example.org')
+        .get('/sparql?query=' + encodeURIComponent(simpleSelectQuery))
+        .reply(200, function () {
+          assert.deepStrictEqual(this.req.headers.authorization, ['Bearer bar'])
+        })
+
+      await endpoint.selectQuery(simpleSelectQuery, { headers: { authorization: 'Bearer bar' } })
     })
   })
 
@@ -450,6 +518,40 @@ describe('sparql-http-client', () => {
         })
 
       await endpoint.updateQuery(simpleUpdateQuery, { accept: accept })
+    })
+
+    it('should request with default headers', async () => {
+      const endpoint = new SparqlHttp({
+        updateUrl: 'http://example.org/update',
+        defaultHeaders: {
+          Authorization: 'Bearer foo'
+        }
+      })
+
+      nock('http://example.org')
+        .post('/update')
+        .reply(200, function () {
+          assert.deepStrictEqual(this.req.headers.authorization, ['Bearer foo'])
+        })
+
+      await endpoint.updateQuery(simpleUpdateQuery)
+    })
+
+    it('should override default headers with those passed to function', async () => {
+      const endpoint = new SparqlHttp({
+        updateUrl: 'http://example.org/update',
+        defaultHeaders: {
+          Authorization: 'Bearer foo'
+        }
+      })
+
+      nock('http://example.org')
+        .post('/update')
+        .reply(200, function () {
+          assert.deepStrictEqual(this.req.headers.authorization, ['Bearer bar'])
+        })
+
+      await endpoint.updateQuery(simpleUpdateQuery, { headers: { authorization: 'Bearer bar' } })
     })
   })
 })

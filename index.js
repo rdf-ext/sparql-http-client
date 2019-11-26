@@ -7,10 +7,12 @@ class SparqlHttp {
     this.fetch = options.fetch || SparqlHttp.fetch
 
     this.types = SparqlHttp.types
+    this.defaultHeaders = options.defaultHeaders || {}
   }
 
   getQuery (query, options = {}) {
     options.headers = options.headers || {}
+    options.headers = { ...this.defaultHeaders, ...options.headers }
 
     let url = null
 
@@ -32,6 +34,7 @@ class SparqlHttp {
 
   postQueryDirect (query, options = {}) {
     options.headers = options.headers || {}
+    options.headers = { ...this.defaultHeaders, ...options.headers }
 
     let url = null
 
@@ -51,6 +54,7 @@ class SparqlHttp {
 
   postQueryUrlencoded (query, options = {}) {
     options.headers = options.headers || {}
+    options.headers = { ...this.defaultHeaders, ...options.headers }
 
     let url = null
 

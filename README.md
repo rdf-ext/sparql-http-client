@@ -45,6 +45,36 @@ endpoint.selectQuery(query).then(function (res) {
 
 See the examples folder for more complex examples.
 
+### Request headers
+
+HTTP requests to the SPARQL endpoint can have additional headers added to it, for example to pass authorization information.
+
+One method for doing so is to set headers on a single query or update:
+
+```js
+var endpoint = new SparqlHttp({endpointUrl: 'https://query.wikidata.org/sparql'})
+
+// authorize a single query
+endpoint.selectQuery(query, {
+  headers: {
+    Authorization: 'Bearer token'
+  }
+})
+```
+
+It is also possible to set defautl headers, which will be set on all query requests originating from an instance of
+the client:
+
+```js
+// authorize all requests
+var endpoint = new SparqlHttp({
+  endpointUrl: 'https://query.wikidata.org/sparql'
+  defaultHeaders: {
+    Authorization: 'Bearer token'
+  }
+})
+```
+
 ## Note on polyfills
 
 `sparql-http-client` does not install `URL` and `fetch` implementation. It will work
