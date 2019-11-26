@@ -4,9 +4,5 @@ node_js:
   - "10"
   - "12"
 
-script:
-  - npm run lint
-  - npx nyc --reporter=lcov mocha
-
 after_success:
   - npx codecov

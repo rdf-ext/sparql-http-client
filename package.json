@@ -4,8 +4,7 @@
   "description": "Simplified SPARQL HTTP request client",
   "main": "index.js",
   "scripts": {
-    "lint": "standard",
-    "test": "mocha"
+    "test": "standard && nyc --reporter=lcov mocha"
   },
   "repository": {
     "type": "git",
@@ -26,6 +25,7 @@
     "isomorphic-fetch": "^2.2.1",
     "mocha": "^6.2.2",
     "nock": "^10.0.6",
+    "nyc": "^14.1.1",
     "standard": "^14.3.1",
     "whatwg-url": "^7.0.0"
   }
