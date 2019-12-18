@@ -9,7 +9,7 @@ Simplified SPARQL HTTP request client
 
 ```
 var fetch = require('isomorphic-fetch')
-var URL = require('whatwg-url')
+var {URL} = require('whatwg-url')
 var SparqlHttp = require('sparql-http-client')
 
 SparqlHttp.fetch = fetch
