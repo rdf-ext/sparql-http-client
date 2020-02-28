@@ -1,23 +1,16 @@
-const fetch = require('isomorphic-fetch')
-const SparqlHttp = require('../')
+const SparqlClient = require('../Client')
 
-SparqlHttp.fetch = fetch
-
-const endpoint = new SparqlHttp({ endpointUrl: 'http://dbpedia.org/sparql' })
+const endpointUrl = 'http://dbpedia.org/sparql'
 const query = 'SELECT ?height WHERE { <http://dbpedia.org/resource/Eiffel_Tower> <http://dbpedia.org/property/height> ?height }'
 
 async function main () {
-  const res = await endpoint.selectQuery(query)
-  const stream = res.body
-  let content = ''
+  const client = new SparqlClient({ endpointUrl })
+  const stream = await client.query.select(query)
 
-  stream.on('data', result => {
-    content += result.toString()
-  })
-
-  stream.on('end', () => {
-    // parse and stringify the content for pretty print
-    console.log(JSON.stringify(JSON.parse(content), null, ' '))
+  stream.on('data', row => {
+    Object.entries(row).forEach(([key, value]) => {
+      console.log(`${key}: ${value.value} (${value.termType})`)
+    })
   })
 
   stream.on('error', err => {
