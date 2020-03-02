@@ -1,3 +1,4 @@
+const { URL } = require('universal-url')
 const { promisify } = require('util')
 const delay = require('promise-the-world/delay')
 const TripleToQuadTransform = require('rdf-transform-triple-to-quad')

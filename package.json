@@ -30,7 +30,8 @@
     "nodeify-fetch": "^2.2.0",
     "promise-the-world": "^1.0.0",
     "rdf-transform-triple-to-quad": "^1.0.2",
-    "readable-stream": "^3.5.0"
+    "readable-stream": "^3.5.0",
+    "universal-url": "^2.0.0"
   },
   "devDependencies": {
     "@rdfjs/dataset": "^1.0.1",

@@ -1,4 +1,4 @@
-const { URL } = require('url')
+const { URL } = require('universal-url')
 
 class RawQuery {
   constructor ({ client }) {
