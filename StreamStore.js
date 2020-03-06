@@ -69,7 +69,11 @@ class StreamStore {
         const quad = stream.read()
 
         if (!quad && all.end) {
-          return request.stream.push(null)
+          if (request) {
+            return request.stream.push(null)
+          }
+
+          return
         }
 
         if (quad) {
@@ -101,7 +105,10 @@ class StreamStore {
     read()
 
     await all
-    await request.promise
+
+    if (request) {
+      await request.promise
+    }
   }
 
   writeRequest (method, graph, read) {

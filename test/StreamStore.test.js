@@ -16,7 +16,7 @@ const ns = {
   ex: namespace('http://example.org/')
 }
 
-describe('Store', () => {
+describe('StreamStore', () => {
   describe('.read', () => {
     it('should be a method', () => {
       const client = new BaseClient({ fetch })
@@ -347,6 +347,19 @@ describe('Store', () => {
         Object.entries(content).forEach(([graphIri, graphContent]) => {
           strictEqual(graphContent, expected[graphIri])
         })
+      })
+    })
+
+    it('should handle streams with no data', async () => {
+      await withServer(async server => {
+        const quads = []
+
+        const storeUrl = await server.listen()
+        const stream = intoStream.object(quads)
+        const client = new BaseClient({ fetch, storeUrl })
+        const store = new StreamStore({ client })
+
+        await store.write({ method: 'POST', stream })
       })
     })
 
