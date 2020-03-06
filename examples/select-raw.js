@@ -1,10 +1,10 @@
 /*
 
-This example uses the default Client to make a SELECT query and processes the stream events for each row.
+This example uses the SimpleClient to make a SELECT query and manually processes the response.
 
 */
 
-const SparqlClient = require('../Client')
+const SparqlClient = require('../SimpleClient')
 
 const endpointUrl = 'https://query.wikidata.org/sparql'
 const query = `
@@ -22,17 +22,19 @@ SELECT ?value WHERE {
 
 async function main () {
   const client = new SparqlClient({ endpointUrl })
-  const stream = await client.query.select(query)
+  const res = await client.query.select(query)
 
-  stream.on('data', row => {
+  if (!res.ok) {
+    return console.error(res.statusText)
+  }
+
+  const content = await res.json()
+
+  for (const row of content.results.bindings) {
     Object.entries(row).forEach(([key, value]) => {
-      console.log(`${key}: ${value.value} (${value.termType})`)
+      console.log(`${key}: ${value.value} (${value.type})`)
     })
-  })
-
-  stream.on('error', err => {
-    console.error(err)
-  })
+  }
 }
 
 main()
