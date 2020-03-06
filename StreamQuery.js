@@ -3,7 +3,7 @@ const checkResponse = require('./lib/checkResponse')
 const RawQuery = require('./RawQuery')
 const ResultParser = require('./ResultParser')
 
-class Query extends RawQuery {
+class StreamQuery extends RawQuery {
   constructor ({ client }) {
     super({ client })
   }
@@ -45,4 +45,4 @@ class Query extends RawQuery {
   }
 }
 
-module.exports = Query
+module.exports = StreamQuery

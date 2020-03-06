@@ -22,7 +22,7 @@ function streamToPromise (stream) {
   return p
 }
 
-class Store {
+class StreamStore {
   constructor ({ client }) {
     this.client = client
   }
@@ -128,4 +128,4 @@ class Store {
   }
 }
 
-module.exports = Store
+module.exports = StreamStore

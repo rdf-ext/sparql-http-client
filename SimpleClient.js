@@ -1,8 +1,7 @@
 const fetch = require('nodeify-fetch')
 const rdf = require('@rdfjs/data-model')
 const BaseClient = require('./BaseClient')
-const StreamQuery = require('./StreamQuery')
-const StreamStore = require('./StreamStore')
+const RawQuery = require('./RawQuery')
 
 class Client extends BaseClient {
   constructor ({ endpointUrl, factory = rdf, headers, password, storeUrl, updateUrl, user }) {
@@ -15,8 +14,7 @@ class Client extends BaseClient {
       storeUrl,
       updateUrl,
       user,
-      Query: StreamQuery,
-      Store: StreamStore
+      Query: RawQuery
     })
   }
 }

@@ -1,7 +1,5 @@
-const RawQuery = require('./RawQuery')
-
 class BaseClient {
-  constructor ({ endpointUrl, factory, fetch, headers, password, storeUrl, updateUrl, user, Query = RawQuery, Store }) {
+  constructor ({ endpointUrl, factory, fetch, headers, password, storeUrl, updateUrl, user, Query, Store }) {
     this.endpointUrl = endpointUrl
     this.factory = factory
     this.fetch = fetch

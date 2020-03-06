@@ -10,7 +10,7 @@ const { quadToNTriples } = require('@rdfjs/to-ntriples')
 const testFactory = require('./support/testFactory')
 const withServer = require('./support/withServer')
 const BaseClient = require('../BaseClient')
-const Query = require('../Query')
+const StreamQuery = require('../StreamQuery')
 
 const ns = {
   ex: namespace('http://example.org/')
@@ -21,11 +21,11 @@ const simpleConstructQuery = 'CONSTRUCT {?s ?p ?o} WHERE {?s ?p ?o}'
 const simpleSelectQuery = 'SELECT * WHERE {?s ?p ?o}'
 const simpleUpdateQuery = 'INSERT {<http://example.org/subject> <http://example.org/predicate> "object"} WHERE {}'
 
-describe('Query', () => {
+describe('StreamQuery', () => {
   describe('.ask', () => {
     it('should be a method', () => {
       const client = new BaseClient({ fetch })
-      const query = new Query({ client })
+      const query = new StreamQuery({ client })
 
       strictEqual(typeof query.ask, 'function')
     })
@@ -42,7 +42,7 @@ describe('Query', () => {
 
         const endpointUrl = await server.listen()
         const client = new BaseClient({ fetch, endpointUrl })
-        const query = new Query({ client })
+        const query = new StreamQuery({ client })
 
         await query.ask(simpleAskQuery)
 
@@ -62,7 +62,7 @@ describe('Query', () => {
 
         const endpointUrl = await server.listen()
         const client = new BaseClient({ fetch, endpointUrl })
-        const query = new Query({ client })
+        const query = new StreamQuery({ client })
 
         await query.ask(simpleAskQuery)
 
@@ -80,7 +80,7 @@ describe('Query', () => {
 
         const endpointUrl = await server.listen()
         const client = new BaseClient({ fetch, endpointUrl })
-        const query = new Query({ client })
+        const query = new StreamQuery({ client })
 
         const result = await query.ask(simpleConstructQuery)
 
@@ -92,7 +92,7 @@ describe('Query', () => {
   describe('.construct', () => {
     it('should be a method', () => {
       const client = new BaseClient({ fetch })
-      const query = new Query({ client })
+      const query = new StreamQuery({ client })
 
       strictEqual(typeof query.construct, 'function')
     })
@@ -109,7 +109,7 @@ describe('Query', () => {
 
         const endpointUrl = await server.listen()
         const client = new BaseClient({ fetch, endpointUrl })
-        const query = new Query({ client })
+        const query = new StreamQuery({ client })
 
         const stream = await query.construct(simpleConstructQuery)
         await getStream.array(stream)
@@ -130,7 +130,7 @@ describe('Query', () => {
 
         const endpointUrl = await server.listen()
         const client = new BaseClient({ fetch, endpointUrl })
-        const query = new Query({ client })
+        const query = new StreamQuery({ client })
 
         const stream = await query.construct(simpleConstructQuery)
         await getStream.array(stream)
@@ -157,7 +157,7 @@ describe('Query', () => {
 
         const endpointUrl = await server.listen()
         const client = new BaseClient({ fetch, endpointUrl })
-        const query = new Query({ client })
+        const query = new StreamQuery({ client })
 
         const stream = await query.construct(simpleConstructQuery)
         const result = rdf.dataset(await getStream.array(stream))
@@ -180,7 +180,7 @@ describe('Query', () => {
 
         const endpointUrl = await server.listen()
         const client = new BaseClient({ factory, fetch, endpointUrl })
-        const query = new Query({ client })
+        const query = new StreamQuery({ client })
 
         const stream = await query.construct(simpleConstructQuery)
         await getStream.array(stream)
@@ -199,7 +199,7 @@ describe('Query', () => {
   describe('.select', () => {
     it('should be a method', () => {
       const client = new BaseClient({ fetch })
-      const query = new Query({ client })
+      const query = new StreamQuery({ client })
 
       strictEqual(typeof query.select, 'function')
     })
@@ -216,7 +216,7 @@ describe('Query', () => {
 
         const endpointUrl = await server.listen()
         const client = new BaseClient({ fetch, endpointUrl })
-        const query = new Query({ client })
+        const query = new StreamQuery({ client })
 
         const stream = await query.select(simpleSelectQuery)
         await getStream.array(stream)
@@ -237,7 +237,7 @@ describe('Query', () => {
 
         const endpointUrl = await server.listen()
         const client = new BaseClient({ fetch, endpointUrl })
-        const query = new Query({ client })
+        const query = new StreamQuery({ client })
 
         const stream = await query.construct(simpleSelectQuery)
         await getStream.array(stream)
@@ -264,7 +264,7 @@ describe('Query', () => {
 
         const endpointUrl = await server.listen()
         const client = new BaseClient({ fetch, endpointUrl })
-        const query = new Query({ client })
+        const query = new StreamQuery({ client })
 
         const stream = await query.select(simpleSelectQuery)
         const result = await getStream.array(stream)
@@ -297,7 +297,7 @@ describe('Query', () => {
 
         const endpointUrl = await server.listen()
         const client = new BaseClient({ factory, fetch, endpointUrl })
-        const query = new Query({ client })
+        const query = new StreamQuery({ client })
 
         const stream = await query.select(simpleSelectQuery)
         await getStream.array(stream)
@@ -314,7 +314,7 @@ describe('Query', () => {
   describe('.update', () => {
     it('should be a method', () => {
       const client = new BaseClient({ fetch })
-      const query = new Query({ client })
+      const query = new StreamQuery({ client })
 
       strictEqual(typeof query.update, 'function')
     })
@@ -331,7 +331,7 @@ describe('Query', () => {
 
         const updateUrl = await server.listen()
         const client = new BaseClient({ fetch, updateUrl })
-        const query = new Query({ client })
+        const query = new StreamQuery({ client })
 
         await query.update(simpleUpdateQuery)
 
@@ -351,7 +351,7 @@ describe('Query', () => {
 
         const updateUrl = await server.listen()
         const client = new BaseClient({ fetch, updateUrl })
-        const query = new Query({ client })
+        const query = new StreamQuery({ client })
 
         await query.update(simpleUpdateQuery)
 
