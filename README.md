@@ -4,8 +4,8 @@
 [![NPM Version](https://img.shields.io/npm/v/sparql-http-client.svg?style=flat)](https://npm.im/sparql-http-client)
 
 SPARQL client for easier handling of SPARQL Queries and Graph Store requests.
-The [SPARQL Protocol](https://www.w3.org/TR/2013/REC-sparql11-protocol-20130321/) is used for [SPARQL Queries](https://www.w3.org/TR/2013/REC-sparql11-query-20130321/) and [SPARQL Updates](https://www.w3.org/TR/2013/REC-sparql11-update-20130321/). 
-The [SPARQL Graph Store Protocol](https://www.w3.org/TR/2013/REC-sparql11-http-rdf-update-20130321/) is used to manage Named Graphs.
+The [SPARQL Protocol](https://www.w3.org/TR/sparql11-protocol/) is used for [SPARQL Queries](https://www.w3.org/TR/sparql11-query/) and [SPARQL Updates](https://www.w3.org/TR/sparql11-update/). 
+The [SPARQL Graph Store Protocol](https://www.w3.org/TR/sparql11-http-rdf-update/) is used to manage Named Graphs.
 
 ## Usage
 
