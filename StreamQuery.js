@@ -8,8 +8,8 @@ class StreamQuery extends RawQuery {
     super({ client })
   }
 
-  async ask (query, { headers } = {}) {
-    const res = await super.ask(query, { headers })
+  async ask (query, { headers, operation } = {}) {
+    const res = await super.ask(query, { headers, operation })
 
     checkResponse(res)
 
@@ -18,8 +18,8 @@ class StreamQuery extends RawQuery {
     return json.boolean
   }
 
-  async construct (query, { headers } = {}) {
-    const res = await super.construct(query, { headers })
+  async construct (query, { headers, operation } = {}) {
+    const res = await super.construct(query, { headers, operation })
 
     checkResponse(res)
 
@@ -28,8 +28,8 @@ class StreamQuery extends RawQuery {
     return parser.import(res.body)
   }
 
-  async select (query, { headers } = {}) {
-    const res = await super.select(query, { headers })
+  async select (query, { headers, operation } = {}) {
+    const res = await super.select(query, { headers, operation })
 
     checkResponse(res)
 
@@ -38,8 +38,8 @@ class StreamQuery extends RawQuery {
     return res.body.pipe(parser)
   }
 
-  async update (query, { headers } = {}) {
-    const res = await super.update(query, { headers })
+  async update (query, { headers, operation } = {}) {
+    const res = await super.update(query, { headers, operation })
 
     checkResponse(res)
   }

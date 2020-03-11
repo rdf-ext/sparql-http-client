@@ -1,5 +1,5 @@
 const { deepStrictEqual, strictEqual } = require('assert')
-const { urlencoded } = require('body-parser')
+const { text, urlencoded } = require('body-parser')
 const getStream = require('get-stream')
 const { describe, it } = require('mocha')
 const fetch = require('nodeify-fetch')
@@ -85,6 +85,28 @@ describe('StreamQuery', () => {
         const result = await query.ask(simpleConstructQuery)
 
         strictEqual(result, true)
+      })
+    })
+
+    it('should use the given operation for the request', async () => {
+      await withServer(async server => {
+        let parameter = null
+
+        server.app.post('/', urlencoded({ extended: false }), async (req, res) => {
+          parameter = req.body.query
+
+          res.json({
+            boolean: true
+          })
+        })
+
+        const endpointUrl = await server.listen()
+        const client = new BaseClient({ fetch, endpointUrl })
+        const query = new StreamQuery({ client })
+
+        await query.ask(simpleAskQuery, { operation: 'postUrlencoded' })
+
+        strictEqual(parameter, simpleAskQuery)
       })
     })
   })
@@ -192,6 +214,27 @@ describe('StreamQuery', () => {
           namedNode: true,
           quad: true
         })
+      })
+    })
+
+    it('should use the given operation for the request', async () => {
+      await withServer(async server => {
+        let parameter = null
+
+        server.app.post('/', urlencoded({ extended: false }), async (req, res) => {
+          parameter = req.body.query
+
+          res.status(204).end()
+        })
+
+        const endpointUrl = await server.listen()
+        const client = new BaseClient({ fetch, endpointUrl })
+        const query = new StreamQuery({ client })
+
+        const stream = await query.construct(simpleConstructQuery, { operation: 'postUrlencoded' })
+        await getStream.array(stream)
+
+        strictEqual(parameter, simpleConstructQuery)
       })
     })
   })
@@ -309,6 +352,27 @@ describe('StreamQuery', () => {
         })
       })
     })
+
+    it('should use the given operation for the request', async () => {
+      await withServer(async server => {
+        let parameter = null
+
+        server.app.post('/', urlencoded({ extended: false }), async (req, res) => {
+          parameter = req.body.query
+
+          res.status(204).end()
+        })
+
+        const endpointUrl = await server.listen()
+        const client = new BaseClient({ fetch, endpointUrl })
+        const query = new StreamQuery({ client })
+
+        const stream = await query.select(simpleSelectQuery, { operation: 'postUrlencoded' })
+        await getStream.array(stream)
+
+        strictEqual(parameter, simpleSelectQuery)
+      })
+    })
   })
 
   describe('.update', () => {
@@ -356,6 +420,26 @@ describe('StreamQuery', () => {
         await query.update(simpleUpdateQuery)
 
         strictEqual(parameter, simpleUpdateQuery)
+      })
+    })
+
+    it('should use the given operation for the request', async () => {
+      await withServer(async server => {
+        let content = null
+
+        server.app.post('/', text({ type: '*/*' }), async (req, res) => {
+          content = req.body
+
+          res.status(204).end()
+        })
+
+        const updateUrl = await server.listen()
+        const client = new BaseClient({ fetch, updateUrl })
+        const query = new StreamQuery({ client })
+
+        await query.update(simpleUpdateQuery, { operation: 'postDirect' })
+
+        strictEqual(content, simpleUpdateQuery)
       })
     })
   })
