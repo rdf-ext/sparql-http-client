@@ -30,22 +30,22 @@ It comes with a [fetch](https://www.npmjs.com/package/nodeify-fetch) library and
 All methods for SPARQL Queries or SPARQL Updates are attached to the instance property `query`.
 The following query methods are available:
 
-#### query.ask (query, { headers })
+#### query.ask (query, { headers, operation })
 
 Runs an `ASK` query against the given `endpointUrl`.
 It returns async a `boolean` value. 
 
-#### query.construct (query, { headers })
+#### query.construct (query, { headers, operation })
 
 Runs a `CONSTRUCT` or `DESCRIBE` query against the given `endpointUrl`.
 It returns async a stream that emits the result as RDF/JS `Quads`.
 
-#### query.select (query, { headers })
+#### query.select (query, { headers, operation })
 
 Runs a `SELECT` query against the given `endpointUrl`.
 It returns async a stream that emits each row as a single object with the variable as key and the value as RDF/JS `Term` object.
 
-#### query.update (query, { headers })
+#### query.update (query, { headers, operation })
 
 Runs an `INSERT`, `UPDATE` or `DELETE` query against the given `updateUrl`.
 The method is async and doesn't have a return value.
@@ -171,19 +171,19 @@ Runs a query using a direct HTTP POST request against the given `endpointUrl` or
 
 Runs a query using a URL encoded HTTP POST request against the given `endpointUrl` or `updateUrl` if `update` is true.
 
-#### query.ask (query, { headers })
+#### query.ask (query, { headers, operation })
 
 Runs an `ASK` query against the given `endpointUrl`. 
 
-#### query.construct (query, { headers })
+#### query.construct (query, { headers, operation })
 
 Runs a `CONSTRUCT` or `DESCRIBE` query against the given `endpointUrl`.
 
-#### query.select (query, { headers })
+#### query.select (query, { headers, operation })
 
 Runs a `SELECT` query against the given `endpointUrl`.
 
-#### query.update (query, { headers })
+#### query.update (query, { headers, operation })
 
 Runs an `INSERT`, `UPDATE` or `DELETE` query against the given `updateUrl`.
 
@@ -220,6 +220,19 @@ const client = new SparqlClient({
   }
 })
 ```
+
+#### Operation
+
+SPARQL queries and updates over the SPARQL Protocol can be done with different [operations](https://www.w3.org/TR/sparql11-protocol/#protocol).
+By default all read queries use `get` and updates use `postUrlencoded`.
+Very long queries may exceed the maximum request header length.
+For those cases, it's useful to switch to operations that use a `POST` request.
+This can be done by the optional `operation` argument.
+The value must be a string with one of the following values:
+
+- `get`
+- `postUrlencoded`
+- `postDirect`   
 
 #### URL class
 

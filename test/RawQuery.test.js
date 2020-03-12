@@ -717,6 +717,27 @@ describe('RawQuery', () => {
         strictEqual(header, value)
       })
     })
+
+    it('should use the given operation for the request', async () => {
+      await withServer(async server => {
+        let parameter = null
+
+        server.app.post('/', urlencoded({ extended: true }), async (req, res) => {
+          parameter = req.body.query
+
+          res.end()
+        })
+
+        const endpointUrl = await server.listen()
+
+        const client = new BaseClient({ endpointUrl, fetch })
+        const query = new RawQuery({ client })
+
+        await query.ask(simpleAskQuery, { operation: 'postUrlencoded' })
+
+        strictEqual(parameter, simpleAskQuery)
+      })
+    })
   })
 
   describe('.construct', () => {
@@ -888,6 +909,27 @@ describe('RawQuery', () => {
         strictEqual(header, value)
       })
     })
+
+    it('should use the given operation for the request', async () => {
+      await withServer(async server => {
+        let parameter = null
+
+        server.app.post('/', urlencoded({ extended: true }), async (req, res) => {
+          parameter = req.body.query
+
+          res.end()
+        })
+
+        const endpointUrl = await server.listen()
+
+        const client = new BaseClient({ endpointUrl, fetch })
+        const query = new RawQuery({ client })
+
+        await query.construct(simpleConstructQuery, { operation: 'postUrlencoded' })
+
+        strictEqual(parameter, simpleConstructQuery)
+      })
+    })
   })
 
   describe('.select', () => {
@@ -909,7 +951,7 @@ describe('RawQuery', () => {
         const client = new BaseClient({ endpointUrl, fetch })
         const query = new RawQuery({ client })
 
-        const res = await query.select(simpleConstructQuery)
+        const res = await query.select(simpleSelectQuery)
 
         strictEqual(typeof res, 'object')
         strictEqual(typeof res.text, 'function')
@@ -931,7 +973,7 @@ describe('RawQuery', () => {
         const client = new BaseClient({ endpointUrl, fetch })
         const query = new RawQuery({ client })
 
-        await query.select(simpleConstructQuery)
+        await query.select(simpleSelectQuery)
 
         strictEqual(called, true)
       })
@@ -975,7 +1017,7 @@ describe('RawQuery', () => {
         const client = new BaseClient({ endpointUrl: `${endpointUrl}?${key}=${value}`, fetch })
         const query = new RawQuery({ client })
 
-        await query.select(simpleConstructQuery)
+        await query.select(simpleSelectQuery)
 
         strictEqual(parameters[key], value)
       })
@@ -996,7 +1038,7 @@ describe('RawQuery', () => {
         const client = new BaseClient({ endpointUrl, fetch })
         const query = new RawQuery({ client })
 
-        await query.select(simpleConstructQuery)
+        await query.select(simpleSelectQuery)
 
         strictEqual(accept, 'application/sparql-results+json')
       })
@@ -1018,7 +1060,7 @@ describe('RawQuery', () => {
         const client = new BaseClient({ endpointUrl, fetch })
         const query = new RawQuery({ client })
 
-        await query.select(simpleConstructQuery, {
+        await query.select(simpleSelectQuery, {
           headers: {
             authorization: value
           }
@@ -1050,13 +1092,34 @@ describe('RawQuery', () => {
         })
         const query = new RawQuery({ client })
 
-        await query.select(simpleConstructQuery, {
+        await query.select(simpleSelectQuery, {
           headers: {
             authorization: value
           }
         })
 
         strictEqual(header, value)
+      })
+    })
+
+    it('should use the given operation for the request', async () => {
+      await withServer(async server => {
+        let parameter = null
+
+        server.app.post('/', urlencoded({ extended: true }), async (req, res) => {
+          parameter = req.body.query
+
+          res.end()
+        })
+
+        const endpointUrl = await server.listen()
+
+        const client = new BaseClient({ endpointUrl, fetch })
+        const query = new RawQuery({ client })
+
+        await query.select(simpleSelectQuery, { operation: 'postUrlencoded' })
+
+        strictEqual(parameter, simpleSelectQuery)
       })
     })
   })
@@ -1249,6 +1312,27 @@ describe('RawQuery', () => {
         })
 
         strictEqual(header, value)
+      })
+    })
+
+    it('should use the given operation for the request', async () => {
+      await withServer(async server => {
+        let content = null
+
+        server.app.post('/', text({ type: '*/*' }), async (req, res) => {
+          content = req.body
+
+          res.end()
+        })
+
+        const endpointUrl = await server.listen()
+
+        const client = new BaseClient({ endpointUrl, fetch })
+        const query = new RawQuery({ client })
+
+        await query.select(simpleUpdateQuery, { operation: 'postDirect' })
+
+        strictEqual(content, simpleUpdateQuery)
       })
     })
   })
