@@ -1,9 +1,9 @@
 const N3Parser = require('@rdfjs/parser-n3')
 const checkResponse = require('./lib/checkResponse')
-const RawQuery = require('./RawQuery')
+const BaseClient = require('./BaseClient')
 const ResultParser = require('./ResultParser')
 
-class StreamQuery extends RawQuery {
+class StreamClient extends BaseClient {
   constructor ({ endpoint }) {
     super({ endpoint })
   }
@@ -23,7 +23,7 @@ class StreamQuery extends RawQuery {
 
     checkResponse(res)
 
-    const parser = new N3Parser({ factory: this.client.factory })
+    const parser = new N3Parser({ factory: this.endpoint.factory })
 
     return parser.import(res.body)
   }
@@ -33,7 +33,7 @@ class StreamQuery extends RawQuery {
 
     checkResponse(res)
 
-    const parser = new ResultParser({ factory: this.client.factory })
+    const parser = new ResultParser({ factory: this.endpoint.factory })
 
     return res.body.pipe(parser)
   }
@@ -45,4 +45,4 @@ class StreamQuery extends RawQuery {
   }
 }
 
-module.exports = StreamQuery
+module.exports = StreamClient

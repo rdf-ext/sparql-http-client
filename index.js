@@ -1,13 +1,13 @@
 const Endpoint = require('./Endpoint')
-const RawQuery = require('./RawQuery')
-const StreamQuery = require('./StreamQuery')
-const SimpleQuery = require('./SimpleQuery')
+const BaseClient = require('./BaseClient')
+const StreamClient = require('./StreamClient')
+const SimpleClient = require('./SimpleClient')
 const StreamStore = require('./StreamStore')
 
 module.exports = {
   Endpoint,
-  RawQuery,
-  StreamQuery,
-  SimpleQuery,
+  BaseClient,
+  StreamClient,
+  SimpleClient,
   StreamStore
 }

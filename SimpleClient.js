@@ -1,7 +1,7 @@
 const { array } = require('get-stream')
-const StreamQuery = require('./StreamQuery')
+const StreamClient = require('./StreamClient')
 
-class SimpleQuery extends StreamQuery {
+class SimpleClient extends StreamClient {
   constructor ({ endpoint }) {
     super({ endpoint })
   }
@@ -19,4 +19,4 @@ class SimpleQuery extends StreamQuery {
   }
 }
 
-module.exports = SimpleQuery
+module.exports = SimpleClient

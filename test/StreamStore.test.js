@@ -9,7 +9,7 @@ const namespace = require('@rdfjs/namespace')
 const { quadToNTriples } = require('@rdfjs/to-ntriples')
 const testFactory = require('./support/testFactory')
 const withServer = require('./support/withServer')
-const BaseClient = require('../BaseClient')
+const Endpoint = require('../Endpoint')
 const StreamStore = require('../StreamStore')
 
 const ns = {
@@ -19,8 +19,8 @@ const ns = {
 describe('StreamStore', () => {
   describe('.read', () => {
     it('should be a method', () => {
-      const client = new BaseClient({ fetch })
-      const store = new StreamStore({ client })
+      const endpoint = new Endpoint({ fetch })
+      const store = new StreamStore({ endpoint })
 
       strictEqual(typeof store.read, 'function')
     })
@@ -37,8 +37,8 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         const stream = await store.read({ method: 'GET', graph })
         await getStream.array(stream)
@@ -59,8 +59,8 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         const stream = await store.read({ method: 'GET', graph })
         await getStream.array(stream)
@@ -82,8 +82,8 @@ describe('StreamStore', () => {
 
         const storeUrl = await server.listen()
 
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         const stream = await store.read({ method: 'GET', graph })
         await getStream.array(stream)
@@ -104,8 +104,8 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         const stream = await store.read({ method: 'GET', graph })
         await getStream.array(stream)
@@ -132,8 +132,8 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         const stream = await store.read({ method: 'GET', graph })
         const quads = await getStream.array(stream)
@@ -152,8 +152,8 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         try {
           await store.read({ method: 'GET', graph })
@@ -179,8 +179,8 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const client = new BaseClient({ factory, fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ factory, fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         const stream = await store.read({ method: 'GET', graph })
         await getStream.array(stream)
@@ -220,8 +220,8 @@ describe('StreamStore', () => {
 
   describe('.write', () => {
     it('should be a method', () => {
-      const client = new BaseClient({ fetch })
-      const store = new StreamStore({ client })
+      const endpoint = new Endpoint({ fetch })
+      const store = new StreamStore({ endpoint })
 
       strictEqual(typeof store.write, 'function')
     })
@@ -239,8 +239,8 @@ describe('StreamStore', () => {
 
         const storeUrl = await server.listen()
         const stream = intoStream.object([quad])
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         await store.write({ method: 'POST', stream })
 
@@ -261,8 +261,8 @@ describe('StreamStore', () => {
 
         const storeUrl = await server.listen()
         const stream = intoStream.object([quad])
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         await store.write({ method: 'POST', stream })
 
@@ -291,8 +291,8 @@ describe('StreamStore', () => {
 
         const storeUrl = await server.listen()
         const stream = intoStream.object(quads)
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         await store.write({ method: 'POST', stream })
 
@@ -323,8 +323,8 @@ describe('StreamStore', () => {
 
         const storeUrl = await server.listen()
         const stream = intoStream.object(quads)
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         await store.write({ method: 'POST', stream })
 
@@ -361,8 +361,8 @@ describe('StreamStore', () => {
 
         const storeUrl = await server.listen()
         const stream = intoStream.object(quads)
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         await store.write({ method: 'POST', stream })
 
@@ -378,8 +378,8 @@ describe('StreamStore', () => {
 
         const storeUrl = await server.listen()
         const stream = intoStream.object(quads)
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         await store.write({ method: 'POST', stream })
       })
@@ -395,8 +395,8 @@ describe('StreamStore', () => {
 
         const storeUrl = await server.listen()
         const stream = intoStream.object([quad])
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         let error = null
 
@@ -435,8 +435,8 @@ describe('StreamStore', () => {
 
   describe('.get', () => {
     it('should be a method', () => {
-      const client = new BaseClient({ fetch })
-      const store = new StreamStore({ client })
+      const endpoint = new Endpoint({ fetch })
+      const store = new StreamStore({ endpoint })
 
       strictEqual(typeof store.get, 'function')
     })
@@ -453,8 +453,8 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         const stream = await store.get(graph)
         await getStream.array(stream)
@@ -475,8 +475,8 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         const stream = await store.get(graph)
         await getStream.array(stream)
@@ -498,8 +498,8 @@ describe('StreamStore', () => {
 
         const storeUrl = await server.listen()
 
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         const stream = await store.get(graph)
         await getStream.array(stream)
@@ -520,8 +520,8 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         const stream = await store.get(graph)
         await getStream.array(stream)
@@ -548,8 +548,8 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         const stream = await store.get(graph)
         const quads = await getStream.array(stream)
@@ -568,8 +568,8 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         try {
           await store.get(graph)
@@ -584,8 +584,8 @@ describe('StreamStore', () => {
 
   describe('.post', () => {
     it('should be a method', () => {
-      const client = new BaseClient({ fetch })
-      const store = new StreamStore({ client })
+      const endpoint = new Endpoint({ fetch })
+      const store = new StreamStore({ endpoint })
 
       strictEqual(typeof store.post, 'function')
     })
@@ -603,8 +603,8 @@ describe('StreamStore', () => {
 
         const storeUrl = await server.listen()
         const stream = intoStream.object([quad])
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         await store.post(stream)
 
@@ -625,8 +625,8 @@ describe('StreamStore', () => {
 
         const storeUrl = await server.listen()
         const stream = intoStream.object([quad])
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         await store.post(stream)
 
@@ -655,8 +655,8 @@ describe('StreamStore', () => {
 
         const storeUrl = await server.listen()
         const stream = intoStream.object(quads)
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         await store.post(stream)
 
@@ -687,8 +687,8 @@ describe('StreamStore', () => {
 
         const storeUrl = await server.listen()
         const stream = intoStream.object(quads)
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         await store.post(stream)
 
@@ -725,8 +725,8 @@ describe('StreamStore', () => {
 
         const storeUrl = await server.listen()
         const stream = intoStream.object(quads)
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         await store.post(stream)
 
@@ -746,8 +746,8 @@ describe('StreamStore', () => {
 
         const storeUrl = await server.listen()
         const stream = intoStream.object([quad])
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         let error = null
 
@@ -764,8 +764,8 @@ describe('StreamStore', () => {
 
   describe('.put', () => {
     it('should be a method', () => {
-      const client = new BaseClient({ fetch })
-      const store = new StreamStore({ client })
+      const endpoint = new Endpoint({ fetch })
+      const store = new StreamStore({ endpoint })
 
       strictEqual(typeof store.put, 'function')
     })
@@ -783,8 +783,8 @@ describe('StreamStore', () => {
 
         const storeUrl = await server.listen()
         const stream = intoStream.object([quad])
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         await store.put(stream)
 
@@ -805,8 +805,8 @@ describe('StreamStore', () => {
 
         const storeUrl = await server.listen()
         const stream = intoStream.object([quad])
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         await store.put(stream)
 
@@ -835,8 +835,8 @@ describe('StreamStore', () => {
 
         const storeUrl = await server.listen()
         const stream = intoStream.object(quads)
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         await store.put(stream)
 
@@ -867,8 +867,8 @@ describe('StreamStore', () => {
 
         const storeUrl = await server.listen()
         const stream = intoStream.object(quads)
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         await store.put(stream)
 
@@ -905,8 +905,8 @@ describe('StreamStore', () => {
 
         const storeUrl = await server.listen()
         const stream = intoStream.object(quads)
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         await store.put(stream)
 
@@ -926,8 +926,8 @@ describe('StreamStore', () => {
 
         const storeUrl = await server.listen()
         const stream = intoStream.object([quad])
-        const client = new BaseClient({ fetch, storeUrl })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
 
         let error = null
 

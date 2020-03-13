@@ -24,8 +24,8 @@ function streamToPromise (stream) {
 }
 
 class StreamStore {
-  constructor ({ client }) {
-    this.client = client
+  constructor ({ endpoint }) {
+    this.endpoint = endpoint
   }
 
   async get (graph) {
@@ -41,20 +41,20 @@ class StreamStore {
   }
 
   async read ({ method, graph }) {
-    const url = new URL(this.client.storeUrl)
+    const url = new URL(this.endpoint.storeUrl)
 
     if (graph.termType !== 'DefaultGraph') {
       url.searchParams.append('graph', graph.value)
     }
 
-    return this.client.fetch(url, {
+    return this.endpoint.fetch(url, {
       method,
       headers: this.client.mergeHeaders({ accept: 'application/n-triples' })
     }).then(res => {
       checkResponse(res)
 
-      const parser = new N3Parser({ factory: this.client.factory })
-      const tripleToQuad = new TripleToQuadTransform(graph, { factory: this.client.factory })
+      const parser = new N3Parser({ factory: this.endpoint.factory })
+      const tripleToQuad = new TripleToQuadTransform(graph, { factory: this.endpoint.factory })
 
       return parser.import(res.body).pipe(tripleToQuad)
     })
@@ -122,13 +122,13 @@ class StreamStore {
   writeRequest (method, graph, read) {
     const stream = new Readable({ read })
     const streamEnd = streamToPromise(stream)
-    const url = new URL(this.client.storeUrl)
+    const url = new URL(this.endpoint.storeUrl)
 
     if (graph.termType !== 'DefaultGraph') {
       url.searchParams.append('graph', graph.value)
     }
 
-    const requestEnd = this.client.fetch(url, {
+    const requestEnd = this.endpoint.fetch(url, {
       method,
       headers: this.client.mergeHeaders({ 'content-type': 'application/n-triples' }),
       body: stream
