@@ -2,7 +2,7 @@ const { strictEqual } = require('assert')
 const { text, urlencoded } = require('body-parser')
 const fetch = require('nodeify-fetch')
 const { describe, it } = require('mocha')
-const BaseClient = require('../BaseClient')
+const Endpoint = require('../Endpoint')
 const RawQuery = require('../RawQuery')
 const withServer = require('./support/withServer')
 
@@ -18,8 +18,8 @@ describe('RawQuery', () => {
 
   describe('.get', () => {
     it('should be a method', () => {
-      const client = new BaseClient({ fetch })
-      const query = new RawQuery({ client })
+      const endpoint = new Endpoint({ fetch })
+      const query = new RawQuery({ endpoint })
 
       strictEqual(typeof query.get, 'function')
     })
@@ -32,8 +32,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         const res = await query.get(simpleSelectQuery)
 
@@ -54,8 +54,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.get(simpleSelectQuery)
 
@@ -75,8 +75,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.get(simpleSelectQuery)
 
@@ -98,8 +98,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl: `${endpointUrl}?${key}=${value}`, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl: `${endpointUrl}?${key}=${value}`, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.get(simpleSelectQuery)
 
@@ -120,8 +120,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.get(simpleConstructQuery, {
           headers: {
@@ -146,14 +146,14 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({
+        const endpoint = new Endpoint({
           endpointUrl,
           fetch,
           headers: {
             authorization: 'Bearer bar'
           }
         })
-        const query = new RawQuery({ client })
+        const query = new RawQuery({ endpoint })
 
         await query.get(simpleConstructQuery, {
           headers: {
@@ -177,8 +177,8 @@ describe('RawQuery', () => {
 
         const updateUrl = await server.listen()
 
-        const client = new BaseClient({ updateUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ updateUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.get(simpleSelectQuery, { update: true })
 
@@ -200,8 +200,8 @@ describe('RawQuery', () => {
 
         const updateUrl = await server.listen()
 
-        const client = new BaseClient({ updateUrl: `${updateUrl}?${key}=${value}`, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ updateUrl: `${updateUrl}?${key}=${value}`, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.get(simpleSelectQuery, { update: true })
 
@@ -212,8 +212,8 @@ describe('RawQuery', () => {
 
   describe('.postDirect', () => {
     it('should be a method', () => {
-      const client = new BaseClient({ fetch })
-      const query = new RawQuery({ client })
+      const endpoint = new Endpoint({ fetch })
+      const query = new RawQuery({ endpoint })
 
       strictEqual(typeof query.postDirect, 'function')
     })
@@ -226,8 +226,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         const res = await query.postDirect(simpleSelectQuery)
 
@@ -248,8 +248,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.postDirect(simpleSelectQuery)
 
@@ -269,8 +269,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.postDirect(simpleSelectQuery)
 
@@ -290,8 +290,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.postDirect(simpleSelectQuery)
 
@@ -312,8 +312,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.postDirect(simpleConstructQuery, {
           headers: {
@@ -338,14 +338,14 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({
+        const endpoint = new Endpoint({
           endpointUrl,
           fetch,
           headers: {
             authorization: 'Bearer bar'
           }
         })
-        const query = new RawQuery({ client })
+        const query = new RawQuery({ endpoint })
 
         await query.postDirect(simpleConstructQuery, {
           headers: {
@@ -369,8 +369,8 @@ describe('RawQuery', () => {
 
         const updateUrl = await server.listen()
 
-        const client = new BaseClient({ updateUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ updateUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.postDirect(simpleSelectQuery, { update: true })
 
@@ -381,8 +381,8 @@ describe('RawQuery', () => {
 
   describe('.postUrlencoded', () => {
     it('should be a method', () => {
-      const client = new BaseClient({ fetch })
-      const query = new RawQuery({ client })
+      const endpoint = new Endpoint({ fetch })
+      const query = new RawQuery({ endpoint })
 
       strictEqual(typeof query.postUrlencoded, 'function')
     })
@@ -395,8 +395,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         const res = await query.postUrlencoded(simpleSelectQuery)
 
@@ -417,8 +417,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.postUrlencoded(simpleSelectQuery)
 
@@ -438,8 +438,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.postUrlencoded(simpleSelectQuery)
 
@@ -459,8 +459,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.postUrlencoded(simpleSelectQuery)
 
@@ -481,8 +481,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.postUrlencoded(simpleConstructQuery, {
           headers: {
@@ -507,14 +507,14 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({
+        const endpoint = new Endpoint({
           endpointUrl,
           fetch,
           headers: {
             authorization: 'Bearer bar'
           }
         })
-        const query = new RawQuery({ client })
+        const query = new RawQuery({ endpoint })
 
         await query.postUrlencoded(simpleConstructQuery, {
           headers: {
@@ -538,8 +538,8 @@ describe('RawQuery', () => {
 
         const updateUrl = await server.listen()
 
-        const client = new BaseClient({ updateUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ updateUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.postUrlencoded(simpleSelectQuery, { update: true })
 
@@ -550,8 +550,8 @@ describe('RawQuery', () => {
 
   describe('.ask', () => {
     it('should be a method', () => {
-      const client = new BaseClient({ fetch })
-      const query = new RawQuery({ client })
+      const endpoint = new Endpoint({ fetch })
+      const query = new RawQuery({ endpoint })
 
       strictEqual(typeof query.ask, 'function')
     })
@@ -564,8 +564,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         const res = await query.ask(simpleAskQuery)
 
@@ -586,8 +586,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.ask(simpleAskQuery)
 
@@ -607,8 +607,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.ask(simpleSelectQuery)
 
@@ -630,8 +630,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl: `${endpointUrl}?${key}=${value}`, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl: `${endpointUrl}?${key}=${value}`, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.ask(simpleAskQuery)
 
@@ -651,8 +651,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.ask(simpleAskQuery)
 
@@ -673,8 +673,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.ask(simpleAskQuery, {
           headers: {
@@ -699,14 +699,14 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({
+        const endpoint = new Endpoint({
           endpointUrl,
           fetch,
           headers: {
             authorization: 'Bearer bar'
           }
         })
-        const query = new RawQuery({ client })
+        const query = new RawQuery({ endpoint })
 
         await query.ask(simpleAskQuery, {
           headers: {
@@ -730,8 +730,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.ask(simpleAskQuery, { operation: 'postUrlencoded' })
 
@@ -742,8 +742,8 @@ describe('RawQuery', () => {
 
   describe('.construct', () => {
     it('should be a method', () => {
-      const client = new BaseClient({ fetch })
-      const query = new RawQuery({ client })
+      const endpoint = new Endpoint({ fetch })
+      const query = new RawQuery({ endpoint })
 
       strictEqual(typeof query.construct, 'function')
     })
@@ -756,8 +756,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         const res = await query.construct(simpleConstructQuery)
 
@@ -778,8 +778,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.construct(simpleConstructQuery)
 
@@ -799,8 +799,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.construct(simpleConstructQuery)
 
@@ -822,8 +822,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl: `${endpointUrl}?${key}=${value}`, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl: `${endpointUrl}?${key}=${value}`, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.construct(simpleConstructQuery)
 
@@ -843,8 +843,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.construct(simpleConstructQuery)
 
@@ -865,8 +865,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.construct(simpleConstructQuery, {
           headers: {
@@ -891,14 +891,14 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({
+        const endpoint = new Endpoint({
           endpointUrl,
           fetch,
           headers: {
             authorization: 'Bearer bar'
           }
         })
-        const query = new RawQuery({ client })
+        const query = new RawQuery({ endpoint })
 
         await query.construct(simpleConstructQuery, {
           headers: {
@@ -922,8 +922,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.construct(simpleConstructQuery, { operation: 'postUrlencoded' })
 
@@ -934,8 +934,8 @@ describe('RawQuery', () => {
 
   describe('.select', () => {
     it('should be a method', () => {
-      const client = new BaseClient({ fetch })
-      const query = new RawQuery({ client })
+      const endpoint = new Endpoint({ fetch })
+      const query = new RawQuery({ endpoint })
 
       strictEqual(typeof query.select, 'function')
     })
@@ -948,8 +948,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         const res = await query.select(simpleSelectQuery)
 
@@ -970,8 +970,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.select(simpleSelectQuery)
 
@@ -991,8 +991,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.select(simpleSelectQuery)
 
@@ -1014,8 +1014,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl: `${endpointUrl}?${key}=${value}`, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl: `${endpointUrl}?${key}=${value}`, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.select(simpleSelectQuery)
 
@@ -1035,8 +1035,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.select(simpleSelectQuery)
 
@@ -1057,8 +1057,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.select(simpleSelectQuery, {
           headers: {
@@ -1083,14 +1083,14 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({
+        const endpoint = new Endpoint({
           endpointUrl,
           fetch,
           headers: {
             authorization: 'Bearer bar'
           }
         })
-        const query = new RawQuery({ client })
+        const query = new RawQuery({ endpoint })
 
         await query.select(simpleSelectQuery, {
           headers: {
@@ -1114,8 +1114,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.select(simpleSelectQuery, { operation: 'postUrlencoded' })
 
@@ -1126,8 +1126,8 @@ describe('RawQuery', () => {
 
   describe('.update', () => {
     it('should be a method', () => {
-      const client = new BaseClient({ fetch })
-      const query = new RawQuery({ client })
+      const endpoint = new Endpoint({ fetch })
+      const query = new RawQuery({ endpoint })
 
       strictEqual(typeof query.update, 'function')
     })
@@ -1140,8 +1140,8 @@ describe('RawQuery', () => {
 
         const updateUrl = await server.listen()
 
-        const client = new BaseClient({ updateUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ updateUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         const res = await query.update(simpleUpdateQuery)
 
@@ -1162,8 +1162,8 @@ describe('RawQuery', () => {
 
         const updateUrl = await server.listen()
 
-        const client = new BaseClient({ updateUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ updateUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.update(simpleUpdateQuery)
 
@@ -1185,8 +1185,8 @@ describe('RawQuery', () => {
 
         const updateUrl = await server.listen()
 
-        const client = new BaseClient({ updateUrl: `${updateUrl}?${key}=${value}`, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ updateUrl: `${updateUrl}?${key}=${value}`, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.update(simpleUpdateQuery)
 
@@ -1206,8 +1206,8 @@ describe('RawQuery', () => {
 
         const updateUrl = await server.listen()
 
-        const client = new BaseClient({ updateUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ updateUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.update(simpleUpdateQuery)
 
@@ -1227,8 +1227,8 @@ describe('RawQuery', () => {
 
         const updateUrl = await server.listen()
 
-        const client = new BaseClient({ updateUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ updateUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.update(simpleUpdateQuery)
 
@@ -1248,8 +1248,8 @@ describe('RawQuery', () => {
 
         const updateUrl = await server.listen()
 
-        const client = new BaseClient({ updateUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ updateUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.update(simpleUpdateQuery)
 
@@ -1270,8 +1270,8 @@ describe('RawQuery', () => {
 
         const updateUrl = await server.listen()
 
-        const client = new BaseClient({ updateUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ updateUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.update(simpleUpdateQuery, {
           headers: {
@@ -1296,14 +1296,14 @@ describe('RawQuery', () => {
 
         const updateUrl = await server.listen()
 
-        const client = new BaseClient({
+        const endpoint = new Endpoint({
           updateUrl,
           fetch,
           headers: {
             authorization: 'Bearer bar'
           }
         })
-        const query = new RawQuery({ client })
+        const query = new RawQuery({ endpoint })
 
         await query.update(simpleUpdateQuery, {
           headers: {
@@ -1327,8 +1327,8 @@ describe('RawQuery', () => {
 
         const endpointUrl = await server.listen()
 
-        const client = new BaseClient({ endpointUrl, fetch })
-        const query = new RawQuery({ client })
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new RawQuery({ endpoint })
 
         await query.select(simpleUpdateQuery, { operation: 'postDirect' })
 

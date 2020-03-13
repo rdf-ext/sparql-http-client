@@ -4,8 +4,8 @@ const RawQuery = require('./RawQuery')
 const ResultParser = require('./ResultParser')
 
 class StreamQuery extends RawQuery {
-  constructor ({ client }) {
-    super({ client })
+  constructor ({ endpoint }) {
+    super({ endpoint })
   }
 
   async ask (query, { headers, operation } = {}) {

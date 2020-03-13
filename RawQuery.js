@@ -1,24 +1,24 @@
 const { URL } = require('universal-url')
 
 class RawQuery {
-  constructor ({ client }) {
-    this.client = client
+  constructor ({ endpoint }) {
+    this.endpoint = endpoint
   }
 
   async get (query, { headers, update = false } = {}) {
     let url = null
 
     if (!update) {
-      url = new URL(this.client.endpointUrl)
+      url = new URL(this.endpoint.endpointUrl)
       url.searchParams.append('query', query)
     } else {
-      url = new URL(this.client.updateUrl)
+      url = new URL(this.endpoint.updateUrl)
       url.searchParams.append('update', query)
     }
 
-    return this.client.fetch(url.toString().replace(/\+/g, '%20'), {
+    return this.endpoint.fetch(url.toString().replace(/\+/g, '%20'), {
       method: 'GET',
-      headers: this.client.mergeHeaders(headers)
+      headers: this.endpoint.mergeHeaders(headers)
     })
   }
 
@@ -26,18 +26,18 @@ class RawQuery {
     let url = null
 
     if (!update) {
-      url = new URL(this.client.endpointUrl)
+      url = new URL(this.endpoint.endpointUrl)
     } else {
-      url = new URL(this.client.updateUrl)
+      url = new URL(this.endpoint.updateUrl)
     }
 
-    headers = this.client.mergeHeaders(headers)
+    headers = this.endpoint.mergeHeaders(headers)
 
     if (!headers.has('content-type')) {
       headers.set('content-type', 'application/sparql-query; charset=utf-8')
     }
 
-    return this.client.fetch(url, {
+    return this.endpoint.fetch(url, {
       method: 'POST',
       headers,
       body: query
@@ -49,14 +49,14 @@ class RawQuery {
     let body = null
 
     if (!update) {
-      url = new URL(this.client.endpointUrl)
+      url = new URL(this.endpoint.endpointUrl)
       body = 'query=' + encodeURIComponent(query)
     } else {
-      url = new URL(this.client.updateUrl)
+      url = new URL(this.endpoint.updateUrl)
       body = 'update=' + encodeURIComponent(query)
     }
 
-    headers = this.client.mergeHeaders(headers)
+    headers = this.endpoint.mergeHeaders(headers)
 
     if (!headers.has('content-type')) {
       headers.set('content-type', 'application/x-www-form-urlencoded')
@@ -70,7 +70,7 @@ class RawQuery {
   }
 
   async ask (query, { headers, operation = 'get' } = {}) {
-    headers = this.client.mergeHeaders(headers)
+    headers = this.endpoint.mergeHeaders(headers)
 
     if (!headers.has('accept')) {
       headers.set('accept', 'application/sparql-results+json')
@@ -80,7 +80,7 @@ class RawQuery {
   }
 
   async construct (query, { headers, operation = 'get' } = {}) {
-    headers = new this.client.fetch.Headers(headers)
+    headers = new this.endpoint.fetch.Headers(headers)
 
     if (!headers.has('accept')) {
       headers.set('accept', 'application/n-triples')
@@ -90,7 +90,7 @@ class RawQuery {
   }
 
   async select (query, { headers, operation = 'get' } = {}) {
-    headers = this.client.mergeHeaders(headers)
+    headers = this.endpoint.mergeHeaders(headers)
 
     if (!headers.has('accept')) {
       headers.set('accept', 'application/sparql-results+json')
@@ -100,7 +100,7 @@ class RawQuery {
   }
 
   async update (query, { headers, operation = 'postUrlencoded' } = {}) {
-    headers = new this.client.fetch.Headers(headers)
+    headers = new this.endpoint.fetch.Headers(headers)
 
     if (!headers.has('accept')) {
       headers.set('accept', '*/*')

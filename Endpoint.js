@@ -1,5 +1,5 @@
-class BaseClient {
-  constructor ({ endpointUrl, factory, fetch, headers, password, storeUrl, updateUrl, user, Query, Store }) {
+class Endpoint {
+  constructor ({ endpointUrl, factory, fetch, headers, password, storeUrl, updateUrl, user }) {
     this.endpointUrl = endpointUrl
     this.factory = factory
     this.fetch = fetch
@@ -10,9 +10,6 @@ class BaseClient {
     if (typeof user === 'string' && typeof password === 'string') {
       this.headers.set('authorization', 'Basic ' + Buffer.from(`${user}:${password}`).toString('base64'))
     }
-
-    this.query = Query ? new Query({ client: this }) : null
-    this.store = Store ? new Store({ client: this }) : null
   }
 
   mergeHeaders (args = {}) {
@@ -32,4 +29,4 @@ class BaseClient {
   }
 }
 
-module.exports = BaseClient
+module.exports = Endpoint
