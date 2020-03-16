@@ -179,8 +179,8 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const endpoint = new Endpoint({ factory, fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ factory, endpoint })
 
         const stream = await store.read({ method: 'GET', graph })
         await getStream.array(stream)

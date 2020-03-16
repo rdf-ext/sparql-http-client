@@ -1,10 +1,10 @@
 const { URL } = require('universal-url')
+const defaultFetch = require('nodeify-fetch')
 
 class Endpoint {
   constructor ({ endpointUrl, factory, fetch, headers, password, storeUrl, updateUrl, user }) {
     this.endpointUrl = endpointUrl
-    this.factory = factory
-    this.fetch = fetch
+    this.fetch = fetch || defaultFetch
     this.headers = new this.fetch.Headers(headers)
     this.storeUrl = storeUrl
     this.updateUrl = updateUrl

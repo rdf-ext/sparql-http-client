@@ -7,6 +7,7 @@ class StreamClient extends BaseClient {
   constructor (options) {
     super({
       endpoint: new Endpoint(options),
+      factory: options.factory,
       Query: StreamQuery,
       Store: StreamStore
     })

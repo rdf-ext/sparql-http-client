@@ -24,8 +24,9 @@ function streamToPromise (stream) {
 }
 
 class StreamStore {
-  constructor ({ endpoint }) {
+  constructor ({ endpoint, factory = rdf }) {
     this.endpoint = endpoint
+    this.factory = factory
   }
 
   async get (graph) {
@@ -53,8 +54,8 @@ class StreamStore {
     }).then(res => {
       checkResponse(res)
 
-      const parser = new N3Parser({ factory: this.endpoint.factory })
-      const tripleToQuad = new TripleToQuadTransform(graph, { factory: this.endpoint.factory })
+      const parser = new N3Parser({ factory: this.factory })
+      const tripleToQuad = new TripleToQuadTransform(graph, { factory: this.factory })
 
       return parser.import(res.body).pipe(tripleToQuad)
     })
@@ -97,7 +98,7 @@ class StreamStore {
 
           last = quad
 
-          const triple = rdf.quad(quad.subject, quad.predicate, quad.object)
+          const triple = this.factory.quad(quad.subject, quad.predicate, quad.object)
 
           if (!request.stream.push(quadToNTriples(triple) + '\n')) {
             break

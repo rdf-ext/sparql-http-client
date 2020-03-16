@@ -201,8 +201,8 @@ describe('StreamQuery', () => {
         })
 
         const endpointUrl = await server.listen()
-        const endpoint = new Endpoint({ factory, fetch, endpointUrl })
-        const query = new StreamQuery({ endpoint })
+        const endpoint = new Endpoint({ fetch, endpointUrl })
+        const query = new StreamQuery({ endpoint, factory })
 
         const stream = await query.construct(simpleConstructQuery)
         await getStream.array(stream)
@@ -339,8 +339,8 @@ describe('StreamQuery', () => {
         })
 
         const endpointUrl = await server.listen()
-        const endpoint = new Endpoint({ factory, fetch, endpointUrl })
-        const query = new StreamQuery({ endpoint })
+        const endpoint = new Endpoint({ fetch, endpointUrl })
+        const query = new StreamQuery({ factory, endpoint })
 
         const stream = await query.select(simpleSelectQuery)
         await getStream.array(stream)

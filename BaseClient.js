@@ -1,7 +1,7 @@
 class BaseClient {
-  constructor ({ endpoint, Query, Store }) {
-    this.query = Query ? new Query({ endpoint }) : null
-    this.store = Store ? new Store({ endpoint }) : null
+  constructor ({ endpoint, Query, Store, factory }) {
+    this.query = Query ? new Query({ endpoint, factory }) : null
+    this.store = Store ? new Store({ endpoint, factory }) : null
   }
 }
 
