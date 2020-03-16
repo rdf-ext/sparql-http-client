@@ -1,21 +1,13 @@
-const { array } = require('get-stream')
-const StreamClient = require('./StreamClient')
+const Endpoint = require('./Endpoint')
+const SimpleQuery = require('./SimpleQuery')
+const BaseClient = require('./BaseClient')
 
-class SimpleClient extends StreamClient {
-  constructor ({ endpoint }) {
-    super({ endpoint })
-  }
-
-  async construct (query, options = {}) {
-    const stream = await super.construct(query, options)
-
-    return array(stream)
-  }
-
-  async select (query, options = {}) {
-    const stream = await super.select(query, options)
-
-    return array(stream)
+class SimpleClient extends BaseClient {
+  constructor (options) {
+    super({
+      endpoint: new Endpoint(options),
+      Query: SimpleQuery
+    })
   }
 }
 

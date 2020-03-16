@@ -1,47 +1,15 @@
-const N3Parser = require('@rdfjs/parser-n3')
-const checkResponse = require('./lib/checkResponse')
 const BaseClient = require('./BaseClient')
-const ResultParser = require('./ResultParser')
+const Endpoint = require('./Endpoint')
+const StreamQuery = require('./StreamQuery')
+const StreamStore = require('./StreamStore')
 
 class StreamClient extends BaseClient {
-  constructor ({ endpoint }) {
-    super({ endpoint })
-  }
-
-  async ask (query, { headers, operation } = {}) {
-    const res = await super.ask(query, { headers, operation })
-
-    checkResponse(res)
-
-    const json = await res.json()
-
-    return json.boolean
-  }
-
-  async construct (query, { headers, operation } = {}) {
-    const res = await super.construct(query, { headers, operation })
-
-    checkResponse(res)
-
-    const parser = new N3Parser({ factory: this.endpoint.factory })
-
-    return parser.import(res.body)
-  }
-
-  async select (query, { headers, operation } = {}) {
-    const res = await super.select(query, { headers, operation })
-
-    checkResponse(res)
-
-    const parser = new ResultParser({ factory: this.endpoint.factory })
-
-    return res.body.pipe(parser)
-  }
-
-  async update (query, { headers, operation } = {}) {
-    const res = await super.update(query, { headers, operation })
-
-    checkResponse(res)
+  constructor (options) {
+    super({
+      endpoint: new Endpoint(options),
+      Query: StreamQuery,
+      Store: StreamStore
+    })
   }
 }
 
