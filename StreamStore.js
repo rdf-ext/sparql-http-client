@@ -128,7 +128,7 @@ class StreamStore {
       url.searchParams.append('graph', graph.value)
     }
 
-    const requestEnd = this.client.fetch(url.toString(), {
+    const requestEnd = this.client.fetch(url, {
       method,
       headers: { 'content-type': 'application/n-triples' },
       body: stream
