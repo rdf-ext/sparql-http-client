@@ -344,8 +344,8 @@ describe('StreamStore', () => {
 
         await store.write({ method: 'POST', stream })
 
-        Object.entries(content).forEach(([graphIri, graphContent]) => {
-          strictEqual(graphContent, expected[graphIri])
+        Object.entries(expected).forEach(([graphIri, graphContent]) => {
+          strictEqual(graphContent, content[graphIri])
         })
       })
     })
@@ -686,8 +686,8 @@ describe('StreamStore', () => {
 
         await store.post(stream)
 
-        Object.entries(content).forEach(([graphIri, graphContent]) => {
-          strictEqual(graphContent, expected[graphIri])
+        Object.entries(expected).forEach(([graphIri, graphContent]) => {
+          strictEqual(graphContent, content[graphIri])
         })
       })
     })
@@ -866,8 +866,8 @@ describe('StreamStore', () => {
 
         await store.put(stream)
 
-        Object.entries(content).forEach(([graphIri, graphContent]) => {
-          strictEqual(graphContent, expected[graphIri])
+        Object.entries(expected).forEach(([graphIri, graphContent]) => {
+          strictEqual(graphContent, content[graphIri])
         })
       })
     })
