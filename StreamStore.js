@@ -49,7 +49,7 @@ class StreamStore {
 
     return this.client.fetch(url, {
       method,
-      headers: { accept: 'application/n-triples' }
+      headers: this.client.mergeHeaders({ accept: 'application/n-triples' })
     }).then(res => {
       checkResponse(res)
 
@@ -130,7 +130,7 @@ class StreamStore {
 
     const requestEnd = this.client.fetch(url, {
       method,
-      headers: { 'content-type': 'application/n-triples' },
+      headers: this.client.mergeHeaders({ 'content-type': 'application/n-triples' }),
       body: stream
     }).then(res => {
       checkResponse(res)
