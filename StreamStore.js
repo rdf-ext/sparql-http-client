@@ -1,6 +1,7 @@
 const { URL } = require('universal-url')
 const { promisify } = require('util')
 const delay = require('promise-the-world/delay')
+const mutex = require('promise-the-world/mutex')
 const TripleToQuadTransform = require('rdf-transform-triple-to-quad')
 const rdf = require('@rdfjs/data-model')
 const N3Parser = require('@rdfjs/parser-n3')
@@ -63,17 +64,22 @@ class StreamStore {
     let request = null
     let last = null
     const all = streamToPromise(stream)
+    const order = mutex()
 
     const read = async () => {
+      await order.lock()
+
       while (true) {
         const quad = stream.read()
 
         if (!quad && all.end) {
           if (request) {
-            return request.stream.push(null)
+            request.stream.push(null)
+
+            break
           }
 
-          return
+          break
         }
 
         if (quad) {
@@ -94,12 +100,14 @@ class StreamStore {
           const triple = rdf.quad(quad.subject, quad.predicate, quad.object)
 
           if (!request.stream.push(quadToNTriples(triple) + '\n')) {
-            return
+            break
           }
         }
 
         await delay(0)
       }
+
+      order.unlock()
     }
 
     read()
