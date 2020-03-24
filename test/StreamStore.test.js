@@ -194,6 +194,28 @@ describe('StreamStore', () => {
         })
       })
     })
+
+    it('should use the given user and password', async () => {
+      await withServer(async server => {
+        let authorization = null
+        const graph = ns.ex.graph1
+
+        server.app.get('/', async (req, res) => {
+          authorization = req.headers.authorization
+
+          res.status(204).end()
+        })
+
+        const storeUrl = await server.listen()
+        const client = new BaseClient({ fetch, storeUrl, user: 'abc', password: 'def' })
+        const store = new StreamStore({ client })
+
+        const stream = await store.read({ method: 'GET', graph })
+        await getStream.array(stream)
+
+        strictEqual(authorization, 'Basic YWJjOmRlZg==')
+      })
+    })
   })
 
   describe('.write', () => {
@@ -385,6 +407,28 @@ describe('StreamStore', () => {
         }
 
         notStrictEqual(error, null)
+      })
+    })
+
+    it('should use the given user and password', async () => {
+      await withServer(async server => {
+        let authorization = null
+        const quad = rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1)
+
+        server.app.post('/', async (req, res) => {
+          authorization = req.headers.authorization
+
+          res.status(204).end()
+        })
+
+        const storeUrl = await server.listen()
+        const stream = intoStream.object([quad])
+        const client = new BaseClient({ fetch, storeUrl, user: 'abc', password: 'def' })
+        const store = new StreamStore({ client })
+
+        await store.write({ method: 'POST', stream })
+
+        strictEqual(authorization, 'Basic YWJjOmRlZg==')
       })
     })
   })
