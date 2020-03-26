@@ -9,7 +9,7 @@ const namespace = require('@rdfjs/namespace')
 const { quadToNTriples } = require('@rdfjs/to-ntriples')
 const testFactory = require('./support/testFactory')
 const withServer = require('./support/withServer')
-const BaseClient = require('../BaseClient')
+const Endpoint = require('../Endpoint')
 const StreamQuery = require('../StreamQuery')
 
 const ns = {
@@ -24,8 +24,8 @@ const simpleUpdateQuery = 'INSERT {<http://example.org/subject> <http://example.
 describe('StreamQuery', () => {
   describe('.ask', () => {
     it('should be a method', () => {
-      const client = new BaseClient({ fetch })
-      const query = new StreamQuery({ client })
+      const endpoint = new Endpoint({ fetch })
+      const query = new StreamQuery({ endpoint })
 
       strictEqual(typeof query.ask, 'function')
     })
@@ -41,8 +41,8 @@ describe('StreamQuery', () => {
         })
 
         const endpointUrl = await server.listen()
-        const client = new BaseClient({ fetch, endpointUrl })
-        const query = new StreamQuery({ client })
+        const endpoint = new Endpoint({ fetch, endpointUrl })
+        const query = new StreamQuery({ endpoint })
 
         await query.ask(simpleAskQuery)
 
@@ -61,8 +61,8 @@ describe('StreamQuery', () => {
         })
 
         const endpointUrl = await server.listen()
-        const client = new BaseClient({ fetch, endpointUrl })
-        const query = new StreamQuery({ client })
+        const endpoint = new Endpoint({ fetch, endpointUrl })
+        const query = new StreamQuery({ endpoint })
 
         await query.ask(simpleAskQuery)
 
@@ -79,8 +79,8 @@ describe('StreamQuery', () => {
         })
 
         const endpointUrl = await server.listen()
-        const client = new BaseClient({ fetch, endpointUrl })
-        const query = new StreamQuery({ client })
+        const endpoint = new Endpoint({ fetch, endpointUrl })
+        const query = new StreamQuery({ endpoint })
 
         const result = await query.ask(simpleConstructQuery)
 
@@ -101,8 +101,8 @@ describe('StreamQuery', () => {
         })
 
         const endpointUrl = await server.listen()
-        const client = new BaseClient({ fetch, endpointUrl })
-        const query = new StreamQuery({ client })
+        const endpoint = new Endpoint({ fetch, endpointUrl })
+        const query = new StreamQuery({ endpoint })
 
         await query.ask(simpleAskQuery, { operation: 'postUrlencoded' })
 
@@ -113,8 +113,8 @@ describe('StreamQuery', () => {
 
   describe('.construct', () => {
     it('should be a method', () => {
-      const client = new BaseClient({ fetch })
-      const query = new StreamQuery({ client })
+      const endpoint = new Endpoint({ fetch })
+      const query = new StreamQuery({ endpoint })
 
       strictEqual(typeof query.construct, 'function')
     })
@@ -130,8 +130,8 @@ describe('StreamQuery', () => {
         })
 
         const endpointUrl = await server.listen()
-        const client = new BaseClient({ fetch, endpointUrl })
-        const query = new StreamQuery({ client })
+        const endpoint = new Endpoint({ fetch, endpointUrl })
+        const query = new StreamQuery({ endpoint })
 
         const stream = await query.construct(simpleConstructQuery)
         await getStream.array(stream)
@@ -151,8 +151,8 @@ describe('StreamQuery', () => {
         })
 
         const endpointUrl = await server.listen()
-        const client = new BaseClient({ fetch, endpointUrl })
-        const query = new StreamQuery({ client })
+        const endpoint = new Endpoint({ fetch, endpointUrl })
+        const query = new StreamQuery({ endpoint })
 
         const stream = await query.construct(simpleConstructQuery)
         await getStream.array(stream)
@@ -178,8 +178,8 @@ describe('StreamQuery', () => {
         })
 
         const endpointUrl = await server.listen()
-        const client = new BaseClient({ fetch, endpointUrl })
-        const query = new StreamQuery({ client })
+        const endpoint = new Endpoint({ fetch, endpointUrl })
+        const query = new StreamQuery({ endpoint })
 
         const stream = await query.construct(simpleConstructQuery)
         const result = rdf.dataset(await getStream.array(stream))
@@ -201,8 +201,8 @@ describe('StreamQuery', () => {
         })
 
         const endpointUrl = await server.listen()
-        const client = new BaseClient({ factory, fetch, endpointUrl })
-        const query = new StreamQuery({ client })
+        const endpoint = new Endpoint({ fetch, endpointUrl })
+        const query = new StreamQuery({ endpoint, factory })
 
         const stream = await query.construct(simpleConstructQuery)
         await getStream.array(stream)
@@ -228,8 +228,8 @@ describe('StreamQuery', () => {
         })
 
         const endpointUrl = await server.listen()
-        const client = new BaseClient({ fetch, endpointUrl })
-        const query = new StreamQuery({ client })
+        const endpoint = new Endpoint({ fetch, endpointUrl })
+        const query = new StreamQuery({ endpoint })
 
         const stream = await query.construct(simpleConstructQuery, { operation: 'postUrlencoded' })
         await getStream.array(stream)
@@ -241,8 +241,8 @@ describe('StreamQuery', () => {
 
   describe('.select', () => {
     it('should be a method', () => {
-      const client = new BaseClient({ fetch })
-      const query = new StreamQuery({ client })
+      const endpoint = new Endpoint({ fetch })
+      const query = new StreamQuery({ endpoint })
 
       strictEqual(typeof query.select, 'function')
     })
@@ -258,8 +258,8 @@ describe('StreamQuery', () => {
         })
 
         const endpointUrl = await server.listen()
-        const client = new BaseClient({ fetch, endpointUrl })
-        const query = new StreamQuery({ client })
+        const endpoint = new Endpoint({ fetch, endpointUrl })
+        const query = new StreamQuery({ endpoint })
 
         const stream = await query.select(simpleSelectQuery)
         await getStream.array(stream)
@@ -279,8 +279,8 @@ describe('StreamQuery', () => {
         })
 
         const endpointUrl = await server.listen()
-        const client = new BaseClient({ fetch, endpointUrl })
-        const query = new StreamQuery({ client })
+        const endpoint = new Endpoint({ fetch, endpointUrl })
+        const query = new StreamQuery({ endpoint })
 
         const stream = await query.construct(simpleSelectQuery)
         await getStream.array(stream)
@@ -306,8 +306,8 @@ describe('StreamQuery', () => {
         })
 
         const endpointUrl = await server.listen()
-        const client = new BaseClient({ fetch, endpointUrl })
-        const query = new StreamQuery({ client })
+        const endpoint = new Endpoint({ fetch, endpointUrl })
+        const query = new StreamQuery({ endpoint })
 
         const stream = await query.select(simpleSelectQuery)
         const result = await getStream.array(stream)
@@ -339,8 +339,8 @@ describe('StreamQuery', () => {
         })
 
         const endpointUrl = await server.listen()
-        const client = new BaseClient({ factory, fetch, endpointUrl })
-        const query = new StreamQuery({ client })
+        const endpoint = new Endpoint({ fetch, endpointUrl })
+        const query = new StreamQuery({ factory, endpoint })
 
         const stream = await query.select(simpleSelectQuery)
         await getStream.array(stream)
@@ -364,8 +364,8 @@ describe('StreamQuery', () => {
         })
 
         const endpointUrl = await server.listen()
-        const client = new BaseClient({ fetch, endpointUrl })
-        const query = new StreamQuery({ client })
+        const endpoint = new Endpoint({ fetch, endpointUrl })
+        const query = new StreamQuery({ endpoint })
 
         const stream = await query.select(simpleSelectQuery, { operation: 'postUrlencoded' })
         await getStream.array(stream)
@@ -377,8 +377,8 @@ describe('StreamQuery', () => {
 
   describe('.update', () => {
     it('should be a method', () => {
-      const client = new BaseClient({ fetch })
-      const query = new StreamQuery({ client })
+      const endpoint = new Endpoint({ fetch })
+      const query = new StreamQuery({ endpoint })
 
       strictEqual(typeof query.update, 'function')
     })
@@ -394,8 +394,8 @@ describe('StreamQuery', () => {
         })
 
         const updateUrl = await server.listen()
-        const client = new BaseClient({ fetch, updateUrl })
-        const query = new StreamQuery({ client })
+        const endpoint = new Endpoint({ fetch, updateUrl })
+        const query = new StreamQuery({ endpoint })
 
         await query.update(simpleUpdateQuery)
 
@@ -414,8 +414,8 @@ describe('StreamQuery', () => {
         })
 
         const updateUrl = await server.listen()
-        const client = new BaseClient({ fetch, updateUrl })
-        const query = new StreamQuery({ client })
+        const endpoint = new Endpoint({ fetch, updateUrl })
+        const query = new StreamQuery({ endpoint })
 
         await query.update(simpleUpdateQuery)
 
@@ -434,8 +434,8 @@ describe('StreamQuery', () => {
         })
 
         const updateUrl = await server.listen()
-        const client = new BaseClient({ fetch, updateUrl })
-        const query = new StreamQuery({ client })
+        const endpoint = new Endpoint({ fetch, updateUrl })
+        const query = new StreamQuery({ endpoint })
 
         await query.update(simpleUpdateQuery, { operation: 'postDirect' })
 

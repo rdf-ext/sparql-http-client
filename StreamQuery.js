@@ -1,11 +1,14 @@
+const rdf = require('@rdfjs/data-model')
 const N3Parser = require('@rdfjs/parser-n3')
 const checkResponse = require('./lib/checkResponse')
 const RawQuery = require('./RawQuery')
 const ResultParser = require('./ResultParser')
 
 class StreamQuery extends RawQuery {
-  constructor ({ client }) {
-    super({ client })
+  constructor ({ endpoint, factory = rdf }) {
+    super({ endpoint })
+
+    this.factory = factory
   }
 
   async ask (query, { headers, operation } = {}) {
@@ -23,7 +26,7 @@ class StreamQuery extends RawQuery {
 
     checkResponse(res)
 
-    const parser = new N3Parser({ factory: this.client.factory })
+    const parser = new N3Parser({ factory: this.factory })
 
     return parser.import(res.body)
   }
@@ -33,7 +36,7 @@ class StreamQuery extends RawQuery {
 
     checkResponse(res)
 
-    const parser = new ResultParser({ factory: this.client.factory })
+    const parser = new ResultParser({ factory: this.factory })
 
     return res.body.pipe(parser)
   }

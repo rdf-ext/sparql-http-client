@@ -1,112 +1,46 @@
-const { URL } = require('universal-url')
-
 class RawQuery {
-  constructor ({ client }) {
-    this.client = client
-  }
-
-  async get (query, { headers, update = false } = {}) {
-    let url = null
-
-    if (!update) {
-      url = new URL(this.client.endpointUrl)
-      url.searchParams.append('query', query)
-    } else {
-      url = new URL(this.client.updateUrl)
-      url.searchParams.append('update', query)
-    }
-
-    return this.client.fetch(url.toString().replace(/\+/g, '%20'), {
-      method: 'GET',
-      headers: this.client.mergeHeaders(headers)
-    })
-  }
-
-  async postDirect (query, { headers, update = false } = {}) {
-    let url = null
-
-    if (!update) {
-      url = new URL(this.client.endpointUrl)
-    } else {
-      url = new URL(this.client.updateUrl)
-    }
-
-    headers = this.client.mergeHeaders(headers)
-
-    if (!headers.has('content-type')) {
-      headers.set('content-type', 'application/sparql-query; charset=utf-8')
-    }
-
-    return this.client.fetch(url, {
-      method: 'POST',
-      headers,
-      body: query
-    })
-  }
-
-  async postUrlencoded (query, { headers, update = false } = {}) {
-    let url = null
-    let body = null
-
-    if (!update) {
-      url = new URL(this.client.endpointUrl)
-      body = 'query=' + encodeURIComponent(query)
-    } else {
-      url = new URL(this.client.updateUrl)
-      body = 'update=' + encodeURIComponent(query)
-    }
-
-    headers = this.client.mergeHeaders(headers)
-
-    if (!headers.has('content-type')) {
-      headers.set('content-type', 'application/x-www-form-urlencoded')
-    }
-
-    return this.client.fetch(url, {
-      method: 'POST',
-      headers,
-      body
-    })
+  constructor ({ endpoint }) {
+    this.endpoint = endpoint
   }
 
   async ask (query, { headers, operation = 'get' } = {}) {
-    headers = this.client.mergeHeaders(headers)
+    headers = this.endpoint.mergeHeaders(headers)
 
     if (!headers.has('accept')) {
       headers.set('accept', 'application/sparql-results+json')
     }
 
-    return this[operation](query, { headers })
+    return this.endpoint[operation](query, { headers })
   }
 
   async construct (query, { headers, operation = 'get' } = {}) {
-    headers = new this.client.fetch.Headers(headers)
+    headers = new this.endpoint.fetch.Headers(headers)
 
     if (!headers.has('accept')) {
       headers.set('accept', 'application/n-triples')
     }
 
-    return this[operation](query, { headers })
+    return this.endpoint[operation](query, { headers })
   }
 
   async select (query, { headers, operation = 'get' } = {}) {
-    headers = this.client.mergeHeaders(headers)
+    headers = this.endpoint.mergeHeaders(headers)
 
     if (!headers.has('accept')) {
       headers.set('accept', 'application/sparql-results+json')
     }
 
-    return this[operation](query, { headers })
+    return this.endpoint[operation](query, { headers })
   }
 
   async update (query, { headers, operation = 'postUrlencoded' } = {}) {
-    headers = new this.client.fetch.Headers(headers)
+    headers = new this.endpoint.fetch.Headers(headers)
 
     if (!headers.has('accept')) {
       headers.set('accept', '*/*')
     }
 
-    return this[operation](query, { headers, update: true })
+    return this.endpoint[operation](query, { headers, update: true })
   }
 }
 

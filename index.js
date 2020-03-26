@@ -1,3 +1,3 @@
-const Client = require('./Client')
+const StreamClient = require('./StreamClient')
 
-module.exports = Client
+module.exports = StreamClient

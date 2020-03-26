@@ -24,8 +24,9 @@ function streamToPromise (stream) {
 }
 
 class StreamStore {
-  constructor ({ client }) {
-    this.client = client
+  constructor ({ endpoint, factory = rdf }) {
+    this.endpoint = endpoint
+    this.factory = factory
   }
 
   async get (graph) {
@@ -41,20 +42,20 @@ class StreamStore {
   }
 
   async read ({ method, graph }) {
-    const url = new URL(this.client.storeUrl)
+    const url = new URL(this.endpoint.storeUrl)
 
     if (graph.termType !== 'DefaultGraph') {
       url.searchParams.append('graph', graph.value)
     }
 
-    return this.client.fetch(url, {
+    return this.endpoint.fetch(url, {
       method,
-      headers: this.client.mergeHeaders({ accept: 'application/n-triples' })
+      headers: this.endpoint.mergeHeaders({ accept: 'application/n-triples' })
     }).then(res => {
       checkResponse(res)
 
-      const parser = new N3Parser({ factory: this.client.factory })
-      const tripleToQuad = new TripleToQuadTransform(graph, { factory: this.client.factory })
+      const parser = new N3Parser({ factory: this.factory })
+      const tripleToQuad = new TripleToQuadTransform(graph, { factory: this.factory })
 
       return parser.import(res.body).pipe(tripleToQuad)
     })
@@ -97,7 +98,7 @@ class StreamStore {
 
           last = quad
 
-          const triple = rdf.quad(quad.subject, quad.predicate, quad.object)
+          const triple = this.factory.quad(quad.subject, quad.predicate, quad.object)
 
           if (!request.stream.push(quadToNTriples(triple) + '\n')) {
             break
@@ -122,15 +123,15 @@ class StreamStore {
   writeRequest (method, graph, read) {
     const stream = new Readable({ read })
     const streamEnd = streamToPromise(stream)
-    const url = new URL(this.client.storeUrl)
+    const url = new URL(this.endpoint.storeUrl)
 
     if (graph.termType !== 'DefaultGraph') {
       url.searchParams.append('graph', graph.value)
     }
 
-    const requestEnd = this.client.fetch(url, {
+    const requestEnd = this.endpoint.fetch(url, {
       method,
-      headers: this.client.mergeHeaders({ 'content-type': 'application/n-triples' }),
+      headers: this.endpoint.mergeHeaders({ 'content-type': 'application/n-triples' }),
       body: stream
     }).then(res => {
       checkResponse(res)

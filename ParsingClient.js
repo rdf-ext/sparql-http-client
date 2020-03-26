@@ -1,15 +1,15 @@
 const Endpoint = require('./Endpoint')
-const RawQuery = require('./RawQuery')
+const ParsingQuery = require('./ParsingQuery')
 const BaseClient = require('./BaseClient')
 
-class SimpleClient extends BaseClient {
+class ParsingClient extends BaseClient {
   constructor (options) {
     super({
       endpoint: new Endpoint(options),
       factory: options.factory,
-      Query: RawQuery
+      Query: ParsingQuery
     })
   }
 }
 
-module.exports = SimpleClient
+module.exports = ParsingClient
