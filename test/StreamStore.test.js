@@ -207,8 +207,8 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const client = new BaseClient({ fetch, storeUrl, user: 'abc', password: 'def' })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl, user: 'abc', password: 'def' })
+        const store = new StreamStore({ endpoint })
 
         const stream = await store.read({ method: 'GET', graph })
         await getStream.array(stream)
@@ -423,8 +423,8 @@ describe('StreamStore', () => {
 
         const storeUrl = await server.listen()
         const stream = intoStream.object([quad])
-        const client = new BaseClient({ fetch, storeUrl, user: 'abc', password: 'def' })
-        const store = new StreamStore({ client })
+        const endpoint = new Endpoint({ fetch, storeUrl, user: 'abc', password: 'def' })
+        const store = new StreamStore({ endpoint })
 
         await store.write({ method: 'POST', stream })
 
