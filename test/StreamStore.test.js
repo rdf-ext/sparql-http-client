@@ -333,7 +333,7 @@ describe('StreamStore', () => {
       })
     })
 
-    it('should use multiple request to send multiple graphs', async () => {
+    it('should use multiple requests to send multiple graphs', async () => {
       await withServer(async server => {
         const content = {}
         const quads = [
@@ -369,6 +369,37 @@ describe('StreamStore', () => {
         Object.entries(expected).forEach(([graphIri, graphContent]) => {
           strictEqual(graphContent, content[graphIri])
         })
+      })
+    })
+
+    it('should use multiple requests if maxQuadsPerRequest is reached', async () => {
+      await withServer(async server => {
+        const content = []
+        const quads = [
+          rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1),
+          rdf.quad(ns.ex.subject2, ns.ex.predicate2, ns.ex.object2),
+          rdf.quad(ns.ex.subject3, ns.ex.predicate3, ns.ex.object3),
+          rdf.quad(ns.ex.subject4, ns.ex.predicate4, ns.ex.object4)
+        ]
+        const expected = [
+          quadToNTriples(quads[0]) + '\n' + quadToNTriples(quads[1]) + '\n',
+          quadToNTriples(quads[2]) + '\n' + quadToNTriples(quads[3]) + '\n'
+        ]
+
+        server.app.post('/', async (req, res) => {
+          content.push(await getStream(req))
+
+          res.status(204).end()
+        })
+
+        const storeUrl = await server.listen()
+        const stream = intoStream.object(quads)
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint, maxQuadsPerRequest: 2 })
+
+        await store.write({ method: 'POST', stream })
+
+        deepStrictEqual(content, expected)
       })
     })
 
@@ -697,7 +728,7 @@ describe('StreamStore', () => {
       })
     })
 
-    it('should use multiple request to send multiple graphs', async () => {
+    it('should use multiple requests to send multiple graphs', async () => {
       await withServer(async server => {
         const content = {}
         const quads = [
@@ -736,6 +767,37 @@ describe('StreamStore', () => {
       })
     })
 
+    it('should use multiple requests if maxQuadsPerRequest is reached', async () => {
+      await withServer(async server => {
+        const content = []
+        const quads = [
+          rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1),
+          rdf.quad(ns.ex.subject2, ns.ex.predicate2, ns.ex.object2),
+          rdf.quad(ns.ex.subject3, ns.ex.predicate3, ns.ex.object3),
+          rdf.quad(ns.ex.subject4, ns.ex.predicate4, ns.ex.object4)
+        ]
+        const expected = [
+          quadToNTriples(quads[0]) + '\n' + quadToNTriples(quads[1]) + '\n',
+          quadToNTriples(quads[2]) + '\n' + quadToNTriples(quads[3]) + '\n'
+        ]
+
+        server.app.post('/', async (req, res) => {
+          content.push(await getStream(req))
+
+          res.status(204).end()
+        })
+
+        const storeUrl = await server.listen()
+        const stream = intoStream.object(quads)
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint, maxQuadsPerRequest: 2 })
+
+        await store.post(stream)
+
+        deepStrictEqual(content, expected)
+      })
+    })
+
     it('should handle server errors', async () => {
       await withServer(async server => {
         const quad = rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1)
@@ -770,7 +832,7 @@ describe('StreamStore', () => {
       strictEqual(typeof store.put, 'function')
     })
 
-    it('should send a POST request', async () => {
+    it('should send a PUT request', async () => {
       await withServer(async server => {
         let called = false
         const quad = rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1)
@@ -877,7 +939,7 @@ describe('StreamStore', () => {
       })
     })
 
-    it('should use multiple request to send multiple graphs', async () => {
+    it('should use multiple requests to send multiple graphs', async () => {
       await withServer(async server => {
         const content = {}
         const quads = [
@@ -913,6 +975,43 @@ describe('StreamStore', () => {
         Object.entries(expected).forEach(([graphIri, graphContent]) => {
           strictEqual(graphContent, content[graphIri])
         })
+      })
+    })
+
+    it('should use PUT and POST methods to combine multiple requests split by maxQuadsPerRequest', async () => {
+      await withServer(async server => {
+        const contentPut = []
+        const contentPost = []
+        const quads = [
+          rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1),
+          rdf.quad(ns.ex.subject2, ns.ex.predicate2, ns.ex.object2),
+          rdf.quad(ns.ex.subject3, ns.ex.predicate3, ns.ex.object3),
+          rdf.quad(ns.ex.subject4, ns.ex.predicate4, ns.ex.object4)
+        ]
+        const expectedPut = [quadToNTriples(quads[0]) + '\n' + quadToNTriples(quads[1]) + '\n']
+        const expectedPost = [quadToNTriples(quads[2]) + '\n' + quadToNTriples(quads[3]) + '\n']
+
+        server.app.post('/', async (req, res) => {
+          contentPost.push(await getStream(req))
+
+          res.status(204).end()
+        })
+
+        server.app.put('/', async (req, res) => {
+          contentPut.push(await getStream(req))
+
+          res.status(204).end()
+        })
+
+        const storeUrl = await server.listen()
+        const stream = intoStream.object(quads)
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint, maxQuadsPerRequest: 2 })
+
+        await store.put(stream)
+
+        deepStrictEqual(contentPut, expectedPut)
+        deepStrictEqual(contentPost, expectedPost)
       })
     })
 
