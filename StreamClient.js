@@ -9,7 +9,8 @@ class StreamClient extends BaseClient {
       endpoint: new Endpoint(options),
       factory: options.factory,
       Query: StreamQuery,
-      Store: StreamStore
+      Store: StreamStore,
+      ...options
     })
   }
 }
