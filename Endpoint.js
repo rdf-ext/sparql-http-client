@@ -1,7 +1,22 @@
 const { URL } = require('universal-url')
 const defaultFetch = require('nodeify-fetch')
 
+/**
+ * Represents a SPARQL endpoint and exposes a low-level methods, close to the underlying HTTP interface
+ *
+ * It directly returns HTTP response objects
+ */
 class Endpoint {
+  /**
+   * @param {Object} init
+   * @param {string} init.endpointUrl SPARQL Query endpoint URL
+   * @param {fetch} [init.fetch=nodeify-fetch] fetch implementation
+   * @param {HeadersInit} [init.headers] HTTP headers to send with every endpoint request
+   * @param {string} [init.password] password used for basic authentication
+   * @param {string} [init.storeUrl] Graph Store URL
+   * @param {string} [init.updateUrl] SPARQL Update endpoint URL
+   * @param {string} [init.user] user used for basic authentication
+   */
   constructor ({ endpointUrl, fetch, headers, password, storeUrl, updateUrl, user }) {
     this.endpointUrl = endpointUrl
     this.fetch = fetch || defaultFetch
@@ -14,6 +29,14 @@ class Endpoint {
     }
   }
 
+  /**
+   * Sends the query as GET request with query string
+   * @param {string} query SPARQL Query/Update
+   * @param {Object} options
+   * @param {HeadersInit} [options.headers] per-request HTTP headers
+   * @param {boolean} [options.update=false] if true, performs a SPARQL Update
+   * @return {Promise<Response>}
+   */
   async get (query, { headers, update = false } = {}) {
     let url = null
 
@@ -31,6 +54,14 @@ class Endpoint {
     })
   }
 
+  /**
+   * Sends the query as POST request with application/sparql-query body
+   * @param {string} query SPARQL Query/Update
+   * @param {Object} options
+   * @param {HeadersInit} [options.headers] per-request HTTP headers
+   * @param {boolean} [options.update=false] if true, performs a SPARQL Update
+   * @return {Promise<Response>}
+   */
   async postDirect (query, { headers, update = false } = {}) {
     let url = null
 
@@ -53,6 +84,14 @@ class Endpoint {
     })
   }
 
+  /**
+   * Sends the query as POST request with application/x-www-form-urlencoded body
+   * @param {string} query SPARQL Query/Update
+   * @param {Object} options
+   * @param {HeadersInit} [options.headers] per-request HTTP headers
+   * @param {boolean} [options.update=false] if true, performs a SPARQL Update
+   * @return {Promise<Response>}
+   */
   async postUrlencoded (query, { headers, update = false } = {}) {
     let url = null
     let body = null

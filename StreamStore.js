@@ -7,21 +7,46 @@ const { finished } = require('readable-stream')
 const checkResponse = require('./lib/checkResponse')
 const QuadStreamSeparator = require('./lib/QuadStreamSeparator')
 
+/**
+ * Accesses stores with SPARQL Graph Protocol
+ */
 class StreamStore {
+  /**
+   *
+   * @param {Object} init
+   * @param {Endpoint} init.endpoint
+   * @param {DataFactory} [init.factory=@rdfjs/data-model]
+   * @param {number} [maxQuadsPerRequest]
+   */
   constructor ({ endpoint, factory = rdf, maxQuadsPerRequest }) {
     this.endpoint = endpoint
     this.factory = factory
     this.maxQuadsPerRequest = maxQuadsPerRequest
   }
 
+  /**
+   * Gets a graph triples from the store
+   * @param {NamedNode} graph
+   * @return {Promise<Stream>}
+   */
   async get (graph) {
     return this.read({ method: 'GET', graph })
   }
 
+  /**
+   * Adds triples to a graph
+   * @param {Stream} stream
+   * @return {Promise<void>}
+   */
   async post (stream) {
     return this.write({ method: 'POST', stream })
   }
 
+  /**
+   * Replaces graph with triples
+   * @param {Stream} stream
+   * @return {Promise<void>}
+   */
   async put (stream) {
     return this.write({ firstMethod: 'PUT', method: 'POST', stream })
   }

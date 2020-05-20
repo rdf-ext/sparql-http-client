@@ -3,6 +3,9 @@ const delay = require('promise-the-world/delay')
 const rdf = require('@rdfjs/data-model')
 const { Duplex, finished } = require('readable-stream')
 
+/**
+ * A stream which parses SPARQL SELECT bindings
+ */
 class ResultParser extends Duplex {
   constructor ({ factory = rdf } = {}) {
     super({

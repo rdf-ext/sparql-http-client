@@ -4,13 +4,29 @@ const checkResponse = require('./lib/checkResponse')
 const RawQuery = require('./RawQuery')
 const ResultParser = require('./ResultParser')
 
+/**
+ * Extends RawQuery by wrapping response body streams as RDF/JS Streams
+ */
 class StreamQuery extends RawQuery {
+  /**
+   * @param {Object} init
+   * @param {Endpoint} init.endpoint
+   * @param {DataFactory} [init.factory=@rdfjs/data-model]
+   */
   constructor ({ endpoint, factory = rdf }) {
     super({ endpoint })
 
+    /** @member {DataFactory} */
     this.factory = factory
   }
 
+  /**
+   * @param {string} query SPARQL ASK query
+   * @param {Object} [init]
+   * @param {HeadersInit} [init.headers] HTTP request headers
+   * @param {'get'|'postUrlencoded'|'postDirect'} [init.operation='get']
+   * @return {Promise<boolean>}
+   */
   async ask (query, { headers, operation } = {}) {
     const res = await super.ask(query, { headers, operation })
 
@@ -21,6 +37,13 @@ class StreamQuery extends RawQuery {
     return json.boolean
   }
 
+  /**
+   * @param {string} query SPARQL query
+   * @param {Object} [init]
+   * @param {HeadersInit} [init.headers] HTTP request headers
+   * @param {'get'|'postUrlencoded'|'postDirect'} [init.operation='get']
+   * @return {Promise<Stream>}
+   */
   async construct (query, { headers, operation } = {}) {
     const res = await super.construct(query, { headers, operation })
 
@@ -31,6 +54,13 @@ class StreamQuery extends RawQuery {
     return parser.import(res.body)
   }
 
+  /**
+   * @param {string} query SPARQL query
+   * @param {Object} [init]
+   * @param {HeadersInit} [init.headers] HTTP request headers
+   * @param {'get'|'postUrlencoded'|'postDirect'} [init.operation='get']
+   * @return {Promise<Stream>}
+   */
   async select (query, { headers, operation } = {}) {
     const res = await super.select(query, { headers, operation })
 
@@ -41,6 +71,13 @@ class StreamQuery extends RawQuery {
     return res.body.pipe(parser)
   }
 
+  /**
+   * @param {string} query SPARQL query
+   * @param {Object} [init]
+   * @param {HeadersInit} [init.headers] HTTP request headers
+   * @param {'get'|'postUrlencoded'|'postDirect'} [init.operation='postUrlencoded']
+   * @return {Promise<void>}
+   */
   async update (query, { headers, operation } = {}) {
     const res = await super.update(query, { headers, operation })
 
