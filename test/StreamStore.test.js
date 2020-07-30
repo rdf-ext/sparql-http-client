@@ -611,6 +611,21 @@ describe('StreamStore', () => {
         notStrictEqual(error, null)
       })
     })
+
+    it('should handle fetch errors', async () => {
+      const endpoint = new Endpoint({ fetch, storeUrl: 'http://thisdomaindoesntexist.example.com' })
+      const store = new StreamStore({ endpoint })
+
+      let error = null
+
+      try {
+        await store.get()
+      } catch (err) {
+        error = err
+      }
+
+      notStrictEqual(error, null)
+    })
   })
 
   describe('.post', () => {
@@ -821,6 +836,24 @@ describe('StreamStore', () => {
 
         notStrictEqual(error, null)
       })
+    })
+
+    it('should handle fetch errors', async () => {
+      const quad = rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1)
+
+      const stream = intoStream.object([quad])
+      const endpoint = new Endpoint({ fetch, storeUrl: 'http://thisdomaindoesntexist.example.com' })
+      const store = new StreamStore({ endpoint })
+
+      let error = null
+
+      try {
+        await store.post(stream)
+      } catch (err) {
+        error = err
+      }
+
+      notStrictEqual(error, null)
     })
   })
 
@@ -1038,6 +1071,24 @@ describe('StreamStore', () => {
 
         notStrictEqual(error, null)
       })
+    })
+
+    it('should handle fetch errors', async () => {
+      const quad = rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1)
+
+      const stream = intoStream.object([quad])
+      const endpoint = new Endpoint({ fetch, storeUrl: 'http://thisdomaindoesntexist.example.com' })
+      const store = new StreamStore({ endpoint })
+
+      let error = null
+
+      try {
+        await store.put(stream)
+      } catch (err) {
+        error = err
+      }
+
+      notStrictEqual(error, null)
     })
   })
 })

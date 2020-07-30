@@ -202,6 +202,21 @@ describe('Endpoint', () => {
         strictEqual(parameters[key], value)
       })
     })
+
+    it('should handle fetch errors', async () => {
+      const endpoint = new Endpoint({ endpointUrl: 'http://thisdomaindoesntexist.example.com', fetch })
+
+      let error = null
+
+      try {
+        await endpoint.get(simpleConstructQuery)
+      } catch (err) {
+        error = err
+      }
+
+      strictEqual(error !== null, true)
+      strictEqual(typeof error.message, 'string')
+    })
   })
 
   describe('.postDirect', () => {
@@ -363,6 +378,21 @@ describe('Endpoint', () => {
         strictEqual(called, true)
       })
     })
+
+    it('should handle fetch errors', async () => {
+      const endpoint = new Endpoint({ updateUrl: 'http://thisdomaindoesntexist.example.com', fetch })
+
+      let error = null
+
+      try {
+        await endpoint.postDirect(simpleSelectQuery)
+      } catch (err) {
+        error = err
+      }
+
+      strictEqual(error !== null, true)
+      strictEqual(typeof error.message, 'string')
+    })
   })
 
   describe('.postUrlencoded', () => {
@@ -523,6 +553,21 @@ describe('Endpoint', () => {
 
         strictEqual(called, true)
       })
+    })
+
+    it('should handle fetch errors', async () => {
+      const endpoint = new Endpoint({ endpointUrl: 'http://thisdomaindoesntexist.example.com', fetch })
+
+      let error = null
+
+      try {
+        await endpoint.postUrlencoded(simpleSelectQuery)
+      } catch (err) {
+        error = err
+      }
+
+      strictEqual(error !== null, true)
+      strictEqual(typeof error.message, 'string')
     })
   })
 })
