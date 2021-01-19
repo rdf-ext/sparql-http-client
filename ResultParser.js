@@ -27,7 +27,7 @@ class ResultParser extends Duplex {
   async _read () {
     const raw = this.jsonParser.read()
 
-    if (!raw) {
+    if (!raw || Object.keys(raw).length === 0) {
       if (!this.writable) {
         return this.push(null)
       }
