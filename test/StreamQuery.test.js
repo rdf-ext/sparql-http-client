@@ -237,6 +237,27 @@ describe('StreamQuery', () => {
         strictEqual(parameter, simpleConstructQuery)
       })
     })
+
+    it('should send an accept header with the value application/n-triples, text/turtle', async () => {
+      await withServer(async server => {
+        let accept = null
+
+        server.app.get('/', async (req, res) => {
+          accept = req.headers.accept
+
+          res.end()
+        })
+
+        const endpointUrl = await server.listen()
+
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new StreamQuery({ endpoint })
+
+        await query.construct(simpleConstructQuery)
+
+        strictEqual(accept, 'application/n-triples, text/turtle')
+      })
+    })
   })
 
   describe('.select', () => {

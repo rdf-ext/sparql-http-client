@@ -45,6 +45,12 @@ class StreamQuery extends RawQuery {
    * @return {Promise<Stream>}
    */
   async construct (query, { headers, operation } = {}) {
+    headers = new this.endpoint.fetch.Headers(headers)
+
+    if (!headers.has('accept')) {
+      headers.set('accept', 'application/n-triples, text/turtle')
+    }
+
     const res = await super.construct(query, { headers, operation })
 
     checkResponse(res)
