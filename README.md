@@ -43,8 +43,3 @@ stream.on('error', err => {
 ```
 
 Find more details on [https://zazuko.github.io/sparql-http-client](https://zazuko.github.io/sparql-http-client)
-
-## URL class
-
-This library uses the URL class of [universal-url](https://www.npmjs.com/package/universal-url).
-Please see [universal-url-lite](https://www.npmjs.com/package/universal-url-lite) for optimized browser builds.

@@ -1,4 +1,3 @@
-const { URL } = require('universal-url')
 const { promisify } = require('util')
 const TripleToQuadTransform = require('rdf-transform-triple-to-quad')
 const rdf = require('@rdfjs/data-model')

@@ -1,4 +1,3 @@
-const { URL } = require('universal-url')
 const defaultFetch = require('nodeify-fetch')
 
 /**
