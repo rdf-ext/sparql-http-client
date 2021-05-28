@@ -60,8 +60,8 @@ class StreamStore {
     return this.endpoint.fetch(url, {
       method,
       headers: this.endpoint.mergeHeaders({ accept: 'application/n-triples' })
-    }).then(res => {
-      checkResponse(res)
+    }).then(async res => {
+      await checkResponse(res)
 
       const parser = new N3Parser({ factory: this.factory })
       const tripleToQuad = new TripleToQuadTransform(graph, { factory: this.factory })
@@ -106,8 +106,8 @@ class StreamStore {
       method,
       headers: this.endpoint.mergeHeaders({ 'content-type': 'application/n-triples' }),
       body: stream
-    }).then(res => {
-      checkResponse(res)
+    }).then(async res => {
+      await checkResponse(res)
     })
   }
 }
