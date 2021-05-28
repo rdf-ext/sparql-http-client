@@ -1,4 +1,4 @@
-const { deepStrictEqual, notStrictEqual, strictEqual } = require('assert')
+const { deepStrictEqual, notStrictEqual, rejects, strictEqual } = require('assert')
 const getStream = require('get-stream')
 const intoStream = require('into-stream')
 const { describe, it } = require('mocha')
@@ -216,6 +216,32 @@ describe('StreamStore', () => {
         strictEqual(authorization, 'Basic YWJjOmRlZg==')
       })
     })
+
+    it('should handle server errors', async () => {
+      await withServer(async server => {
+        const message = 'test message'
+        const graph = ns.ex.graph1
+
+        server.app.get('/', async (req, res) => {
+          res.status(500).end(message)
+        })
+
+        const storeUrl = await server.listen()
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
+
+        await rejects(async () => {
+          const stream = await store.read({ method: 'GET', graph })
+          await getStream.array(stream)
+        }, err => {
+          strictEqual(err.message.includes('Internal Server Error'), true)
+          strictEqual(err.message.includes('500'), true)
+          strictEqual(err.message.includes(message), true)
+
+          return true
+        })
+      })
+    })
   })
 
   describe('.write', () => {
@@ -418,10 +444,12 @@ describe('StreamStore', () => {
 
     it('should handle server errors', async () => {
       await withServer(async server => {
+        const message = 'test message'
+
         const quad = rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1)
 
         server.app.post('/', async (req, res) => {
-          res.status(500).end()
+          res.status(500).end(message)
         })
 
         const storeUrl = await server.listen()
@@ -429,15 +457,15 @@ describe('StreamStore', () => {
         const endpoint = new Endpoint({ fetch, storeUrl })
         const store = new StreamStore({ endpoint })
 
-        let error = null
-
-        try {
+        await rejects(async () => {
           await store.write({ method: 'POST', stream })
-        } catch (err) {
-          error = err
-        }
+        }, err => {
+          strictEqual(err.message.includes('Internal Server Error'), true)
+          strictEqual(err.message.includes('500'), true)
+          strictEqual(err.message.includes(message), true)
 
-        notStrictEqual(error, null)
+          return true
+        })
       })
     })
 
