@@ -95,20 +95,20 @@ class StreamStore {
     await requestEnd
   }
 
-  writeRequest (method, graph, stream) {
+  async writeRequest (method, graph, stream) {
     const url = new URL(this.endpoint.storeUrl)
 
     if (graph.termType !== 'DefaultGraph') {
       url.searchParams.append('graph', graph.value)
     }
 
-    return this.endpoint.fetch(url, {
+    const res = await this.endpoint.fetch(url, {
       method,
       headers: this.endpoint.mergeHeaders({ 'content-type': 'application/n-triples' }),
       body: stream
-    }).then(async res => {
-      await checkResponse(res)
     })
+
+    await checkResponse(res)
   }
 }
 
