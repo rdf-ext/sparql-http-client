@@ -442,6 +442,29 @@ describe('StreamStore', () => {
       })
     })
 
+    it('should handle server socket errors', async () => {
+      await withServer(async server => {
+        const quad = rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1)
+
+        server.app.post('/', async req => {
+          req.client.destroy()
+        })
+
+        const storeUrl = await server.listen()
+        const stream = intoStream.object([quad])
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
+
+        await rejects(async () => {
+          await store.write({ method: 'POST', stream })
+        }, err => {
+          strictEqual(err.message.includes('socket hang up'), true)
+
+          return true
+        })
+      })
+    })
+
     it('should handle server errors', async () => {
       await withServer(async server => {
         const message = 'test message'
@@ -454,6 +477,66 @@ describe('StreamStore', () => {
 
         const storeUrl = await server.listen()
         const stream = intoStream.object([quad])
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
+
+        await rejects(async () => {
+          await store.write({ method: 'POST', stream })
+        }, err => {
+          strictEqual(err.message.includes('Internal Server Error'), true)
+          strictEqual(err.message.includes('500'), true)
+          strictEqual(err.message.includes(message), true)
+
+          return true
+        })
+      })
+    })
+
+    it('should handle server socket errors in separated requests', async () => {
+      await withServer(async server => {
+        const quad1 = rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1)
+        const quad2 = rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph2)
+
+        server.app.post('/', async (req, res) => {
+          if (req.query.graph === quad2.graph.value) {
+            return req.client.destroy()
+          }
+
+          res.status(204).end()
+        })
+
+        const storeUrl = await server.listen()
+        const stream = intoStream.object([quad1, quad2])
+        const endpoint = new Endpoint({ fetch, storeUrl })
+        const store = new StreamStore({ endpoint })
+
+        await rejects(async () => {
+          await store.write({ method: 'POST', stream })
+        }, err => {
+          strictEqual(err.message.includes('socket hang up'), true)
+
+          return true
+        })
+      })
+    })
+
+    it('should handle server errors in separated requests', async () => {
+      await withServer(async server => {
+        const message = 'test message'
+
+        const quad1 = rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1)
+        const quad2 = rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph2)
+
+        server.app.post('/', async (req, res) => {
+          if (req.query.graph === quad2.graph.value) {
+            return res.status(500).end(message)
+          }
+
+          res.status(204).end()
+        })
+
+        const storeUrl = await server.listen()
+        const stream = intoStream.object([quad1, quad2])
         const endpoint = new Endpoint({ fetch, storeUrl })
         const store = new StreamStore({ endpoint })
 
