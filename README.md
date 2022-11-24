@@ -42,4 +42,4 @@ stream.on('error', err => {
 })
 ```
 
-Find more details on [https://zazuko.github.io/sparql-http-client](https://zazuko.github.io/sparql-http-client)
+Find more details on [https://bergos.github.io/sparql-http-client](https://bergos.github.io/sparql-http-client)
