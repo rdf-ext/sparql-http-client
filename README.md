@@ -1,7 +1,7 @@
 # sparql-http-client
 
-[![Build Status](https://travis-ci.org/zazuko/sparql-http-client.svg?branch=master)](https://travis-ci.org/zazuko/sparql-http-client)
-[![NPM Version](https://img.shields.io/npm/v/sparql-http-client.svg?style=flat)](https://npm.im/sparql-http-client)
+[![build status](https://img.shields.io/github/actions/workflow/status/bergos/sparql-http-client/ci.yaml?branch=master)](https://github.com/bergos/sparql-http-client/actions/workflows/ci.yaml)
+[![npm version](https://img.shields.io/npm/v/sparql-http-client.svg)](https://www.npmjs.com/package/sparql-http-client)
 
 SPARQL client for easier handling of SPARQL Queries and Graph Store requests.
 The [SPARQL Protocol](https://www.w3.org/TR/sparql11-protocol/) is used for [SPARQL Queries](https://www.w3.org/TR/sparql11-query/) and [SPARQL Updates](https://www.w3.org/TR/sparql11-update/). 
@@ -42,4 +42,4 @@ stream.on('error', err => {
 })
 ```
 
-Find more details on [https://zazuko.github.io/sparql-http-client](https://zazuko.github.io/sparql-http-client)
+Find more details on [https://bergos.github.io/sparql-http-client/](https://bergos.github.io/sparql-http-client/)
