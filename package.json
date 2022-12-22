@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/zazuko/sparql-http-client.git"
+    "url": "https://github.com/bergos/sparql-http-client.git"
   },
   "keywords": [
     "sparql",
@@ -19,9 +19,9 @@
   "author": "Thomas Bergwinkl <bergi@axolotlfarm.org> (https://www.bergnet.org/people/bergi/card#me)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/zazuko/sparql-http-client/issues"
+    "url": "https://github.com/bergos/sparql-http-client/issues"
   },
-  "homepage": "https://github.com/zazuko/sparql-http-client",
+  "homepage": "https://bergos.github.io/sparql-http-client/",
   "dependencies": {
     "@rdfjs/data-model": "^1.1.2",
     "@rdfjs/parser-n3": "^1.1.3",
