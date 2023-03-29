@@ -1,4 +1,4 @@
-import { deepStrictEqual, strictEqual } from 'assert'
+import { deepStrictEqual, rejects, strictEqual } from 'assert'
 import bodyParser from 'body-parser'
 import getStream from 'get-stream'
 import { describe, it } from 'mocha'
@@ -108,6 +108,30 @@ describe('StreamQuery', () => {
         await query.ask(simpleAskQuery, { operation: 'postUrlencoded' })
 
         strictEqual(parameter, simpleAskQuery)
+      })
+    })
+
+    it('should handle server errors', async () => {
+      await withServer(async server => {
+        const message = 'test message'
+
+        server.app.get('/', async (req, res) => {
+          res.status(500).end(message)
+        })
+
+        const endpointUrl = await server.listen()
+        const endpoint = new Endpoint({ fetch, endpointUrl })
+        const query = new StreamQuery({ endpoint })
+
+        await rejects(async () => {
+          await query.ask(simpleAskQuery)
+        }, err => {
+          strictEqual(err.message.includes('Internal Server Error'), true)
+          strictEqual(err.message.includes('500'), true)
+          strictEqual(err.message.includes(message), true)
+
+          return true
+        })
       })
     })
   })
@@ -236,6 +260,51 @@ describe('StreamQuery', () => {
         await getStream.array(stream)
 
         strictEqual(parameter, simpleConstructQuery)
+      })
+    })
+
+    it('should send an accept header with the value application/n-triples, text/turtle', async () => {
+      await withServer(async server => {
+        let accept = null
+
+        server.app.get('/', async (req, res) => {
+          accept = req.headers.accept
+
+          res.end()
+        })
+
+        const endpointUrl = await server.listen()
+
+        const endpoint = new Endpoint({ endpointUrl, fetch })
+        const query = new StreamQuery({ endpoint })
+
+        await query.construct(simpleConstructQuery)
+
+        strictEqual(accept, 'application/n-triples, text/turtle')
+      })
+    })
+
+    it('should handle server errors', async () => {
+      await withServer(async server => {
+        const message = 'test message'
+
+        server.app.get('/', async (req, res) => {
+          res.status(500).end(message)
+        })
+
+        const endpointUrl = await server.listen()
+        const endpoint = new Endpoint({ fetch, endpointUrl })
+        const query = new StreamQuery({ endpoint })
+
+        await rejects(async () => {
+          await query.construct(simpleConstructQuery)
+        }, err => {
+          strictEqual(err.message.includes('Internal Server Error'), true)
+          strictEqual(err.message.includes('500'), true)
+          strictEqual(err.message.includes(message), true)
+
+          return true
+        })
       })
     })
   })
@@ -374,6 +443,30 @@ describe('StreamQuery', () => {
         strictEqual(parameter, simpleSelectQuery)
       })
     })
+
+    it('should handle server errors', async () => {
+      await withServer(async server => {
+        const message = 'test message'
+
+        server.app.get('/', async (req, res) => {
+          res.status(500).end(message)
+        })
+
+        const endpointUrl = await server.listen()
+        const endpoint = new Endpoint({ fetch, endpointUrl })
+        const query = new StreamQuery({ endpoint })
+
+        await rejects(async () => {
+          await query.select(simpleSelectQuery)
+        }, err => {
+          strictEqual(err.message.includes('Internal Server Error'), true)
+          strictEqual(err.message.includes('500'), true)
+          strictEqual(err.message.includes(message), true)
+
+          return true
+        })
+      })
+    })
   })
 
   describe('.update', () => {
@@ -441,6 +534,30 @@ describe('StreamQuery', () => {
         await query.update(simpleUpdateQuery, { operation: 'postDirect' })
 
         strictEqual(content, simpleUpdateQuery)
+      })
+    })
+
+    it('should handle server errors', async () => {
+      await withServer(async server => {
+        const message = 'test message'
+
+        server.app.post('/', async (req, res) => {
+          res.status(500).end(message)
+        })
+
+        const updateUrl = await server.listen()
+        const endpoint = new Endpoint({ fetch, updateUrl })
+        const query = new StreamQuery({ endpoint })
+
+        await rejects(async () => {
+          await query.update(simpleUpdateQuery)
+        }, err => {
+          strictEqual(err.message.includes('Internal Server Error'), true)
+          strictEqual(err.message.includes('500'), true)
+          strictEqual(err.message.includes(message), true)
+
+          return true
+        })
       })
     })
   })

@@ -1,4 +1,3 @@
-import { URL } from 'universal-url'
 import { promisify } from 'util'
 import TripleToQuadTransform from 'rdf-transform-triple-to-quad'
 import rdf from '@rdfjs/data-model'
@@ -61,8 +60,8 @@ export default class StreamStore {
     return this.endpoint.fetch(url, {
       method,
       headers: this.endpoint.mergeHeaders({ accept: 'application/n-triples' })
-    }).then(res => {
-      checkResponse(res)
+    }).then(async res => {
+      await checkResponse(res)
 
       const parser = new N3Parser({ factory: this.factory })
       const tripleToQuad = new TripleToQuadTransform(graph, { factory: this.factory })
@@ -96,19 +95,19 @@ export default class StreamStore {
     await requestEnd
   }
 
-  writeRequest (method, graph, stream) {
+  async writeRequest (method, graph, stream) {
     const url = new URL(this.endpoint.storeUrl)
 
     if (graph.termType !== 'DefaultGraph') {
       url.searchParams.append('graph', graph.value)
     }
 
-    return this.endpoint.fetch(url, {
+    const res = await this.endpoint.fetch(url, {
       method,
       headers: this.endpoint.mergeHeaders({ 'content-type': 'application/n-triples' }),
       body: stream
-    }).then(res => {
-      checkResponse(res)
     })
+
+    await checkResponse(res)
   }
 }

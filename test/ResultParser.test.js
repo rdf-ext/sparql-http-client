@@ -34,6 +34,21 @@ describe('ResultParser', () => {
     deepStrictEqual(result, [])
   })
 
+  it('should not emit any chunk when Stardog GROUP BY bug shows up', async () => {
+    const parser = new ResultParser()
+    const content = {
+      results: {
+        bindings: [{}]
+      }
+    }
+
+    parser.end(JSON.stringify(content))
+
+    const result = await getStream.array(parser)
+
+    deepStrictEqual(result, [])
+  })
+
   it('should parse named node values', async () => {
     const parser = new ResultParser()
     const content = {

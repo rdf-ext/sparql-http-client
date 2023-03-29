@@ -1,6 +1,6 @@
 {
   "name": "sparql-http-client",
-  "version": "2.2.2",
+  "version": "2.4.2",
   "description": "Simplified SPARQL HTTP request client",
   "main": "index.js",
   "type": "module",
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/zazuko/sparql-http-client.git"
+    "url": "https://github.com/bergos/sparql-http-client.git"
   },
   "keywords": [
     "sparql",
@@ -20,9 +20,9 @@
   "author": "Thomas Bergwinkl <bergi@axolotlfarm.org> (https://www.bergnet.org/people/bergi/card#me)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/zazuko/sparql-http-client/issues"
+    "url": "https://github.com/bergos/sparql-http-client/issues"
   },
-  "homepage": "https://github.com/zazuko/sparql-http-client",
+  "homepage": "https://bergos.github.io/sparql-http-client/",
   "dependencies": {
     "@rdfjs/data-model": "^2.0.1",
     "@rdfjs/parser-n3": "^2.0.1",
@@ -34,8 +34,7 @@
     "promise-the-world": "^1.0.1",
     "rdf-transform-triple-to-quad": "^1.0.2",
     "readable-stream": "^3.5.0",
-    "separate-stream": "^1.0.0",
-    "universal-url": "^2.0.0"
+    "separate-stream": "^1.0.0"
   },
   "devDependencies": {
     "@rdfjs/namespace": "^2.0.0",

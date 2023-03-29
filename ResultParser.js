@@ -27,27 +27,27 @@ export default class ResultParser extends Duplex {
   }
 
   async _read () {
-    const raw = this.jsonParser.read()
+    while (true) {
+      const raw = this.jsonParser.read()
 
-    if (!raw) {
-      if (!this.writable) {
-        return this.push(null)
-      }
+      if (!raw || Object.keys(raw).length === 0) {
+        if (!this.writable) {
+          return this.push(null)
+        }
 
-      await delay(0)
-    } else {
-      const row = Object.entries(raw).reduce((row, [key, value]) => {
-        row[key] = this.valueToTerm(value)
+        await delay(0)
+      } else {
+        const row = Object.entries(raw).reduce((row, [key, value]) => {
+          row[key] = this.valueToTerm(value)
 
-        return row
-      }, {})
+          return row
+        }, {})
 
-      if (!this.push(row)) {
-        return
+        if (!this.push(row)) {
+          return
+        }
       }
     }
-
-    this._read()
   }
 
   valueToTerm (value) {

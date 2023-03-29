@@ -30,7 +30,7 @@ export default class StreamQuery extends RawQuery {
   async ask (query, { headers, operation } = {}) {
     const res = await super.ask(query, { headers, operation })
 
-    checkResponse(res)
+    await checkResponse(res)
 
     const json = await res.json()
 
@@ -45,9 +45,15 @@ export default class StreamQuery extends RawQuery {
    * @return {Promise<Stream>}
    */
   async construct (query, { headers, operation } = {}) {
+    headers = new this.endpoint.fetch.Headers(headers)
+
+    if (!headers.has('accept')) {
+      headers.set('accept', 'application/n-triples, text/turtle')
+    }
+
     const res = await super.construct(query, { headers, operation })
 
-    checkResponse(res)
+    await checkResponse(res)
 
     const parser = new N3Parser({ factory: this.factory })
 
@@ -64,7 +70,7 @@ export default class StreamQuery extends RawQuery {
   async select (query, { headers, operation } = {}) {
     const res = await super.select(query, { headers, operation })
 
-    checkResponse(res)
+    await checkResponse(res)
 
     const parser = new ResultParser({ factory: this.factory })
 
@@ -81,6 +87,6 @@ export default class StreamQuery extends RawQuery {
   async update (query, { headers, operation } = {}) {
     const res = await super.update(query, { headers, operation })
 
-    checkResponse(res)
+    await checkResponse(res)
   }
 }

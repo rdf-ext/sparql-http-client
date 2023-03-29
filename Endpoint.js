@@ -1,4 +1,3 @@
-import { URL } from 'universal-url'
 import defaultFetch from 'nodeify-fetch'
 
 /**
