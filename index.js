@@ -1,3 +1,3 @@
-const StreamClient = require('./StreamClient')
+import StreamClient from './StreamClient.js'
 
-module.exports = StreamClient
+export default StreamClient

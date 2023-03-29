@@ -1,12 +1,12 @@
-const { URL } = require('universal-url')
-const defaultFetch = require('nodeify-fetch')
+import { URL } from 'universal-url'
+import defaultFetch from 'nodeify-fetch'
 
 /**
  * Represents a SPARQL endpoint and exposes a low-level methods, close to the underlying HTTP interface
  *
  * It directly returns HTTP response objects
  */
-class Endpoint {
+export default class Endpoint {
   /**
    * @param {Object} init
    * @param {string} init.endpointUrl SPARQL Query endpoint URL
@@ -133,5 +133,3 @@ class Endpoint {
     return merged
   }
 }
-
-module.exports = Endpoint

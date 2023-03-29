@@ -1,8 +1,8 @@
-const { deepStrictEqual, strictEqual, notStrictEqual } = require('assert')
-const getStream = require('get-stream')
-const { describe, it } = require('mocha')
-const testFactory = require('./support/testFactory')
-const ResultParser = require('../ResultParser')
+import { deepStrictEqual, strictEqual, notStrictEqual } from 'assert'
+import getStream from 'get-stream'
+import { describe, it } from 'mocha'
+import testFactory from './support/testFactory.js'
+import ResultParser from '../ResultParser.js'
 
 describe('ResultParser', () => {
   it('should be a constructor', () => {

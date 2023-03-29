@@ -1,5 +1,5 @@
-const rdf = require('rdf-ext')
-const SparqlClient = require('..')
+import rdf from 'rdf-ext'
+import SparqlClient from '../index.js'
 
 const local = new SparqlClient({
   storeUrl: 'http://localhost:3030/test/data',

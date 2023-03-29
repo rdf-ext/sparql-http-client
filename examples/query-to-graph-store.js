@@ -17,8 +17,8 @@ The following steps are required:
 
 */
 
-const namespace = require('@rdfjs/namespace')
-const SparqlClient = require('..')
+import namespace from '@rdfjs/namespace'
+import SparqlClient from '../index.js'
 
 const ns = {
   rdf: namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#'),

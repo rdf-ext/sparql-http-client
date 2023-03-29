@@ -12,7 +12,7 @@ The [SPARQL Graph Store Protocol](https://www.w3.org/TR/sparql11-http-rdf-update
 TL;DR; the package exports a `StreamClient` class which run SPARQL queries on an endpoint.
 
 ```javascript
-const SparqlClient = require('sparql-http-client')
+import SparqlClient from 'sparql-http-client'
 
 const endpointUrl = 'https://query.wikidata.org/sparql'
 const query = `

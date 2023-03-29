@@ -1,12 +1,14 @@
-const jsonStream = require('jsonstream2')
-const delay = require('promise-the-world/delay')
-const rdf = require('@rdfjs/data-model')
-const { Duplex, finished } = require('readable-stream')
+import jsonStream from 'jsonstream2'
+import delay from 'promise-the-world/delay.js'
+import rdf from '@rdfjs/data-model'
+import stream from 'readable-stream'
+
+const { Duplex, finished } = stream
 
 /**
  * A stream which parses SPARQL SELECT bindings
  */
-class ResultParser extends Duplex {
+export default class ResultParser extends Duplex {
   constructor ({ factory = rdf } = {}) {
     super({
       readableObjectMode: true
@@ -66,5 +68,3 @@ class ResultParser extends Duplex {
     return null
   }
 }
-
-module.exports = ResultParser

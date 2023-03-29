@@ -1,6 +1,6 @@
-const rdf = require('@rdfjs/data-model')
+import rdf from '@rdfjs/data-model'
 
-function testFactory () {
+export default function testFactory () {
   const factory = {
     blankNode: () => {
       factory.used.blankNode = true
@@ -27,5 +27,3 @@ function testFactory () {
 
   return factory
 }
-
-module.exports = testFactory

@@ -1,6 +1,6 @@
-const { strictEqual } = require('assert')
-const { describe, it } = require('mocha')
-const BaseClient = require('../BaseClient')
+import { strictEqual } from 'assert'
+import { describe, it } from 'mocha'
+import BaseClient from '../BaseClient.js'
 
 describe('BaseClient', () => {
   it('should be a constructor', () => {

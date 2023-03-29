@@ -4,7 +4,7 @@ This example uses the default Client to make a SELECT query and processes the st
 
 */
 
-const SparqlClient = require('..')
+import SparqlClient from '../index.js'
 
 const endpointUrl = 'https://query.wikidata.org/sparql'
 const query = `

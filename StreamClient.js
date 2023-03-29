@@ -1,7 +1,7 @@
-const BaseClient = require('./BaseClient')
-const Endpoint = require('./Endpoint')
-const StreamQuery = require('./StreamQuery')
-const StreamStore = require('./StreamStore')
+import BaseClient from './BaseClient.js'
+import Endpoint from './Endpoint.js'
+import StreamQuery from './StreamQuery.js'
+import StreamStore from './StreamStore.js'
 
 /**
  * The default client implementation which returns SPARQL response as RDF/JS streams
@@ -9,7 +9,7 @@ const StreamStore = require('./StreamStore')
  * @property {StreamQuery} query
  * @property {StreamStore} store
  */
-class StreamClient extends BaseClient {
+export default class StreamClient extends BaseClient {
   /**
    * @param {Object} options
    * @param {string} options.endpointUrl SPARQL Query endpoint URL
@@ -31,5 +31,3 @@ class StreamClient extends BaseClient {
     })
   }
 }
-
-module.exports = StreamClient

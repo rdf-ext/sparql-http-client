@@ -1,7 +1,7 @@
 /**
  * A base query class which performs HTTP requests for the different SPARQL query forms
  */
-class RawQuery {
+export default class RawQuery {
   /**
    * @param {Object} init
    * @param {Endpoint} init.endpoint
@@ -91,5 +91,3 @@ class RawQuery {
     return this.endpoint[operation](query, { headers, update: true })
   }
 }
-
-module.exports = RawQuery

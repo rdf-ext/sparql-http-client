@@ -1,16 +1,16 @@
-const { deepStrictEqual, notStrictEqual, strictEqual } = require('assert')
-const getStream = require('get-stream')
-const intoStream = require('into-stream')
-const { describe, it } = require('mocha')
-const fetch = require('nodeify-fetch')
-const { toCanonical } = require('rdf-dataset-ext')
-const rdf = require('@rdfjs/data-model')
-const namespace = require('@rdfjs/namespace')
-const { quadToNTriples } = require('@rdfjs/to-ntriples')
-const testFactory = require('./support/testFactory')
-const withServer = require('./support/withServer')
-const Endpoint = require('../Endpoint')
-const StreamStore = require('../StreamStore')
+import { deepStrictEqual, notStrictEqual, strictEqual } from 'assert'
+import getStream from 'get-stream'
+import intoStream from 'into-stream'
+import { describe, it } from 'mocha'
+import fetch from 'nodeify-fetch'
+import toCanonical from 'rdf-dataset-ext/toCanonical.js'
+import rdf from '@rdfjs/data-model'
+import namespace from '@rdfjs/namespace'
+import quadToNTriples from '@rdfjs/to-ntriples'
+import testFactory from './support/testFactory.js'
+import withServer from './support/withServer.js'
+import Endpoint from '../Endpoint.js'
+import StreamStore from '../StreamStore.js'
 
 const ns = {
   ex: namespace('http://example.org/')

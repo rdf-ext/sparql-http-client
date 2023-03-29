@@ -1,6 +1,6 @@
-const Endpoint = require('./Endpoint')
-const ParsingQuery = require('./ParsingQuery')
-const BaseClient = require('./BaseClient')
+import Endpoint from './Endpoint.js'
+import ParsingQuery from './ParsingQuery.js'
+import BaseClient from './BaseClient.js'
 
 /**
  * A client implementation which parses SPARQL responses into RDF/JS dataset (CONSTRUCT/DESCRIBE) or JSON objects (SELECT)
@@ -9,7 +9,7 @@ const BaseClient = require('./BaseClient')
  *
  * @property {ParsingQuery} query
  */
-class ParsingClient extends BaseClient {
+export default class ParsingClient extends BaseClient {
   /**
    * @param {Object} options
    * @param {string} options.endpointUrl SPARQL Query endpoint URL
@@ -29,5 +29,3 @@ class ParsingClient extends BaseClient {
     })
   }
 }
-
-module.exports = ParsingClient

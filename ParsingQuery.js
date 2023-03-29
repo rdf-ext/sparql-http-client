@@ -1,10 +1,10 @@
-const { array } = require('get-stream')
-const StreamQuery = require('./StreamQuery')
+import getStream from 'get-stream'
+import StreamQuery from './StreamQuery.js'
 
 /**
  * Extends StreamQuery by materialising the SPARQL response streams
  */
-class ParsingQuery extends StreamQuery {
+export default class ParsingQuery extends StreamQuery {
   /**
    * @param {Object} init
    * @param {Endpoint} init.endpoint
@@ -25,7 +25,7 @@ class ParsingQuery extends StreamQuery {
   async construct (query, options = {}) {
     const stream = await super.construct(query, options)
 
-    return array(stream)
+    return getStream.array(stream)
   }
 
   /**
@@ -40,8 +40,6 @@ class ParsingQuery extends StreamQuery {
   async select (query, options = {}) {
     const stream = await super.select(query, options)
 
-    return array(stream)
+    return getStream.array(stream)
   }
 }
-
-module.exports = ParsingQuery

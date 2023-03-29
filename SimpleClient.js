@@ -1,13 +1,13 @@
-const Endpoint = require('./Endpoint')
-const RawQuery = require('./RawQuery')
-const BaseClient = require('./BaseClient')
+import Endpoint from './Endpoint.js'
+import RawQuery from './RawQuery.js'
+import BaseClient from './BaseClient.js'
 
 /**
  * A basic client implementation which uses RawQuery and no Store
  *
  * @property {RawQuery} query
  */
-class SimpleClient extends BaseClient {
+export default class SimpleClient extends BaseClient {
   /**
    * @param {Object} options
    * @param {string} options.endpointUrl SPARQL Query endpoint URL
@@ -27,5 +27,3 @@ class SimpleClient extends BaseClient {
     })
   }
 }
-
-module.exports = SimpleClient
