@@ -9,7 +9,7 @@ import StreamStore from './StreamStore.js'
  * @property {StreamQuery} query
  * @property {StreamStore} store
  */
-export default class StreamClient extends BaseClient {
+class StreamClient extends BaseClient {
   /**
    * @param {Object} options
    * @param {string} options.endpointUrl SPARQL Query endpoint URL
@@ -31,3 +31,5 @@ export default class StreamClient extends BaseClient {
     })
   }
 }
+
+export default StreamClient

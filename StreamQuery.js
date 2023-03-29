@@ -7,7 +7,7 @@ import ResultParser from './ResultParser.js'
 /**
  * Extends RawQuery by wrapping response body streams as RDF/JS Streams
  */
-export default class StreamQuery extends RawQuery {
+class StreamQuery extends RawQuery {
   /**
    * @param {Object} init
    * @param {Endpoint} init.endpoint
@@ -90,3 +90,5 @@ export default class StreamQuery extends RawQuery {
     await checkResponse(res)
   }
 }
+
+export default StreamQuery

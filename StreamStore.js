@@ -9,7 +9,7 @@ import QuadStreamSeparator from './lib/QuadStreamSeparator.js'
 /**
  * Accesses stores with SPARQL Graph Protocol
  */
-export default class StreamStore {
+class StreamStore {
   /**
    *
    * @param {Object} init
@@ -111,3 +111,5 @@ export default class StreamStore {
     await checkResponse(res)
   }
 }
+
+export default StreamStore

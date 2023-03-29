@@ -4,7 +4,7 @@ import StreamQuery from './StreamQuery.js'
 /**
  * Extends StreamQuery by materialising the SPARQL response streams
  */
-export default class ParsingQuery extends StreamQuery {
+class ParsingQuery extends StreamQuery {
   /**
    * @param {Object} init
    * @param {Endpoint} init.endpoint
@@ -43,3 +43,5 @@ export default class ParsingQuery extends StreamQuery {
     return getStream.array(stream)
   }
 }
+
+export default ParsingQuery

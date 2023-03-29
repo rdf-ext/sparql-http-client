@@ -5,7 +5,7 @@ import defaultFetch from 'nodeify-fetch'
  *
  * It directly returns HTTP response objects
  */
-export default class Endpoint {
+class Endpoint {
   /**
    * @param {Object} init
    * @param {string} init.endpointUrl SPARQL Query endpoint URL
@@ -132,3 +132,5 @@ export default class Endpoint {
     return merged
   }
 }
+
+export default Endpoint

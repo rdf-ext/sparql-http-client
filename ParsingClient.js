@@ -9,7 +9,7 @@ import BaseClient from './BaseClient.js'
  *
  * @property {ParsingQuery} query
  */
-export default class ParsingClient extends BaseClient {
+class ParsingClient extends BaseClient {
   /**
    * @param {Object} options
    * @param {string} options.endpointUrl SPARQL Query endpoint URL
@@ -29,3 +29,5 @@ export default class ParsingClient extends BaseClient {
     })
   }
 }
+
+export default ParsingClient

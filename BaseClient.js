@@ -6,7 +6,7 @@
  *
  * @class
  */
-export default class BaseClient {
+class BaseClient {
   /**
    * @param {Object} init
    * @param {Endpoint} init.endpoint object to connect to SPARQL endpoint
@@ -22,3 +22,5 @@ export default class BaseClient {
     this.store = Store ? new Store({ endpoint, factory, ...options }) : null
   }
 }
+
+export default BaseClient

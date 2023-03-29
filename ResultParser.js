@@ -8,7 +8,7 @@ const { Duplex, finished } = stream
 /**
  * A stream which parses SPARQL SELECT bindings
  */
-export default class ResultParser extends Duplex {
+class ResultParser extends Duplex {
   constructor ({ factory = rdf } = {}) {
     super({
       readableObjectMode: true
@@ -68,3 +68,5 @@ export default class ResultParser extends Duplex {
     return null
   }
 }
+
+export default ResultParser
