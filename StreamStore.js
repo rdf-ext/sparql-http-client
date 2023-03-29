@@ -1,10 +1,10 @@
-const { promisify } = require('util')
-const TripleToQuadTransform = require('rdf-transform-triple-to-quad')
-const rdf = require('@rdfjs/data-model')
-const N3Parser = require('@rdfjs/parser-n3')
-const { finished } = require('readable-stream')
-const checkResponse = require('./lib/checkResponse')
-const QuadStreamSeparator = require('./lib/QuadStreamSeparator')
+import { promisify } from 'util'
+import TripleToQuadTransform from 'rdf-transform-triple-to-quad'
+import rdf from '@rdfjs/data-model'
+import N3Parser from '@rdfjs/parser-n3'
+import Stream from 'readable-stream'
+import checkResponse from './lib/checkResponse.js'
+import QuadStreamSeparator from './lib/QuadStreamSeparator.js'
 
 /**
  * Accesses stores with SPARQL Graph Protocol
@@ -91,7 +91,7 @@ class StreamStore {
 
     stream.pipe(splitter)
 
-    await promisify(finished)(splitter)
+    await promisify(Stream.finished)(splitter)
     await requestEnd
   }
 
@@ -112,4 +112,4 @@ class StreamStore {
   }
 }
 
-module.exports = StreamStore
+export default StreamStore

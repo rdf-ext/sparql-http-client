@@ -1,6 +1,6 @@
-const ExpressAsPromise = require('express-as-promise')
+import ExpressAsPromise from 'express-as-promise'
 
-async function withServer (callback) {
+export default async function withServer (callback) {
   let error = null
   const server = new ExpressAsPromise()
 
@@ -18,5 +18,3 @@ async function withServer (callback) {
     throw error
   }
 }
-
-module.exports = withServer

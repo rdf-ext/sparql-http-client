@@ -1,15 +1,16 @@
-const { deepStrictEqual, strictEqual } = require('assert')
-const { promisify } = require('util')
-const getStream = require('get-stream')
-const { isReadable, isWritable } = require('isstream')
-const { describe, it } = require('mocha')
-const rdf = require('@rdfjs/data-model')
-const namespace = require('@rdfjs/namespace')
-const { quadToNTriples } = require('@rdfjs/to-ntriples')
-const { finished } = require('readable-stream')
-const QuadStreamSeparator = require('../lib/QuadStreamSeparator')
+import { deepStrictEqual, strictEqual } from 'assert'
+import { promisify } from 'util'
+import getStream from 'get-stream'
+import isstream from 'isstream'
+import { describe, it } from 'mocha'
+import rdf from '@rdfjs/data-model'
+import namespace from '@rdfjs/namespace'
+import quadToNTriples from '@rdfjs/to-ntriples'
+import Stream from 'readable-stream'
+import QuadStreamSeparator from '../lib/QuadStreamSeparator.js'
 
-const untilFinished = promisify(finished)
+const { isReadable, isWritable } = isstream
+const untilFinished = promisify(Stream.finished)
 
 const ns = {
   ex: namespace('http://example.org/')

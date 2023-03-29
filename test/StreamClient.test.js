@@ -1,8 +1,8 @@
-const { strictEqual } = require('assert')
-const { describe, it } = require('mocha')
-const StreamClient = require('../StreamClient')
-const StreamQuery = require('../StreamQuery')
-const StreamStore = require('../StreamStore')
+import { strictEqual } from 'assert'
+import { describe, it } from 'mocha'
+import StreamClient from '../StreamClient.js'
+import StreamQuery from '../StreamQuery.js'
+import StreamStore from '../StreamStore.js'
 
 describe('StreamClient', () => {
   it('should be a constructor', () => {

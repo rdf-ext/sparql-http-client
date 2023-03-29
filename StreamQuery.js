@@ -1,8 +1,8 @@
-const rdf = require('@rdfjs/data-model')
-const N3Parser = require('@rdfjs/parser-n3')
-const checkResponse = require('./lib/checkResponse')
-const RawQuery = require('./RawQuery')
-const ResultParser = require('./ResultParser')
+import rdf from '@rdfjs/data-model'
+import N3Parser from '@rdfjs/parser-n3'
+import checkResponse from './lib/checkResponse.js'
+import RawQuery from './RawQuery.js'
+import ResultParser from './ResultParser.js'
 
 /**
  * Extends RawQuery by wrapping response body streams as RDF/JS Streams
@@ -91,4 +91,4 @@ class StreamQuery extends RawQuery {
   }
 }
 
-module.exports = StreamQuery
+export default StreamQuery

@@ -1,10 +1,12 @@
-const { strictEqual } = require('assert')
-const { text, urlencoded } = require('body-parser')
-const fetch = require('nodeify-fetch')
-const { describe, it } = require('mocha')
-const Endpoint = require('../Endpoint')
-const RawQuery = require('../RawQuery')
-const withServer = require('./support/withServer')
+import { strictEqual } from 'assert'
+import bodyParser from 'body-parser'
+import fetch from 'nodeify-fetch'
+import { describe, it } from 'mocha'
+import Endpoint from '../Endpoint.js'
+import RawQuery from '../RawQuery.js'
+import withServer from './support/withServer.js'
+
+const { text, urlencoded } = bodyParser
 
 const simpleAskQuery = 'ASK {}'
 const simpleConstructQuery = 'CONSTRUCT {?s ?p ?o} WHERE {?s ?p ?o}'

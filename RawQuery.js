@@ -92,4 +92,4 @@ class RawQuery {
   }
 }
 
-module.exports = RawQuery
+export default RawQuery

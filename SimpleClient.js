@@ -1,6 +1,6 @@
-const Endpoint = require('./Endpoint')
-const RawQuery = require('./RawQuery')
-const BaseClient = require('./BaseClient')
+import Endpoint from './Endpoint.js'
+import RawQuery from './RawQuery.js'
+import BaseClient from './BaseClient.js'
 
 /**
  * A basic client implementation which uses RawQuery and no Store
@@ -28,4 +28,4 @@ class SimpleClient extends BaseClient {
   }
 }
 
-module.exports = SimpleClient
+export default SimpleClient

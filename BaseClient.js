@@ -23,4 +23,4 @@ class BaseClient {
   }
 }
 
-module.exports = BaseClient
+export default BaseClient

@@ -1,4 +1,4 @@
-const defaultFetch = require('nodeify-fetch')
+import defaultFetch from 'nodeify-fetch'
 
 /**
  * Represents a SPARQL endpoint and exposes a low-level methods, close to the underlying HTTP interface
@@ -133,4 +133,4 @@ class Endpoint {
   }
 }
 
-module.exports = Endpoint
+export default Endpoint

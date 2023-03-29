@@ -4,7 +4,7 @@ This example uses the SimpleClient to make a SELECT query and manually processes
 
 */
 
-const SparqlClient = require('../SimpleClient')
+import SparqlClient from '../SimpleClient.js'
 
 const endpointUrl = 'https://query.wikidata.org/sparql'
 const query = `
