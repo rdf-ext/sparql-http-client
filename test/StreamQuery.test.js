@@ -1,36 +1,65 @@
-const { deepStrictEqual, rejects, strictEqual } = require('assert')
-const { text, urlencoded } = require('body-parser')
-const getStream = require('get-stream')
-const { describe, it } = require('mocha')
-const fetch = require('nodeify-fetch')
-const { toCanonical } = require('rdf-dataset-ext')
-const rdf = { ...require('@rdfjs/data-model'), ...require('@rdfjs/dataset') }
-const namespace = require('@rdfjs/namespace')
-const { quadToNTriples } = require('@rdfjs/to-ntriples')
-const testFactory = require('./support/testFactory')
-const withServer = require('./support/withServer')
-const Endpoint = require('../Endpoint')
-const StreamQuery = require('../StreamQuery')
-
-const ns = {
-  ex: namespace('http://example.org/')
-}
-
-const simpleAskQuery = 'ASK {}'
-const simpleConstructQuery = 'CONSTRUCT {?s ?p ?o} WHERE {?s ?p ?o}'
-const simpleSelectQuery = 'SELECT * WHERE {?s ?p ?o}'
-const simpleUpdateQuery = 'INSERT {<http://example.org/subject> <http://example.org/predicate> "object"} WHERE {}'
+import { deepStrictEqual, rejects, strictEqual } from 'node:assert'
+import factory from '@rdfjs/data-model'
+import express from 'express'
+import withServer from 'express-as-promise/withServer.js'
+import { isReadableStream, isWritableStream } from 'is-stream'
+import { describe, it } from 'mocha'
+import rdf from 'rdf-ext'
+import { datasetEqual } from 'rdf-test/assert.js'
+import chunks from 'stream-chunks/chunks.js'
+import SimpleClient from '../SimpleClient.js'
+import StreamQuery from '../StreamQuery.js'
+import { message, quads, askQuery, constructQuery, selectQuery, updateQuery } from './support/examples.js'
+import isServerError from './support/isServerError.js'
+import isSocketError from './support/isSocketError.js'
+import * as ns from './support/namespaces.js'
+import testFactory from './support/testFactory.js'
 
 describe('StreamQuery', () => {
   describe('.ask', () => {
     it('should be a method', () => {
-      const endpoint = new Endpoint({ fetch })
-      const query = new StreamQuery({ endpoint })
+      const query = new StreamQuery({})
 
       strictEqual(typeof query.ask, 'function')
     })
 
-    it('should send a GET request to the endpointUrl', async () => {
+    it('should return a boolean value', async () => {
+      await withServer(async server => {
+        server.app.get('/', async (req, res) => {
+          res.json({
+            boolean: true
+          })
+        })
+
+        const endpointUrl = await server.listen()
+        const client = new SimpleClient({ endpointUrl })
+        const query = new StreamQuery({ client })
+
+        const result = await query.ask(askQuery)
+
+        strictEqual(typeof result, 'boolean')
+      })
+    })
+
+    it('should parse the SPARQL JSON result', async () => {
+      await withServer(async server => {
+        server.app.get('/', async (req, res) => {
+          res.json({
+            boolean: true
+          })
+        })
+
+        const endpointUrl = await server.listen()
+        const client = new SimpleClient({ endpointUrl })
+        const query = new StreamQuery({ client })
+
+        const result = await query.ask(askQuery)
+
+        strictEqual(result, true)
+      })
+    })
+
+    it('should send a GET request', async () => {
       await withServer(async server => {
         let called = false
 
@@ -41,10 +70,10 @@ describe('StreamQuery', () => {
         })
 
         const endpointUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, endpointUrl })
-        const query = new StreamQuery({ endpoint })
+        const client = new SimpleClient({ endpointUrl })
+        const query = new StreamQuery({ client })
 
-        await query.ask(simpleAskQuery)
+        await query.ask(askQuery)
 
         strictEqual(called, true)
       })
@@ -61,30 +90,12 @@ describe('StreamQuery', () => {
         })
 
         const endpointUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, endpointUrl })
-        const query = new StreamQuery({ endpoint })
+        const client = new SimpleClient({ endpointUrl })
+        const query = new StreamQuery({ client })
 
-        await query.ask(simpleAskQuery)
+        await query.ask(askQuery)
 
-        strictEqual(parameter, simpleAskQuery)
-      })
-    })
-
-    it('should parse parse the result and return the boolean value', async () => {
-      await withServer(async server => {
-        server.app.get('/', async (req, res) => {
-          res.json({
-            boolean: true
-          })
-        })
-
-        const endpointUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, endpointUrl })
-        const query = new StreamQuery({ endpoint })
-
-        const result = await query.ask(simpleConstructQuery)
-
-        strictEqual(result, true)
+        strictEqual(parameter, askQuery)
       })
     })
 
@@ -92,7 +103,7 @@ describe('StreamQuery', () => {
       await withServer(async server => {
         let parameter = null
 
-        server.app.post('/', urlencoded({ extended: false }), async (req, res) => {
+        server.app.post('/', express.urlencoded({ extended: false }), async (req, res) => {
           parameter = req.body.query
 
           res.json({
@@ -101,49 +112,92 @@ describe('StreamQuery', () => {
         })
 
         const endpointUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, endpointUrl })
-        const query = new StreamQuery({ endpoint })
+        const client = new SimpleClient({ endpointUrl })
+        const query = new StreamQuery({ client })
 
-        await query.ask(simpleAskQuery, { operation: 'postUrlencoded' })
+        await query.ask(askQuery, { operation: 'postUrlencoded' })
 
-        strictEqual(parameter, simpleAskQuery)
+        strictEqual(parameter, askQuery)
+      })
+    })
+
+    it('should handle server socket errors', async () => {
+      await withServer(async server => {
+        server.app.get('/', async (req, res) => {
+          req.destroy()
+        })
+
+        const endpointUrl = await server.listen()
+        const client = new SimpleClient({ endpointUrl })
+        const query = new StreamQuery({ client })
+
+        await rejects(async () => {
+          await query.ask(askQuery)
+        }, err => isSocketError(err))
       })
     })
 
     it('should handle server errors', async () => {
       await withServer(async server => {
-        const message = 'test message'
-
         server.app.get('/', async (req, res) => {
           res.status(500).end(message)
         })
 
         const endpointUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, endpointUrl })
-        const query = new StreamQuery({ endpoint })
+        const client = new SimpleClient({ endpointUrl })
+        const query = new StreamQuery({ client })
 
         await rejects(async () => {
-          await query.ask(simpleAskQuery)
-        }, err => {
-          strictEqual(err.message.includes('Internal Server Error'), true)
-          strictEqual(err.message.includes('500'), true)
-          strictEqual(err.message.includes(message), true)
-
-          return true
-        })
+          await query.ask(askQuery)
+        }, err => isServerError(err, message))
       })
     })
   })
 
   describe('.construct', () => {
     it('should be a method', () => {
-      const endpoint = new Endpoint({ fetch })
-      const query = new StreamQuery({ endpoint })
+      const query = new StreamQuery({})
 
       strictEqual(typeof query.construct, 'function')
     })
 
-    it('should send a GET request to the endpointUrl', async () => {
+    it('should return a Readable stream object', async () => {
+      await withServer(async server => {
+        server.app.get('/', async (req, res) => {
+          res.status(204).end()
+        })
+
+        const endpointUrl = await server.listen()
+        const client = new SimpleClient({ endpointUrl })
+        const query = new StreamQuery({ client })
+
+        const result = query.construct(constructQuery)
+
+        strictEqual(isReadableStream(result), true)
+        strictEqual(isWritableStream(result), false)
+
+        await chunks(result)
+      })
+    })
+
+    it('should parse the N-Triples', async () => {
+      await withServer(async server => {
+        server.app.get('/', async (req, res) => {
+          res.end(quads.toString())
+        })
+
+        const endpointUrl = await server.listen()
+        const client = new SimpleClient({ endpointUrl })
+        const query = new StreamQuery({ client })
+
+        const stream = query.construct(constructQuery)
+        const result = await chunks(stream)
+
+        datasetEqual(result, quads)
+      })
+    })
+
+    it('should send a GET request', async () => {
       await withServer(async server => {
         let called = false
 
@@ -154,11 +208,11 @@ describe('StreamQuery', () => {
         })
 
         const endpointUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, endpointUrl })
-        const query = new StreamQuery({ endpoint })
+        const client = new SimpleClient({ endpointUrl })
+        const query = new StreamQuery({ client })
 
-        const stream = await query.construct(simpleConstructQuery)
-        await getStream.array(stream)
+        const stream = query.construct(constructQuery)
+        await chunks(stream)
 
         strictEqual(called, true)
       })
@@ -175,61 +229,33 @@ describe('StreamQuery', () => {
         })
 
         const endpointUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, endpointUrl })
-        const query = new StreamQuery({ endpoint })
+        const client = new SimpleClient({ endpointUrl })
+        const query = new StreamQuery({ client })
 
-        const stream = await query.construct(simpleConstructQuery)
-        await getStream.array(stream)
+        const stream = query.construct(constructQuery)
+        await chunks(stream)
 
-        strictEqual(parameter, simpleConstructQuery)
-      })
-    })
-
-    it('should parse the N-Triples from the server and provide them as a quad stream', async () => {
-      await withServer(async server => {
-        const quads = rdf.dataset([
-          rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1),
-          rdf.quad(ns.ex.subject2, ns.ex.predicate2, ns.ex.object2),
-          rdf.quad(ns.ex.subject3, ns.ex.predicate3, ns.ex.object3),
-          rdf.quad(ns.ex.subject4, ns.ex.predicate4, ns.ex.object4)
-        ])
-        const content = [...quads].map(quad => {
-          return quadToNTriples(rdf.quad(quad.subject, quad.predicate, quad.object)) + '\n'
-        }).join('')
-
-        server.app.get('/', async (req, res) => {
-          res.end(content)
-        })
-
-        const endpointUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, endpointUrl })
-        const query = new StreamQuery({ endpoint })
-
-        const stream = await query.construct(simpleConstructQuery)
-        const result = rdf.dataset(await getStream.array(stream))
-
-        strictEqual(toCanonical(result), toCanonical(quads))
+        strictEqual(parameter, constructQuery)
       })
     })
 
     it('should use the given factory', async () => {
       await withServer(async server => {
-        const quads = rdf.dataset([rdf.quad(rdf.blankNode(), ns.ex.predicate, rdf.literal('test'))])
-        const content = [...quads].map(quad => {
-          return quadToNTriples(rdf.quad(quad.subject, quad.predicate, quad.object)) + '\n'
-        }).join('')
+        const quads = rdf.dataset([
+          rdf.quad(rdf.blankNode(), ns.ex.predicate, rdf.literal('test'))
+        ])
         const factory = testFactory()
 
         server.app.get('/', async (req, res) => {
-          res.end(content)
+          res.end(quads.toString())
         })
 
         const endpointUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, endpointUrl })
-        const query = new StreamQuery({ endpoint, factory })
+        const client = new SimpleClient({ endpointUrl, factory })
+        const query = new StreamQuery({ client })
 
-        const stream = await query.construct(simpleConstructQuery)
-        await getStream.array(stream)
+        const stream = query.construct(constructQuery)
+        await chunks(stream)
 
         deepStrictEqual(factory.used, {
           blankNode: true,
@@ -245,20 +271,20 @@ describe('StreamQuery', () => {
       await withServer(async server => {
         let parameter = null
 
-        server.app.post('/', urlencoded({ extended: false }), async (req, res) => {
+        server.app.post('/', express.urlencoded({ extended: false }), async (req, res) => {
           parameter = req.body.query
 
           res.status(204).end()
         })
 
         const endpointUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, endpointUrl })
-        const query = new StreamQuery({ endpoint })
+        const client = new SimpleClient({ endpointUrl })
+        const query = new StreamQuery({ client })
 
-        const stream = await query.construct(simpleConstructQuery, { operation: 'postUrlencoded' })
-        await getStream.array(stream)
+        const stream = query.construct(constructQuery, { operation: 'postUrlencoded' })
+        await chunks(stream)
 
-        strictEqual(parameter, simpleConstructQuery)
+        strictEqual(parameter, constructQuery)
       })
     })
 
@@ -273,92 +299,78 @@ describe('StreamQuery', () => {
         })
 
         const endpointUrl = await server.listen()
+        const client = new SimpleClient({ endpointUrl })
+        const query = new StreamQuery({ client })
 
-        const endpoint = new Endpoint({ endpointUrl, fetch })
-        const query = new StreamQuery({ endpoint })
-
-        await query.construct(simpleConstructQuery)
+        const stream = query.construct(constructQuery)
+        await chunks(stream)
 
         strictEqual(accept, 'application/n-triples, text/turtle')
       })
     })
 
+    it('should handle server socket errors', async () => {
+      await withServer(async server => {
+        server.app.get('/', async (req, res) => {
+          req.destroy()
+        })
+
+        const endpointUrl = await server.listen()
+        const client = new SimpleClient({ endpointUrl })
+        const query = new StreamQuery({ client })
+
+        await rejects(async () => {
+          const stream = query.construct(constructQuery)
+          await chunks(stream)
+        }, err => isSocketError(err))
+      })
+    })
+
     it('should handle server errors', async () => {
       await withServer(async server => {
-        const message = 'test message'
-
         server.app.get('/', async (req, res) => {
           res.status(500).end(message)
         })
 
         const endpointUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, endpointUrl })
-        const query = new StreamQuery({ endpoint })
+        const client = new SimpleClient({ endpointUrl })
+        const query = new StreamQuery({ client })
 
         await rejects(async () => {
-          await query.construct(simpleConstructQuery)
-        }, err => {
-          strictEqual(err.message.includes('Internal Server Error'), true)
-          strictEqual(err.message.includes('500'), true)
-          strictEqual(err.message.includes(message), true)
-
-          return true
-        })
+          const stream = query.construct(constructQuery)
+          await chunks(stream)
+        }, err => isServerError(err, message))
       })
     })
   })
 
   describe('.select', () => {
     it('should be a method', () => {
-      const endpoint = new Endpoint({ fetch })
-      const query = new StreamQuery({ endpoint })
+      const query = new StreamQuery({})
 
       strictEqual(typeof query.select, 'function')
     })
 
-    it('should send a GET request to the endpointUrl', async () => {
+    it('should return a Readable stream object', async () => {
       await withServer(async server => {
-        let called = false
-
         server.app.get('/', async (req, res) => {
-          called = true
-
           res.status(204).end()
         })
 
         const endpointUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, endpointUrl })
-        const query = new StreamQuery({ endpoint })
+        const client = new SimpleClient({ endpointUrl })
+        const query = new StreamQuery({ client })
 
-        const stream = await query.select(simpleSelectQuery)
-        await getStream.array(stream)
+        const result = query.select(selectQuery)
 
-        strictEqual(called, true)
+        strictEqual(isReadableStream(result), true)
+        strictEqual(isWritableStream(result), false)
+
+        await chunks(result)
       })
     })
 
-    it('should send the query string as query parameter', async () => {
-      await withServer(async server => {
-        let parameter = null
-
-        server.app.get('/', async (req, res) => {
-          parameter = req.query.query
-
-          res.status(204).end()
-        })
-
-        const endpointUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, endpointUrl })
-        const query = new StreamQuery({ endpoint })
-
-        const stream = await query.construct(simpleSelectQuery)
-        await getStream.array(stream)
-
-        strictEqual(parameter, simpleSelectQuery)
-      })
-    })
-
-    it('should parse the SPARQL JSON result from the server and provide it as stream of RDF/JS key value pair objects', async () => {
+    it('should parse the SPARQL JSON result', async () => {
       await withServer(async server => {
         const content = {
           results: {
@@ -375,16 +387,58 @@ describe('StreamQuery', () => {
         })
 
         const endpointUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, endpointUrl })
-        const query = new StreamQuery({ endpoint })
+        const client = new SimpleClient({ endpointUrl, factory })
+        const query = new StreamQuery({ client })
 
-        const stream = await query.select(simpleSelectQuery)
-        const result = await getStream.array(stream)
+        const stream = query.select(selectQuery)
+        const result = await chunks(stream)
 
         strictEqual(result[0].a.termType, 'NamedNode')
         strictEqual(result[0].a.value, content.results.bindings[0].a.value)
         strictEqual(result[1].a.termType, 'NamedNode')
         strictEqual(result[1].a.value, content.results.bindings[1].a.value)
+      })
+    })
+
+    it('should send a GET request', async () => {
+      await withServer(async server => {
+        let called = false
+
+        server.app.get('/', async (req, res) => {
+          called = true
+
+          res.status(204).end()
+        })
+
+        const endpointUrl = await server.listen()
+        const client = new SimpleClient({ endpointUrl })
+        const query = new StreamQuery({ client })
+
+        const stream = query.select(selectQuery)
+        await chunks(stream)
+
+        strictEqual(called, true)
+      })
+    })
+
+    it('should send the query string as query parameter', async () => {
+      await withServer(async server => {
+        let parameter = null
+
+        server.app.get('/', async (req, res) => {
+          parameter = req.query.query
+
+          res.status(204).end()
+        })
+
+        const endpointUrl = await server.listen()
+        const client = new SimpleClient({ endpointUrl })
+        const query = new StreamQuery({ client })
+
+        const stream = query.construct(selectQuery)
+        await chunks(stream)
+
+        strictEqual(parameter, selectQuery)
       })
     })
 
@@ -408,11 +462,11 @@ describe('StreamQuery', () => {
         })
 
         const endpointUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, endpointUrl })
-        const query = new StreamQuery({ factory, endpoint })
+        const client = new SimpleClient({ endpointUrl, factory })
+        const query = new StreamQuery({ client })
 
-        const stream = await query.select(simpleSelectQuery)
-        await getStream.array(stream)
+        const stream = query.select(selectQuery)
+        await chunks(stream)
 
         deepStrictEqual(factory.used, {
           blankNode: true,
@@ -426,57 +480,66 @@ describe('StreamQuery', () => {
       await withServer(async server => {
         let parameter = null
 
-        server.app.post('/', urlencoded({ extended: false }), async (req, res) => {
+        server.app.post('/', express.urlencoded({ extended: false }), async (req, res) => {
           parameter = req.body.query
 
           res.status(204).end()
         })
 
         const endpointUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, endpointUrl })
-        const query = new StreamQuery({ endpoint })
+        const client = new SimpleClient({ endpointUrl })
+        const query = new StreamQuery({ client })
 
-        const stream = await query.select(simpleSelectQuery, { operation: 'postUrlencoded' })
-        await getStream.array(stream)
+        const stream = query.select(selectQuery, { operation: 'postUrlencoded' })
+        await chunks(stream)
 
-        strictEqual(parameter, simpleSelectQuery)
+        strictEqual(parameter, selectQuery)
+      })
+    })
+
+    it('should handle server socket errors', async () => {
+      await withServer(async server => {
+        server.app.get('/', async (req, res) => {
+          req.destroy()
+        })
+
+        const endpointUrl = await server.listen()
+        const client = new SimpleClient({ endpointUrl })
+        const query = new StreamQuery({ client })
+
+        await rejects(async () => {
+          const stream = query.select(selectQuery)
+          await chunks(stream)
+        }, err => isSocketError(err))
       })
     })
 
     it('should handle server errors', async () => {
       await withServer(async server => {
-        const message = 'test message'
-
         server.app.get('/', async (req, res) => {
           res.status(500).end(message)
         })
 
         const endpointUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, endpointUrl })
-        const query = new StreamQuery({ endpoint })
+        const client = new SimpleClient({ endpointUrl })
+        const query = new StreamQuery({ client })
 
         await rejects(async () => {
-          await query.select(simpleSelectQuery)
-        }, err => {
-          strictEqual(err.message.includes('Internal Server Error'), true)
-          strictEqual(err.message.includes('500'), true)
-          strictEqual(err.message.includes(message), true)
-
-          return true
-        })
+          const stream = query.select(selectQuery)
+          await chunks(stream)
+        }, err => isServerError(err, message))
       })
     })
   })
 
   describe('.update', () => {
     it('should be a method', () => {
-      const endpoint = new Endpoint({ fetch })
-      const query = new StreamQuery({ endpoint })
+      const query = new StreamQuery({})
 
       strictEqual(typeof query.update, 'function')
     })
 
-    it('should send a POST request to the updateUrl', async () => {
+    it('should send a POST request', async () => {
       await withServer(async server => {
         let called = false
 
@@ -487,10 +550,10 @@ describe('StreamQuery', () => {
         })
 
         const updateUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, updateUrl })
-        const query = new StreamQuery({ endpoint })
+        const client = new SimpleClient({ updateUrl })
+        const query = new StreamQuery({ client })
 
-        await query.update(simpleUpdateQuery)
+        await query.update(updateQuery)
 
         strictEqual(called, true)
       })
@@ -500,19 +563,19 @@ describe('StreamQuery', () => {
       await withServer(async server => {
         let parameter = null
 
-        server.app.post('/', urlencoded({ extended: false }), async (req, res) => {
+        server.app.post('/', express.urlencoded({ extended: false }), async (req, res) => {
           parameter = req.body.update
 
           res.status(204).end()
         })
 
         const updateUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, updateUrl })
-        const query = new StreamQuery({ endpoint })
+        const client = new SimpleClient({ updateUrl })
+        const query = new StreamQuery({ client })
 
-        await query.update(simpleUpdateQuery)
+        await query.update(updateQuery)
 
-        strictEqual(parameter, simpleUpdateQuery)
+        strictEqual(parameter, updateQuery)
       })
     })
 
@@ -520,43 +583,51 @@ describe('StreamQuery', () => {
       await withServer(async server => {
         let content = null
 
-        server.app.post('/', text({ type: '*/*' }), async (req, res) => {
+        server.app.post('/', express.text({ type: '*/*' }), async (req, res) => {
           content = req.body
 
           res.status(204).end()
         })
 
         const updateUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, updateUrl })
-        const query = new StreamQuery({ endpoint })
+        const client = new SimpleClient({ updateUrl })
+        const query = new StreamQuery({ client })
 
-        await query.update(simpleUpdateQuery, { operation: 'postDirect' })
+        await query.update(updateQuery, { operation: 'postDirect' })
 
-        strictEqual(content, simpleUpdateQuery)
+        strictEqual(content, updateQuery)
+      })
+    })
+
+    it('should handle server socket errors', async () => {
+      await withServer(async server => {
+        server.app.post('/', async (req, res) => {
+          req.destroy()
+        })
+
+        const updateUrl = await server.listen()
+        const client = new SimpleClient({ updateUrl })
+        const query = new StreamQuery({ client })
+
+        await rejects(async () => {
+          await query.update(updateQuery)
+        }, err => isSocketError(err))
       })
     })
 
     it('should handle server errors', async () => {
       await withServer(async server => {
-        const message = 'test message'
-
         server.app.post('/', async (req, res) => {
           res.status(500).end(message)
         })
 
         const updateUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, updateUrl })
-        const query = new StreamQuery({ endpoint })
+        const client = new SimpleClient({ updateUrl })
+        const query = new StreamQuery({ client })
 
         await rejects(async () => {
-          await query.update(simpleUpdateQuery)
-        }, err => {
-          strictEqual(err.message.includes('Internal Server Error'), true)
-          strictEqual(err.message.includes('500'), true)
-          strictEqual(err.message.includes(message), true)
-
-          return true
-        })
+          await query.update(updateQuery)
+        }, err => isServerError(err, message))
       })
     })
   })

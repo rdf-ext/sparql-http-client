@@ -1,51 +1,52 @@
-const jsonStream = require('jsonstream2')
-const delay = require('promise-the-world/delay')
-const rdf = require('@rdfjs/data-model')
-const { Duplex, finished } = require('readable-stream')
+import JsonParser from '@bergos/jsonparse'
+import { Transform } from 'readable-stream'
 
 /**
- * A stream which parses SPARQL SELECT bindings
+ * A Transform stream that parses JSON SPARQL results and emits one object per row with the variable names as keys and
+ * RDF/JS terms as values.
  */
-class ResultParser extends Duplex {
-  constructor ({ factory = rdf } = {}) {
+class ResultParser extends Transform {
+  /**
+   * @param {Object} options
+   * @param {DataFactory} options.factory RDF/JS DataFactory used to create the quads and terms
+   */
+  constructor ({ factory }) {
     super({
       readableObjectMode: true
     })
 
     this.factory = factory
-    this.jsonParser = jsonStream.parse('results.bindings.*')
-
-    finished(this.jsonParser, err => {
-      this.destroy(err)
-    })
+    this.jsonParser = new JsonParser()
+    this.jsonParser.onError = err => this.destroy(err)
+    this.jsonParser.onValue = value => this.onValue(value)
   }
 
   _write (chunk, encoding, callback) {
-    this.jsonParser.write(chunk, encoding, callback)
+    this.jsonParser.write(chunk)
+
+    callback()
   }
 
-  async _read () {
-    while (true) {
-      const raw = this.jsonParser.read()
-
-      if (!raw || Object.keys(raw).length === 0) {
-        if (!this.writable) {
-          return this.push(null)
-        }
-
-        await delay(0)
-      } else {
-        const row = Object.entries(raw).reduce((row, [key, value]) => {
-          row[key] = this.valueToTerm(value)
-
-          return row
-        }, {})
-
-        if (!this.push(row)) {
-          return
-        }
-      }
+  onValue (raw) {
+    if (this.jsonParser.stack.length !== 3) {
+      return
     }
+
+    if (this.jsonParser.stack[1].key !== 'results' || this.jsonParser.stack[2].key !== 'bindings') {
+      return
+    }
+
+    if (Object.keys(raw).length === 0) {
+      return
+    }
+
+    const row = {}
+
+    for (const [key, value] of Object.entries(raw)) {
+      row[key] = this.valueToTerm(value)
+    }
+
+    this.push(row)
   }
 
   valueToTerm (value) {
@@ -67,4 +68,4 @@ class ResultParser extends Duplex {
   }
 }
 
-module.exports = ResultParser
+export default ResultParser

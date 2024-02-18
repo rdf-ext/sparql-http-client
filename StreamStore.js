@@ -1,115 +1,127 @@
-const { promisify } = require('util')
-const TripleToQuadTransform = require('rdf-transform-triple-to-quad')
-const rdf = require('@rdfjs/data-model')
-const N3Parser = require('@rdfjs/parser-n3')
-const { finished } = require('readable-stream')
-const checkResponse = require('./lib/checkResponse')
-const QuadStreamSeparator = require('./lib/QuadStreamSeparator')
+import N3Parser from '@rdfjs/parser-n3'
+import toNT from '@rdfjs/to-ntriples'
+import TripleToQuadTransform from 'rdf-transform-triple-to-quad'
+import { Transform } from 'readable-stream'
+import asyncToReadabe from './lib/asyncToReadabe.js'
+import checkResponse from './lib/checkResponse.js'
+import mergeHeaders from './lib/mergeHeaders.js'
 
 /**
- * Accesses stores with SPARQL Graph Protocol
+ * A store implementation that parses and serializes SPARQL Graph Store responses and requests into/from Readable
+ * streams.
  */
 class StreamStore {
   /**
-   *
-   * @param {Object} init
-   * @param {Endpoint} init.endpoint
-   * @param {DataFactory} [init.factory=@rdfjs/data-model]
-   * @param {number} [maxQuadsPerRequest]
+   * @param {Object} options
+   * @param {SimpleClient} options.client client that provides the HTTP I/O
    */
-  constructor ({ endpoint, factory = rdf, maxQuadsPerRequest }) {
-    this.endpoint = endpoint
-    this.factory = factory
-    this.maxQuadsPerRequest = maxQuadsPerRequest
+  constructor ({ client }) {
+    this.client = client
   }
 
   /**
-   * Gets a graph triples from the store
-   * @param {NamedNode} graph
-   * @return {Promise<Stream>}
+   * Sends a GET request to the Graph Store
+   *
+   * @param {NamedNode} [graph] source graph
+   * @return {Promise<Readable>}
    */
-  async get (graph) {
+  get (graph) {
     return this.read({ method: 'GET', graph })
   }
 
   /**
-   * Adds triples to a graph
-   * @param {Stream} stream
+   * Sends a POST request to the Graph Store
+   *
+   * @param {Readable} stream triples/quads to write
+   * @param {Object} [options]
+   * @param {Term} [options.graph] target graph
    * @return {Promise<void>}
    */
-  async post (stream) {
-    return this.write({ method: 'POST', stream })
+  async post (stream, { graph } = {}) {
+    return this.write({ graph, method: 'POST', stream })
   }
 
   /**
-   * Replaces graph with triples
-   * @param {Stream} stream
+   * Sends a PUT request to the Graph Store
+   *
+   * @param {Readable} stream triples/quads to write
+   * @param {Object} [options]
+   * @param {Term} [options.graph] target graph
    * @return {Promise<void>}
    */
-  async put (stream) {
-    return this.write({ firstMethod: 'PUT', method: 'POST', stream })
+  async put (stream, { graph } = {}) {
+    return this.write({ graph, method: 'PUT', stream })
   }
 
-  async read ({ method, graph }) {
-    const url = new URL(this.endpoint.storeUrl)
+  /**
+   * Generic read request to the Graph Store
+   *
+   * @param {Object} [options]
+   * @param {Term} [options.graph] source graph
+   * @param {string} options.method HTTP method
+   * @returns {Readable}
+   */
+  read ({ graph, method }) {
+    return asyncToReadabe(async () => {
+      const url = new URL(this.client.storeUrl)
 
-    if (graph.termType !== 'DefaultGraph') {
-      url.searchParams.append('graph', graph.value)
-    }
+      if (graph && graph.termType !== 'DefaultGraph') {
+        url.searchParams.append('graph', graph.value)
+      }
 
-    return this.endpoint.fetch(url, {
-      method,
-      headers: this.endpoint.mergeHeaders({ accept: 'application/n-triples' })
-    }).then(async res => {
+      const res = await this.client.fetch(url, {
+        method,
+        headers: mergeHeaders(this.client.headers, { accept: 'application/n-triples' })
+      })
+
       await checkResponse(res)
 
-      const parser = new N3Parser({ factory: this.factory })
-      const tripleToQuad = new TripleToQuadTransform(graph, { factory: this.factory })
+      const parser = new N3Parser({ factory: this.client.factory })
+      const tripleToQuad = new TripleToQuadTransform(graph, { factory: this.client.factory })
 
       return parser.import(res.body).pipe(tripleToQuad)
     })
   }
 
-  async write ({ firstMethod, method, stream }) {
-    const seen = new Set()
-    let requestEnd = null
+  /**
+   * Generic write request to the Graph Store
+   *
+   * @param {Object} [options]
+   * @param {Term} [graph] target graph
+   * @param {string} method HTTP method
+   * @param {Readable} stream triples/quads to write
+   * @returns {Promise<void>}
+   */
+  async write ({ graph, method, stream }) {
+    const url = new URL(this.client.storeUrl)
 
-    const splitter = new QuadStreamSeparator({
-      maxQuadsPerStream: this.maxQuadsPerRequest,
-      change: async stream => {
-        if (requestEnd) {
-          await requestEnd
-        }
-
-        const currentMethod = seen.has(splitter.graph.value) ? method : (firstMethod || method)
-
-        requestEnd = this.writeRequest(currentMethod, splitter.graph, stream)
-
-        seen.add(splitter.graph.value)
-      }
-    })
-
-    stream.pipe(splitter)
-
-    await promisify(finished)(splitter)
-    await requestEnd
-  }
-
-  async writeRequest (method, graph, stream) {
-    const url = new URL(this.endpoint.storeUrl)
-
-    if (graph.termType !== 'DefaultGraph') {
+    if (graph && graph.termType !== 'DefaultGraph') {
       url.searchParams.append('graph', graph.value)
     }
 
-    const res = await this.endpoint.fetch(url, {
+    const serialize = new Transform({
+      writableObjectMode: true,
+      transform (quad, encoding, callback) {
+        const triple = {
+          subject: quad.subject,
+          predicate: quad.predicate,
+          object: quad.object,
+          graph: { termType: 'DefaultGraph' }
+        }
+
+        callback(null, `${toNT(triple)}\n`)
+      }
+    })
+
+    const res = await this.client.fetch(url, {
       method,
-      headers: this.endpoint.mergeHeaders({ 'content-type': 'application/n-triples' }),
-      body: stream
+      headers: mergeHeaders(this.client.headers, { 'content-type': 'application/n-triples' }),
+      body: stream.pipe(serialize),
+      duplex: 'half'
     })
 
     await checkResponse(res)
   }
 }
 
-module.exports = StreamStore
+export default StreamStore

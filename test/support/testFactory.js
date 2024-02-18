@@ -1,26 +1,31 @@
-const rdf = require('@rdfjs/data-model')
+import dataModelFactory from '@rdfjs/data-model'
+import datasetFactory from '@rdfjs/dataset'
 
 function testFactory () {
   const factory = {
     blankNode: () => {
       factory.used.blankNode = true
-      return rdf.blankNode()
+      return dataModelFactory.blankNode()
+    },
+    dataset: (quads, graph) => {
+      factory.used.dataset = true
+      return datasetFactory.dataset(quads, graph)
     },
     defaultGraph: () => {
       factory.used.defaultGraph = true
-      return rdf.defaultGraph()
+      return dataModelFactory.defaultGraph()
     },
-    literal: (value) => {
+    literal: value => {
       factory.used.literal = true
-      return rdf.literal(value)
+      return dataModelFactory.literal(value)
     },
-    namedNode: (value) => {
+    namedNode: value => {
       factory.used.namedNode = true
-      return rdf.namedNode(value)
+      return dataModelFactory.namedNode(value)
     },
     quad: (s, p, o, g) => {
       factory.used.quad = true
-      return rdf.quad(s, p, o, g)
+      return dataModelFactory.quad(s, p, o, g)
     },
     used: {}
   }
@@ -28,4 +33,4 @@ function testFactory () {
   return factory
 }
 
-module.exports = testFactory
+export default testFactory

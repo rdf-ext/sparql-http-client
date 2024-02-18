@@ -1,50 +1,39 @@
 import { deepStrictEqual, strictEqual, throws } from 'node:assert'
+import DataModelFactory from '@rdfjs/data-model/Factory.js'
+import Environment from '@rdfjs/environment'
 import omit from 'lodash/omit.js'
 import pick from 'lodash/pick.js'
 import { describe, it } from 'mocha'
+import ParsingClient from '../ParsingClient.js'
+import ParsingQuery from '../ParsingQuery.js'
 import SimpleClient from '../SimpleClient.js'
-import StreamClient from '../StreamClient.js'
-import StreamQuery from '../StreamQuery.js'
-import StreamStore from '../StreamStore.js'
 
-describe('StreamClient', () => {
+describe('ParsingClient', () => {
   it('should be a constructor', () => {
-    strictEqual(typeof StreamClient, 'function')
+    strictEqual(typeof ParsingClient, 'function')
   })
 
-  it('should throw an error if the given factory does not implement the DataFactory interface', () => {
+  it('should throw an error if the given factory does not implement the DatasetCoreFactory interface', () => {
     throws(() => {
-      new StreamClient({ // eslint-disable-line no-new
+      new ParsingClient({ // eslint-disable-line no-new
         endpointUrl: 'test',
-        factory: {}
+        factory: new Environment([DataModelFactory])
       })
     }, {
-      message: /DataFactory/
+      message: /DatasetCoreFactory/
     })
   })
 
   it('should use StreamQuery to create the query instance', () => {
-    const client = new StreamClient({ endpointUrl: 'test' })
+    const client = new ParsingClient({ endpointUrl: 'test' })
 
-    strictEqual(client.query instanceof StreamQuery, true)
+    strictEqual(client.query instanceof ParsingQuery, true)
   })
 
   it('should forward the client to the query instance', () => {
-    const client = new StreamClient({ endpointUrl: 'test' })
+    const client = new ParsingClient({ endpointUrl: 'test' })
 
     strictEqual(client.query.client, client)
-  })
-
-  it('should use StreamStore to create the store instance', () => {
-    const client = new StreamClient({ endpointUrl: 'test' })
-
-    strictEqual(client.store instanceof StreamStore, true)
-  })
-
-  it('should forward the client to the store instance', () => {
-    const client = new StreamClient({ endpointUrl: 'test' })
-
-    strictEqual(client.store.client, client)
   })
 
   it('should be possible to create an instance from a SimpleClient', () => {
@@ -58,7 +47,7 @@ describe('StreamClient', () => {
     }
 
     const simpleClient = new SimpleClient(options)
-    const client = new StreamClient(simpleClient)
+    const client = new ParsingClient(simpleClient)
     const result = pick(client, Object.keys(options))
 
     deepStrictEqual(omit(result, 'headers'), omit(options, 'headers'))

@@ -30,11 +30,7 @@ async function main () {
 
   const content = await res.json()
 
-  for (const row of content.results.bindings) {
-    for (const [key, value] of Object.entries(row)) {
-      console.log(`${key}: ${value.value}`)
-    }
-  }
+  console.log(JSON.stringify(content, null, 2))
 }
 
 main()

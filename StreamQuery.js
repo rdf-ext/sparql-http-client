@@ -1,30 +1,24 @@
-const rdf = require('@rdfjs/data-model')
-const N3Parser = require('@rdfjs/parser-n3')
-const checkResponse = require('./lib/checkResponse')
-const RawQuery = require('./RawQuery')
-const ResultParser = require('./ResultParser')
+import N3Parser from '@rdfjs/parser-n3'
+import asyncToReadabe from './lib/asyncToReadabe.js'
+import checkResponse from './lib/checkResponse.js'
+import mergeHeaders from './lib/mergeHeaders.js'
+import RawQuery from './RawQuery.js'
+import ResultParser from './ResultParser.js'
 
 /**
- * Extends RawQuery by wrapping response body streams as RDF/JS Streams
+ * A query implementation based on {@link RawQuery} that parses SPARQL results into Readable streams of RDF/JS Quad
+ * objects (CONSTRUCT/DESCRIBE) or Readable streams of objects (SELECT).
+ *
+ * @extends RawQuery
  */
 class StreamQuery extends RawQuery {
   /**
-   * @param {Object} init
-   * @param {Endpoint} init.endpoint
-   * @param {DataFactory} [init.factory=@rdfjs/data-model]
-   */
-  constructor ({ endpoint, factory = rdf }) {
-    super({ endpoint })
-
-    /** @member {DataFactory} */
-    this.factory = factory
-  }
-
-  /**
-   * @param {string} query SPARQL ASK query
-   * @param {Object} [init]
-   * @param {HeadersInit} [init.headers] HTTP request headers
-   * @param {'get'|'postUrlencoded'|'postDirect'} [init.operation='get']
+   * Sends a request for a ASK query
+   *
+   * @param {string} query ASK query
+   * @param {Object} [options]
+   * @param {Headers} [options.headers] additional request headers
+   * @param {'get'|'postUrlencoded'|'postDirect'} [options.operation='get'] SPARQL Protocol operation
    * @return {Promise<boolean>}
    */
   async ask (query, { headers, operation } = {}) {
@@ -38,50 +32,60 @@ class StreamQuery extends RawQuery {
   }
 
   /**
-   * @param {string} query SPARQL query
-   * @param {Object} [init]
-   * @param {HeadersInit} [init.headers] HTTP request headers
-   * @param {'get'|'postUrlencoded'|'postDirect'} [init.operation='get']
-   * @return {Promise<Stream>}
+   * Sends a request for a CONSTRUCT or DESCRIBE query
+   *
+   * @param {string} query CONSTRUCT or DESCRIBE query
+   * @param {Object} [options]
+   * @param {Headers} [options.headers] additional request headers
+   * @param {'get'|'postUrlencoded'|'postDirect'} [options.operation='get'] SPARQL Protocol operation
+   * @return {Readable}
    */
-  async construct (query, { headers, operation } = {}) {
-    headers = new this.endpoint.fetch.Headers(headers)
+  construct (query, { headers, operation } = {}) {
+    return asyncToReadabe(async () => {
+      headers = mergeHeaders(headers)
 
-    if (!headers.has('accept')) {
-      headers.set('accept', 'application/n-triples, text/turtle')
-    }
+      if (!headers.has('accept')) {
+        headers.set('accept', 'application/n-triples, text/turtle')
+      }
 
-    const res = await super.construct(query, { headers, operation })
+      const res = await super.construct(query, { headers, operation })
 
-    await checkResponse(res)
+      await checkResponse(res)
 
-    const parser = new N3Parser({ factory: this.factory })
+      const parser = new N3Parser({ factory: this.client.factory })
 
-    return parser.import(res.body)
+      return parser.import(res.body)
+    })
   }
 
   /**
-   * @param {string} query SPARQL query
-   * @param {Object} [init]
-   * @param {HeadersInit} [init.headers] HTTP request headers
-   * @param {'get'|'postUrlencoded'|'postDirect'} [init.operation='get']
-   * @return {Promise<Stream>}
+   * Sends a request for a SELECT query
+   *
+   * @param {string} query SELECT query
+   * @param {Object} [options]
+   * @param {Headers} [options.headers] additional request headers
+   * @param {'get'|'postUrlencoded'|'postDirect'} [options.operation='get'] SPARQL Protocol operation
+   * @return {Readable}
    */
-  async select (query, { headers, operation } = {}) {
-    const res = await super.select(query, { headers, operation })
+  select (query, { headers, operation } = {}) {
+    return asyncToReadabe(async () => {
+      const res = await super.select(query, { headers, operation })
 
-    await checkResponse(res)
+      await checkResponse(res)
 
-    const parser = new ResultParser({ factory: this.factory })
+      const parser = new ResultParser({ factory: this.client.factory })
 
-    return res.body.pipe(parser)
+      return res.body.pipe(parser)
+    })
   }
 
   /**
-   * @param {string} query SPARQL query
-   * @param {Object} [init]
-   * @param {HeadersInit} [init.headers] HTTP request headers
-   * @param {'get'|'postUrlencoded'|'postDirect'} [init.operation='postUrlencoded']
+   * Sends a request for an update query
+   *
+   * @param {string} query update query
+   * @param {Object} [options]
+   * @param {Headers} [options.headers] additional request headers
+   * @param {'get'|'postUrlencoded'|'postDirect'} [options.operation='postUrlencoded'] SPARQL Protocol operation
    * @return {Promise<void>}
    */
   async update (query, { headers, operation } = {}) {
@@ -91,4 +95,4 @@ class StreamQuery extends RawQuery {
   }
 }
 
-module.exports = StreamQuery
+export default StreamQuery

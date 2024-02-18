@@ -4,7 +4,7 @@ This example uses the default Client to make a SELECT query and processes the st
 
 */
 
-const SparqlClient = require('..')
+import SparqlClient from '../StreamClient.js'
 
 const endpointUrl = 'https://query.wikidata.org/sparql'
 const query = `
@@ -22,12 +22,12 @@ SELECT ?value WHERE {
 
 async function main () {
   const client = new SparqlClient({ endpointUrl })
-  const stream = await client.query.select(query)
+  const stream = client.query.select(query)
 
   stream.on('data', row => {
-    Object.entries(row).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(row)) {
       console.log(`${key}: ${value.value} (${value.termType})`)
-    })
+    }
   })
 
   stream.on('error', err => {
