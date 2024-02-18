@@ -1,6 +1,6 @@
 {
   "name": "sparql-http-client",
-  "version": "2.4.2",
+  "version": "3.0.0",
   "description": "Simplified SPARQL HTTP request client",
   "type": "module",
   "main": "index.js",
