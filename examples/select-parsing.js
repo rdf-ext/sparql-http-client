@@ -1,10 +1,11 @@
 /*
 
-This example uses the SimpleClient to make a SELECT query and manually processes the response.
+This example uses the SimpleClient and upgrades it to a ParsingClient to make a SELECT query and processes the result.
 
 */
 
-import SparqlClient from '../SimpleClient.js'
+import ParsingClient from '../ParsingClient.js'
+import SimpleClient from '../SimpleClient.js'
 
 const endpointUrl = 'https://query.wikidata.org/sparql'
 const query = `
@@ -21,18 +22,13 @@ SELECT ?value WHERE {
 }`
 
 async function main () {
-  const client = new SparqlClient({ endpointUrl })
-  const res = await client.query.select(query)
+  const simpleClient = new SimpleClient({ endpointUrl })
+  const parsingClient = new ParsingClient(simpleClient)
+  const result = await parsingClient.query.select(query)
 
-  if (!res.ok) {
-    return console.error(res.statusText)
-  }
-
-  const content = await res.json()
-
-  for (const row of content.results.bindings) {
+  for (const row of result) {
     for (const [key, value] of Object.entries(row)) {
-      console.log(`${key}: ${value.value}`)
+      console.log(`${key}: ${value.value} (${value.termType})`)
     }
   }
 }

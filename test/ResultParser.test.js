@@ -1,8 +1,9 @@
-const { deepStrictEqual, strictEqual, notStrictEqual } = require('assert')
-const getStream = require('get-stream')
-const { describe, it } = require('mocha')
-const testFactory = require('./support/testFactory')
-const ResultParser = require('../ResultParser')
+import { deepStrictEqual, rejects, strictEqual } from 'node:assert'
+import factory from '@rdfjs/data-model'
+import { describe, it } from 'mocha'
+import chunks from 'stream-chunks/chunks.js'
+import ResultParser from '../ResultParser.js'
+import testFactory from './support/testFactory.js'
 
 describe('ResultParser', () => {
   it('should be a constructor', () => {
@@ -10,32 +11,29 @@ describe('ResultParser', () => {
   })
 
   it('should throw an error if the content is not JSON', async () => {
-    let error = null
-    const parser = new ResultParser()
+    const parser = new ResultParser({ factory })
 
     parser.end('this is not json')
 
-    try {
-      await getStream.array(parser)
-    } catch (err) {
-      error = err
-    }
-
-    notStrictEqual(error, null)
+    await rejects(async () => {
+      await chunks(parser)
+    }, {
+      message: /Unexpected/
+    })
   })
 
   it('should not emit any chunk if the json doesn\'t contain results.bindings', async () => {
-    const parser = new ResultParser()
+    const parser = new ResultParser({ factory })
 
     parser.end('{}')
 
-    const result = await getStream.array(parser)
+    const result = await chunks(parser)
 
     deepStrictEqual(result, [])
   })
 
   it('should not emit any chunk when Stardog GROUP BY bug shows up', async () => {
-    const parser = new ResultParser()
+    const parser = new ResultParser({ factory })
     const content = {
       results: {
         bindings: [{}]
@@ -44,13 +42,13 @@ describe('ResultParser', () => {
 
     parser.end(JSON.stringify(content))
 
-    const result = await getStream.array(parser)
+    const result = await chunks(parser)
 
     deepStrictEqual(result, [])
   })
 
   it('should parse named node values', async () => {
-    const parser = new ResultParser()
+    const parser = new ResultParser({ factory })
     const content = {
       results: {
         bindings: [{
@@ -63,7 +61,7 @@ describe('ResultParser', () => {
 
     parser.end(JSON.stringify(content))
 
-    const result = await getStream.array(parser)
+    const result = await chunks(parser)
 
     strictEqual(result[0].a.termType, 'NamedNode')
     strictEqual(result[0].a.value, content.results.bindings[0].a.value)
@@ -72,7 +70,7 @@ describe('ResultParser', () => {
   })
 
   it('should parse blank node values', async () => {
-    const parser = new ResultParser()
+    const parser = new ResultParser({ factory })
     const content = {
       results: {
         bindings: [{
@@ -85,7 +83,7 @@ describe('ResultParser', () => {
 
     parser.end(JSON.stringify(content))
 
-    const result = await getStream.array(parser)
+    const result = await chunks(parser)
 
     strictEqual(result[0].a.termType, 'BlankNode')
     strictEqual(result[0].a.value, content.results.bindings[0].a.value)
@@ -94,7 +92,7 @@ describe('ResultParser', () => {
   })
 
   it('should parse literal values', async () => {
-    const parser = new ResultParser()
+    const parser = new ResultParser({ factory })
     const content = {
       results: {
         bindings: [{
@@ -107,7 +105,7 @@ describe('ResultParser', () => {
 
     parser.end(JSON.stringify(content))
 
-    const result = await getStream.array(parser)
+    const result = await chunks(parser)
 
     strictEqual(result[0].a.termType, 'Literal')
     strictEqual(result[0].a.value, content.results.bindings[0].a.value)
@@ -116,7 +114,7 @@ describe('ResultParser', () => {
   })
 
   it('should parse typed literal values', async () => {
-    const parser = new ResultParser()
+    const parser = new ResultParser({ factory })
     const content = {
       results: {
         bindings: [{
@@ -129,7 +127,7 @@ describe('ResultParser', () => {
 
     parser.end(JSON.stringify(content))
 
-    const result = await getStream.array(parser)
+    const result = await chunks(parser)
 
     strictEqual(result[0].a.termType, 'Literal')
     strictEqual(result[0].a.value, content.results.bindings[0].a.value)
@@ -140,7 +138,7 @@ describe('ResultParser', () => {
   })
 
   it('should parse Virtuoso style typed literal values', async () => {
-    const parser = new ResultParser()
+    const parser = new ResultParser({ factory })
     const content = {
       results: {
         bindings: [{
@@ -153,7 +151,7 @@ describe('ResultParser', () => {
 
     parser.end(JSON.stringify(content))
 
-    const result = await getStream.array(parser)
+    const result = await chunks(parser)
 
     strictEqual(result[0].a.termType, 'Literal')
     strictEqual(result[0].a.value, content.results.bindings[0].a.value)
@@ -164,7 +162,7 @@ describe('ResultParser', () => {
   })
 
   it('should parse language literal values', async () => {
-    const parser = new ResultParser()
+    const parser = new ResultParser({ factory })
     const content = {
       results: {
         bindings: [{
@@ -177,7 +175,7 @@ describe('ResultParser', () => {
 
     parser.end(JSON.stringify(content))
 
-    const result = await getStream.array(parser)
+    const result = await chunks(parser)
 
     strictEqual(result[0].a.termType, 'Literal')
     strictEqual(result[0].a.value, content.results.bindings[0].a.value)
@@ -185,6 +183,34 @@ describe('ResultParser', () => {
     strictEqual(result[1].a.termType, 'Literal')
     strictEqual(result[1].a.value, content.results.bindings[1].a.value)
     strictEqual(result[1].a.language, content.results.bindings[1].a['xml:lang'])
+  })
+
+  it('should parse multiple variables', async () => {
+    const parser = new ResultParser({ factory })
+    const content = {
+      results: {
+        bindings: [{
+          a: { type: 'uri', value: 'http://example.org/0' },
+          b: { type: 'uri', value: 'http://example.org/1' }
+        }, {
+          a: { type: 'uri', value: 'http://example.org/2' },
+          b: { type: 'uri', value: 'http://example.org/3' }
+        }]
+      }
+    }
+
+    parser.end(JSON.stringify(content))
+
+    const result = await chunks(parser)
+
+    strictEqual(result[0].a.termType, 'NamedNode')
+    strictEqual(result[0].a.value, content.results.bindings[0].a.value)
+    strictEqual(result[0].b.termType, 'NamedNode')
+    strictEqual(result[0].b.value, content.results.bindings[0].b.value)
+    strictEqual(result[1].a.termType, 'NamedNode')
+    strictEqual(result[1].a.value, content.results.bindings[1].a.value)
+    strictEqual(result[1].b.termType, 'NamedNode')
+    strictEqual(result[1].b.value, content.results.bindings[1].b.value)
   })
 
   it('should use the given factory', async () => {
@@ -204,7 +230,7 @@ describe('ResultParser', () => {
 
     parser.end(JSON.stringify(content))
 
-    await getStream.array(parser)
+    await chunks(parser)
 
     deepStrictEqual(factory.used, {
       blankNode: true,

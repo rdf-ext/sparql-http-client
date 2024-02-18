@@ -1,47 +1,40 @@
-const { array } = require('get-stream')
-const StreamQuery = require('./StreamQuery')
+import chunks from 'stream-chunks/chunks.js'
+import StreamQuery from './StreamQuery.js'
 
 /**
- * Extends StreamQuery by materialising the SPARQL response streams
+ * A query implementation that wraps the results of the {@link StreamQuery} into RDF/JS DatasetCore objects
+ * (CONSTRUCT/DESCRIBE) or an array of objects (SELECT).
+ *
+ * @extends StreamQuery
  */
 class ParsingQuery extends StreamQuery {
   /**
-   * @param {Object} init
-   * @param {Endpoint} init.endpoint
+   * Sends a request for a CONSTRUCT or DESCRIBE query
+   *
+   * @param {string} query CONSTRUCT or DESCRIBE query
+   * @param {Object} options
+   * @param {Headers} [options.headers] additional request headers
+   * @param {'get'|'postUrlencoded'|'postDirect'} [options.operation='get'] SPARQL Protocol operation
+   * @return {Promise<DatasetCore>}
    */
-  constructor ({ endpoint }) {
-    super({ endpoint })
+  async construct (query, { headers, operation } = {}) {
+    const quads = await chunks(await super.construct(query, { headers, operation }))
+
+    return this.client.factory.dataset(quads)
   }
 
   /**
-   * Performs a query which returns triples
+   * Sends a request for a SELECT query
    *
-   * @param {string} query
+   * @param {string} query SELECT query
    * @param {Object} [options]
-   * @param {HeadersInit} [options.headers] HTTP request headers
-   * @param {'get'|'postUrlencoded'|'postDirect'} [options.operation='get']
-   * @return {Promise<Quad[]>}
-   */
-  async construct (query, options = {}) {
-    const stream = await super.construct(query, options)
-
-    return array(stream)
-  }
-
-  /**
-   * Performs a SELECT query which returns binding tuples
-   *
-   * @param {string} query
-   * @param {Object} [options]
-   * @param {HeadersInit} [options.headers] HTTP request headers
-   * @param {'get'|'postUrlencoded'|'postDirect'} [options.operation='get']
+   * @param {Headers} [options.headers] additional request headers
+   * @param {'get'|'postUrlencoded'|'postDirect'} [options.operation='get'] SPARQL Protocol operation
    * @return {Promise<Array<Object.<string, Term>>>}
    */
-  async select (query, options = {}) {
-    const stream = await super.select(query, options)
-
-    return array(stream)
+  async select (query, { headers, operation } = {}) {
+    return chunks(await super.select(query, { headers, operation }))
   }
 }
 
-module.exports = ParsingQuery
+export default ParsingQuery

@@ -1,235 +1,48 @@
 ## Classes
 
 <dl>
-<dt><a href="#BaseClient">BaseClient</a></dt>
-<dd><p>An abstract base client which connects the query, store and endpoint together</p>
-<p>Store and Query parameters are both optional and only necessary when the client will connect to SPARQL Graph Store
-or SPARQL Query endpoints respectively</p>
+<dt><a href="#ParsingClient">ParsingClient</a> ⇐ <code><a href="#SimpleClient">SimpleClient</a></code></dt>
+<dd><p>A client implementation based on <a href="#ParsingQuery">ParsingQuery</a> that parses SPARQL results into RDF/JS DatasetCore objects
+(CONSTRUCT/DESCRIBE) or an array of objects (SELECT). It does not provide a store interface.</p>
 </dd>
-<dt><a href="#Endpoint">Endpoint</a></dt>
-<dd><p>Represents a SPARQL endpoint and exposes a low-level methods, close to the underlying HTTP interface</p>
-<p>It directly returns HTTP response objects</p>
-</dd>
-<dt><a href="#ParsingClient">ParsingClient</a></dt>
-<dd><p>A client implementation which parses SPARQL responses into RDF/JS dataset (CONSTRUCT/DESCRIBE) or JSON objects (SELECT)</p>
-<p>It does not provide a store</p>
-</dd>
-<dt><a href="#ParsingQuery">ParsingQuery</a></dt>
-<dd><p>Extends StreamQuery by materialising the SPARQL response streams</p>
+<dt><a href="#ParsingQuery">ParsingQuery</a> ⇐ <code><a href="#StreamQuery">StreamQuery</a></code></dt>
+<dd><p>A query implementation that wraps the results of the <a href="#StreamQuery">StreamQuery</a> into RDF/JS DatasetCore objects
+(CONSTRUCT/DESCRIBE) or an array of objects (SELECT).</p>
 </dd>
 <dt><a href="#RawQuery">RawQuery</a></dt>
-<dd><p>A base query class which performs HTTP requests for the different SPARQL query forms</p>
+<dd><p>A query implementation that prepares URLs and headers for SPARQL queries and returns the raw fetch response.</p>
 </dd>
 <dt><a href="#ResultParser">ResultParser</a></dt>
-<dd><p>A stream which parses SPARQL SELECT bindings</p>
+<dd><p>A Transform stream that parses JSON SPARQL results and emits one object per row with the variable names as keys and
+RDF/JS terms as values.</p>
 </dd>
 <dt><a href="#SimpleClient">SimpleClient</a></dt>
-<dd><p>A basic client implementation which uses RawQuery and no Store</p>
+<dd><p>A client implementation based on <a href="#RawQuery">RawQuery</a> that prepares URLs and headers for SPARQL queries and returns the
+raw fetch response. It does not provide a store interface.</p>
 </dd>
-<dt><a href="#StreamClient">StreamClient</a></dt>
-<dd><p>The default client implementation which returns SPARQL response as RDF/JS streams</p>
+<dt><a href="#StreamClient">StreamClient</a> ⇐ <code><a href="#SimpleClient">SimpleClient</a></code></dt>
+<dd><p>The default client implementation based on <a href="#StreamQuery">StreamQuery</a> and <a href="#StreamStore">StreamStore</a> parses SPARQL results into
+Readable streams of RDF/JS Quad objects (CONSTRUCT/DESCRIBE) or Readable streams of objects (SELECT). Graph Store
+read and write operations are handled using Readable streams.</p>
 </dd>
-<dt><a href="#StreamQuery">StreamQuery</a></dt>
-<dd><p>Extends RawQuery by wrapping response body streams as RDF/JS Streams</p>
+<dt><a href="#StreamQuery">StreamQuery</a> ⇐ <code><a href="#RawQuery">RawQuery</a></code></dt>
+<dd><p>A query implementation based on <a href="#RawQuery">RawQuery</a> that parses SPARQL results into Readable streams of RDF/JS Quad
+objects (CONSTRUCT/DESCRIBE) or Readable streams of objects (SELECT).</p>
 </dd>
 <dt><a href="#StreamStore">StreamStore</a></dt>
-<dd><p>Accesses stores with SPARQL Graph Protocol</p>
+<dd><p>A store implementation that parses and serializes SPARQL Graph Store responses and requests into/from Readable
+streams.</p>
 </dd>
 </dl>
 
-<a name="BaseClient"></a>
-
-## BaseClient
-An abstract base client which connects the query, store and endpoint together
-
-Store and Query parameters are both optional and only necessary when the client will connect to SPARQL Graph Store
-or SPARQL Query endpoints respectively
-
-**Kind**: global class  
-
-* [BaseClient](#BaseClient)
-    * [new BaseClient(init)](#new_BaseClient_new)
-    * [.query](#BaseClient+query) : [<code>RawQuery</code>](#RawQuery)
-    * [.store](#BaseClient+store) : [<code>StreamStore</code>](#StreamStore)
-
-<a name="new_BaseClient_new"></a>
-
-### new BaseClient(init)
-<table>
-  <thead>
-    <tr>
-      <th>Param</th><th>Type</th><th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-<tr>
-    <td>init</td><td><code>Object</code></td><td></td>
-    </tr><tr>
-    <td>init.endpoint</td><td><code><a href="#Endpoint">Endpoint</a></code></td><td><p>object to connect to SPARQL endpoint</p>
-</td>
-    </tr><tr>
-    <td>[init.Query]</td><td><code>Query</code></td><td><p>SPARQL Query/Update executor constructor</p>
-</td>
-    </tr><tr>
-    <td>[init.Store]</td><td><code>Store</code></td><td><p>SPARQL Graph Store connector constructor</p>
-</td>
-    </tr><tr>
-    <td>[init.factory]</td><td><code>factory</code></td><td><p>RDF/JS DataFactory</p>
-</td>
-    </tr><tr>
-    <td>[init.options]</td><td><code>Object</code></td><td><p>any additional arguments passed to Query and Store constructors</p>
-</td>
-    </tr>  </tbody>
-</table>
-
-<a name="BaseClient+query"></a>
-
-### baseClient.query : [<code>RawQuery</code>](#RawQuery)
-**Kind**: instance property of [<code>BaseClient</code>](#BaseClient)  
-<a name="BaseClient+store"></a>
-
-### baseClient.store : [<code>StreamStore</code>](#StreamStore)
-**Kind**: instance property of [<code>BaseClient</code>](#BaseClient)  
-<a name="Endpoint"></a>
-
-## Endpoint
-Represents a SPARQL endpoint and exposes a low-level methods, close to the underlying HTTP interface
-
-It directly returns HTTP response objects
-
-**Kind**: global class  
-
-* [Endpoint](#Endpoint)
-    * [new Endpoint(init)](#new_Endpoint_new)
-    * [.get(query, options)](#Endpoint+get) ⇒ <code>Promise.&lt;Response&gt;</code>
-    * [.postDirect(query, options)](#Endpoint+postDirect) ⇒ <code>Promise.&lt;Response&gt;</code>
-    * [.postUrlencoded(query, options)](#Endpoint+postUrlencoded) ⇒ <code>Promise.&lt;Response&gt;</code>
-
-<a name="new_Endpoint_new"></a>
-
-### new Endpoint(init)
-<table>
-  <thead>
-    <tr>
-      <th>Param</th><th>Type</th><th>Default</th><th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-<tr>
-    <td>init</td><td><code>Object</code></td><td></td><td></td>
-    </tr><tr>
-    <td>init.endpointUrl</td><td><code>string</code></td><td></td><td><p>SPARQL Query endpoint URL</p>
-</td>
-    </tr><tr>
-    <td>[init.fetch]</td><td><code>fetch</code></td><td><code>nodeify-fetch</code></td><td><p>fetch implementation</p>
-</td>
-    </tr><tr>
-    <td>[init.headers]</td><td><code>HeadersInit</code></td><td></td><td><p>HTTP headers to send with every endpoint request</p>
-</td>
-    </tr><tr>
-    <td>[init.password]</td><td><code>string</code></td><td></td><td><p>password used for basic authentication</p>
-</td>
-    </tr><tr>
-    <td>[init.storeUrl]</td><td><code>string</code></td><td></td><td><p>Graph Store URL</p>
-</td>
-    </tr><tr>
-    <td>[init.updateUrl]</td><td><code>string</code></td><td></td><td><p>SPARQL Update endpoint URL</p>
-</td>
-    </tr><tr>
-    <td>[init.user]</td><td><code>string</code></td><td></td><td><p>user used for basic authentication</p>
-</td>
-    </tr>  </tbody>
-</table>
-
-<a name="Endpoint+get"></a>
-
-### endpoint.get(query, options) ⇒ <code>Promise.&lt;Response&gt;</code>
-Sends the query as GET request with query string
-
-**Kind**: instance method of [<code>Endpoint</code>](#Endpoint)  
-<table>
-  <thead>
-    <tr>
-      <th>Param</th><th>Type</th><th>Default</th><th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-<tr>
-    <td>query</td><td><code>string</code></td><td></td><td><p>SPARQL Query/Update</p>
-</td>
-    </tr><tr>
-    <td>options</td><td><code>Object</code></td><td></td><td></td>
-    </tr><tr>
-    <td>[options.headers]</td><td><code>HeadersInit</code></td><td></td><td><p>per-request HTTP headers</p>
-</td>
-    </tr><tr>
-    <td>[options.update]</td><td><code>boolean</code></td><td><code>false</code></td><td><p>if true, performs a SPARQL Update</p>
-</td>
-    </tr>  </tbody>
-</table>
-
-<a name="Endpoint+postDirect"></a>
-
-### endpoint.postDirect(query, options) ⇒ <code>Promise.&lt;Response&gt;</code>
-Sends the query as POST request with application/sparql-query body
-
-**Kind**: instance method of [<code>Endpoint</code>](#Endpoint)  
-<table>
-  <thead>
-    <tr>
-      <th>Param</th><th>Type</th><th>Default</th><th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-<tr>
-    <td>query</td><td><code>string</code></td><td></td><td><p>SPARQL Query/Update</p>
-</td>
-    </tr><tr>
-    <td>options</td><td><code>Object</code></td><td></td><td></td>
-    </tr><tr>
-    <td>[options.headers]</td><td><code>HeadersInit</code></td><td></td><td><p>per-request HTTP headers</p>
-</td>
-    </tr><tr>
-    <td>[options.update]</td><td><code>boolean</code></td><td><code>false</code></td><td><p>if true, performs a SPARQL Update</p>
-</td>
-    </tr>  </tbody>
-</table>
-
-<a name="Endpoint+postUrlencoded"></a>
-
-### endpoint.postUrlencoded(query, options) ⇒ <code>Promise.&lt;Response&gt;</code>
-Sends the query as POST request with application/x-www-form-urlencoded body
-
-**Kind**: instance method of [<code>Endpoint</code>](#Endpoint)  
-<table>
-  <thead>
-    <tr>
-      <th>Param</th><th>Type</th><th>Default</th><th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-<tr>
-    <td>query</td><td><code>string</code></td><td></td><td><p>SPARQL Query/Update</p>
-</td>
-    </tr><tr>
-    <td>options</td><td><code>Object</code></td><td></td><td></td>
-    </tr><tr>
-    <td>[options.headers]</td><td><code>HeadersInit</code></td><td></td><td><p>per-request HTTP headers</p>
-</td>
-    </tr><tr>
-    <td>[options.update]</td><td><code>boolean</code></td><td><code>false</code></td><td><p>if true, performs a SPARQL Update</p>
-</td>
-    </tr>  </tbody>
-</table>
-
 <a name="ParsingClient"></a>
 
-## ParsingClient
-A client implementation which parses SPARQL responses into RDF/JS dataset (CONSTRUCT/DESCRIBE) or JSON objects (SELECT)
-
-It does not provide a store
+## ParsingClient ⇐ [<code>SimpleClient</code>](#SimpleClient)
+A client implementation based on [ParsingQuery](#ParsingQuery) that parses SPARQL results into RDF/JS DatasetCore objects
+(CONSTRUCT/DESCRIBE) or an array of objects (SELECT). It does not provide a store interface.
 
 **Kind**: global class  
+**Extends**: [<code>SimpleClient</code>](#SimpleClient)  
 **Properties**
 
 <table>
@@ -244,6 +57,13 @@ It does not provide a store
     </tr>  </tbody>
 </table>
 
+
+* [ParsingClient](#ParsingClient) ⇐ [<code>SimpleClient</code>](#SimpleClient)
+    * [new ParsingClient(options)](#new_ParsingClient_new)
+    * [.get(query, options)](#SimpleClient+get) ⇒ <code>Promise.&lt;Response&gt;</code>
+    * [.postDirect(query, options)](#SimpleClient+postDirect) ⇒ <code>Promise.&lt;Response&gt;</code>
+    * [.postUrlencoded(query, options)](#SimpleClient+postUrlencoded) ⇒ <code>Promise.&lt;Response&gt;</code>
+
 <a name="new_ParsingClient_new"></a>
 
 ### new ParsingClient(options)
@@ -257,67 +77,170 @@ It does not provide a store
 <tr>
     <td>options</td><td><code>Object</code></td><td></td><td></td>
     </tr><tr>
-    <td>options.endpointUrl</td><td><code>string</code></td><td></td><td><p>SPARQL Query endpoint URL</p>
+    <td>[options.endpointUrl]</td><td><code>string</code></td><td></td><td><p>SPARQL query endpoint URL</p>
+</td>
+    </tr><tr>
+    <td>[options.factory]</td><td><code>factory</code></td><td></td><td><p>RDF/JS factory</p>
 </td>
     </tr><tr>
     <td>[options.fetch]</td><td><code>fetch</code></td><td><code>nodeify-fetch</code></td><td><p>fetch implementation</p>
 </td>
     </tr><tr>
-    <td>[options.headers]</td><td><code>HeadersInit</code></td><td></td><td><p>HTTP headers to send with every endpoint request</p>
+    <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>headers sent with every request</p>
 </td>
     </tr><tr>
     <td>[options.password]</td><td><code>string</code></td><td></td><td><p>password used for basic authentication</p>
 </td>
     </tr><tr>
-    <td>[options.storeUrl]</td><td><code>string</code></td><td></td><td><p>Graph Store URL</p>
+    <td>[options.storeUrl]</td><td><code>string</code></td><td></td><td><p>SPARQL Graph Store URL</p>
 </td>
     </tr><tr>
-    <td>[options.updateUrl]</td><td><code>string</code></td><td></td><td><p>SPARQL Update endpoint URL</p>
+    <td>[options.updateUrl]</td><td><code>string</code></td><td></td><td><p>SPARQL update endpoint URL</p>
 </td>
     </tr><tr>
     <td>[options.user]</td><td><code>string</code></td><td></td><td><p>user used for basic authentication</p>
 </td>
+    </tr>  </tbody>
+</table>
+
+**Example**  
+```js
+// read the height of the Eiffel Tower from Wikidata with a SELECT query
+
+import ParsingClient from 'sparql-http-client/ParsingClient.js'
+
+const endpointUrl = 'https://query.wikidata.org/sparql'
+const query = `
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX p: <http://www.wikidata.org/prop/>
+PREFIX ps: <http://www.wikidata.org/prop/statement/>
+PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
+
+SELECT ?value WHERE {
+  wd:Q243 p:P2048 ?height.
+
+  ?height pq:P518 wd:Q24192182;
+    ps:P2048 ?value .
+}`
+
+const client = new ParsingClient({ endpointUrl })
+const result = await client.query.select(query)
+
+for (const row of result) {
+  for (const [key, value] of Object.entries(row)) {
+    console.log(`${key}: ${value.value} (${value.termType})`)
+  }
+}
+```
+<a name="SimpleClient+get"></a>
+
+### parsingClient.get(query, options) ⇒ <code>Promise.&lt;Response&gt;</code>
+Sends a GET request as defined in the
+[SPARQL Protocol specification](https://www.w3.org/TR/2013/REC-sparql11-protocol-20130321/#query-via-get).
+
+**Kind**: instance method of [<code>ParsingClient</code>](#ParsingClient)  
+**Overrides**: [<code>get</code>](#SimpleClient+get)  
+<table>
+  <thead>
+    <tr>
+      <th>Param</th><th>Type</th><th>Default</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+<tr>
+    <td>query</td><td><code>string</code></td><td></td><td><p>SPARQL query</p>
+</td>
     </tr><tr>
-    <td>[options.factory]</td><td><code>factory</code></td><td></td><td><p>RDF/JS DataFactory</p>
+    <td>options</td><td><code>Object</code></td><td></td><td></td>
+    </tr><tr>
+    <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
+</td>
+    </tr><tr>
+    <td>[options.update]</td><td><code>boolean</code></td><td><code>false</code></td><td><p>send the request to the updateUrl</p>
+</td>
+    </tr>  </tbody>
+</table>
+
+<a name="SimpleClient+postDirect"></a>
+
+### parsingClient.postDirect(query, options) ⇒ <code>Promise.&lt;Response&gt;</code>
+Sends a POST directly request as defined in the
+[SPARQL Protocol specification](https://www.w3.org/TR/2013/REC-sparql11-protocol-20130321/#query-via-post-direct).
+
+**Kind**: instance method of [<code>ParsingClient</code>](#ParsingClient)  
+**Overrides**: [<code>postDirect</code>](#SimpleClient+postDirect)  
+<table>
+  <thead>
+    <tr>
+      <th>Param</th><th>Type</th><th>Default</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+<tr>
+    <td>query</td><td><code>string</code></td><td></td><td><p>SPARQL query</p>
+</td>
+    </tr><tr>
+    <td>options</td><td><code>Object</code></td><td></td><td></td>
+    </tr><tr>
+    <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
+</td>
+    </tr><tr>
+    <td>[options.update]</td><td><code>boolean</code></td><td><code>false</code></td><td><p>send the request to the updateUrl</p>
+</td>
+    </tr>  </tbody>
+</table>
+
+<a name="SimpleClient+postUrlencoded"></a>
+
+### parsingClient.postUrlencoded(query, options) ⇒ <code>Promise.&lt;Response&gt;</code>
+Sends a POST URL-encoded request as defined in the
+[SPARQL Protocol specification](https://www.w3.org/TR/2013/REC-sparql11-protocol-20130321/#query-via-post-urlencoded).
+
+**Kind**: instance method of [<code>ParsingClient</code>](#ParsingClient)  
+**Overrides**: [<code>postUrlencoded</code>](#SimpleClient+postUrlencoded)  
+<table>
+  <thead>
+    <tr>
+      <th>Param</th><th>Type</th><th>Default</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+<tr>
+    <td>query</td><td><code>string</code></td><td></td><td><p>SPARQL query</p>
+</td>
+    </tr><tr>
+    <td>options</td><td><code>Object</code></td><td></td><td></td>
+    </tr><tr>
+    <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
+</td>
+    </tr><tr>
+    <td>[options.update]</td><td><code>boolean</code></td><td><code>false</code></td><td><p>send the request to the updateUrl</p>
 </td>
     </tr>  </tbody>
 </table>
 
 <a name="ParsingQuery"></a>
 
-## ParsingQuery
-Extends StreamQuery by materialising the SPARQL response streams
+## ParsingQuery ⇐ [<code>StreamQuery</code>](#StreamQuery)
+A query implementation that wraps the results of the [StreamQuery](#StreamQuery) into RDF/JS DatasetCore objects
+(CONSTRUCT/DESCRIBE) or an array of objects (SELECT).
 
 **Kind**: global class  
+**Extends**: [<code>StreamQuery</code>](#StreamQuery)  
 
-* [ParsingQuery](#ParsingQuery)
-    * [new ParsingQuery(init)](#new_ParsingQuery_new)
-    * [.construct(query, [options])](#ParsingQuery+construct) ⇒ <code>Promise.&lt;Array.&lt;Quad&gt;&gt;</code>
+* [ParsingQuery](#ParsingQuery) ⇐ [<code>StreamQuery</code>](#StreamQuery)
+    * [.construct(query, options)](#ParsingQuery+construct) ⇒ <code>Promise.&lt;DatasetCore&gt;</code>
     * [.select(query, [options])](#ParsingQuery+select) ⇒ <code>Promise.&lt;Array.&lt;Object.&lt;string, Term&gt;&gt;&gt;</code>
-
-<a name="new_ParsingQuery_new"></a>
-
-### new ParsingQuery(init)
-<table>
-  <thead>
-    <tr>
-      <th>Param</th><th>Type</th>
-    </tr>
-  </thead>
-  <tbody>
-<tr>
-    <td>init</td><td><code>Object</code></td>
-    </tr><tr>
-    <td>init.endpoint</td><td><code><a href="#Endpoint">Endpoint</a></code></td>
-    </tr>  </tbody>
-</table>
+    * [.ask(query, [options])](#StreamQuery+ask) ⇒ <code>Promise.&lt;boolean&gt;</code>
+    * [.update(query, [options])](#StreamQuery+update) ⇒ <code>Promise.&lt;void&gt;</code>
 
 <a name="ParsingQuery+construct"></a>
 
-### parsingQuery.construct(query, [options]) ⇒ <code>Promise.&lt;Array.&lt;Quad&gt;&gt;</code>
-Performs a query which returns triples
+### parsingQuery.construct(query, options) ⇒ <code>Promise.&lt;DatasetCore&gt;</code>
+Sends a request for a CONSTRUCT or DESCRIBE query
 
 **Kind**: instance method of [<code>ParsingQuery</code>](#ParsingQuery)  
+**Overrides**: [<code>construct</code>](#StreamQuery+construct)  
 <table>
   <thead>
     <tr>
@@ -326,21 +249,51 @@ Performs a query which returns triples
   </thead>
   <tbody>
 <tr>
-    <td>query</td><td><code>string</code></td><td></td><td></td>
-    </tr><tr>
-    <td>[options]</td><td><code>Object</code></td><td></td><td></td>
-    </tr><tr>
-    <td>[options.headers]</td><td><code>HeadersInit</code></td><td></td><td><p>HTTP request headers</p>
+    <td>query</td><td><code>string</code></td><td></td><td><p>CONSTRUCT or DESCRIBE query</p>
 </td>
     </tr><tr>
-    <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td></td>
+    <td>options</td><td><code>Object</code></td><td></td><td></td>
+    </tr><tr>
+    <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
+</td>
+    </tr><tr>
+    <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td><p>SPARQL Protocol operation</p>
+</td>
     </tr>  </tbody>
 </table>
 
 <a name="ParsingQuery+select"></a>
 
 ### parsingQuery.select(query, [options]) ⇒ <code>Promise.&lt;Array.&lt;Object.&lt;string, Term&gt;&gt;&gt;</code>
-Performs a SELECT query which returns binding tuples
+Sends a request for a SELECT query
+
+**Kind**: instance method of [<code>ParsingQuery</code>](#ParsingQuery)  
+**Overrides**: [<code>select</code>](#StreamQuery+select)  
+<table>
+  <thead>
+    <tr>
+      <th>Param</th><th>Type</th><th>Default</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+<tr>
+    <td>query</td><td><code>string</code></td><td></td><td><p>SELECT query</p>
+</td>
+    </tr><tr>
+    <td>[options]</td><td><code>Object</code></td><td></td><td></td>
+    </tr><tr>
+    <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
+</td>
+    </tr><tr>
+    <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td><p>SPARQL Protocol operation</p>
+</td>
+    </tr>  </tbody>
+</table>
+
+<a name="StreamQuery+ask"></a>
+
+### parsingQuery.ask(query, [options]) ⇒ <code>Promise.&lt;boolean&gt;</code>
+Sends a request for a ASK query
 
 **Kind**: instance method of [<code>ParsingQuery</code>](#ParsingQuery)  
 <table>
@@ -351,58 +304,82 @@ Performs a SELECT query which returns binding tuples
   </thead>
   <tbody>
 <tr>
-    <td>query</td><td><code>string</code></td><td></td><td></td>
+    <td>query</td><td><code>string</code></td><td></td><td><p>ASK query</p>
+</td>
     </tr><tr>
     <td>[options]</td><td><code>Object</code></td><td></td><td></td>
     </tr><tr>
-    <td>[options.headers]</td><td><code>HeadersInit</code></td><td></td><td><p>HTTP request headers</p>
+    <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
 </td>
     </tr><tr>
-    <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td></td>
+    <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td><p>SPARQL Protocol operation</p>
+</td>
+    </tr>  </tbody>
+</table>
+
+<a name="StreamQuery+update"></a>
+
+### parsingQuery.update(query, [options]) ⇒ <code>Promise.&lt;void&gt;</code>
+Sends a request for an update query
+
+**Kind**: instance method of [<code>ParsingQuery</code>](#ParsingQuery)  
+<table>
+  <thead>
+    <tr>
+      <th>Param</th><th>Type</th><th>Default</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+<tr>
+    <td>query</td><td><code>string</code></td><td></td><td><p>update query</p>
+</td>
+    </tr><tr>
+    <td>[options]</td><td><code>Object</code></td><td></td><td></td>
+    </tr><tr>
+    <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
+</td>
+    </tr><tr>
+    <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;postUrlencoded&#x27;</code></td><td><p>SPARQL Protocol operation</p>
+</td>
     </tr>  </tbody>
 </table>
 
 <a name="RawQuery"></a>
 
 ## RawQuery
-A base query class which performs HTTP requests for the different SPARQL query forms
+A query implementation that prepares URLs and headers for SPARQL queries and returns the raw fetch response.
 
 **Kind**: global class  
 
 * [RawQuery](#RawQuery)
-    * [new RawQuery(init)](#new_RawQuery_new)
-    * [.endpoint](#RawQuery+endpoint) : [<code>Endpoint</code>](#Endpoint)
-    * [.ask(query, [init])](#RawQuery+ask) ⇒ <code>Promise.&lt;Response&gt;</code>
-    * [.construct(query, [init])](#RawQuery+construct) ⇒ <code>Promise.&lt;Response&gt;</code>
-    * [.select(query, [init])](#RawQuery+select) ⇒ <code>Promise.&lt;Response&gt;</code>
-    * [.update(query, [init])](#RawQuery+update) ⇒ <code>Promise.&lt;Response&gt;</code>
+    * [new RawQuery(options)](#new_RawQuery_new)
+    * [.ask(query, [options])](#RawQuery+ask) ⇒ <code>Promise.&lt;Response&gt;</code>
+    * [.construct(query, [options])](#RawQuery+construct) ⇒ <code>Promise.&lt;Response&gt;</code>
+    * [.select(query, [options])](#RawQuery+select) ⇒ <code>Promise.&lt;Response&gt;</code>
+    * [.update(query, [options])](#RawQuery+update) ⇒ <code>Promise.&lt;Response&gt;</code>
 
 <a name="new_RawQuery_new"></a>
 
-### new RawQuery(init)
+### new RawQuery(options)
 <table>
   <thead>
     <tr>
-      <th>Param</th><th>Type</th>
+      <th>Param</th><th>Type</th><th>Description</th>
     </tr>
   </thead>
   <tbody>
 <tr>
-    <td>init</td><td><code>Object</code></td>
+    <td>options</td><td><code>Object</code></td><td></td>
     </tr><tr>
-    <td>init.endpoint</td><td><code><a href="#Endpoint">Endpoint</a></code></td>
+    <td>options.client</td><td><code><a href="#SimpleClient">SimpleClient</a></code></td><td><p>client that provides the HTTP I/O</p>
+</td>
     </tr>  </tbody>
 </table>
 
-<a name="RawQuery+endpoint"></a>
-
-### rawQuery.endpoint : [<code>Endpoint</code>](#Endpoint)
-**Kind**: instance property of [<code>RawQuery</code>](#RawQuery)  
 <a name="RawQuery+ask"></a>
 
-### rawQuery.ask(query, [init]) ⇒ <code>Promise.&lt;Response&gt;</code>
-Performs an ASK query
-By default uses HTTP GET with query string
+### rawQuery.ask(query, [options]) ⇒ <code>Promise.&lt;Response&gt;</code>
+Sends a request for a ASK query
 
 **Kind**: instance method of [<code>RawQuery</code>](#RawQuery)  
 <table>
@@ -413,23 +390,23 @@ By default uses HTTP GET with query string
   </thead>
   <tbody>
 <tr>
-    <td>query</td><td><code>string</code></td><td></td><td><p>SPARQL ASK query</p>
+    <td>query</td><td><code>string</code></td><td></td><td><p>ASK query</p>
 </td>
     </tr><tr>
-    <td>[init]</td><td><code>Object</code></td><td></td><td></td>
+    <td>[options]</td><td><code>Object</code></td><td></td><td></td>
     </tr><tr>
-    <td>[init.headers]</td><td><code>HeadersInit</code></td><td></td><td><p>HTTP request headers</p>
+    <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
 </td>
     </tr><tr>
-    <td>[init.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td></td>
+    <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td><p>SPARQL Protocol operation</p>
+</td>
     </tr>  </tbody>
 </table>
 
 <a name="RawQuery+construct"></a>
 
-### rawQuery.construct(query, [init]) ⇒ <code>Promise.&lt;Response&gt;</code>
-Performs a CONSTRUCT/DESCRIBE query
-By default uses HTTP GET with query string
+### rawQuery.construct(query, [options]) ⇒ <code>Promise.&lt;Response&gt;</code>
+Sends a request for a CONSTRUCT or DESCRIBE query
 
 **Kind**: instance method of [<code>RawQuery</code>](#RawQuery)  
 <table>
@@ -440,23 +417,23 @@ By default uses HTTP GET with query string
   </thead>
   <tbody>
 <tr>
-    <td>query</td><td><code>string</code></td><td></td><td><p>SPARQL query</p>
+    <td>query</td><td><code>string</code></td><td></td><td><p>CONSTRUCT or DESCRIBE query</p>
 </td>
     </tr><tr>
-    <td>[init]</td><td><code>Object</code></td><td></td><td></td>
+    <td>[options]</td><td><code>Object</code></td><td></td><td></td>
     </tr><tr>
-    <td>[init.headers]</td><td><code>HeadersInit</code></td><td></td><td><p>HTTP request headers</p>
+    <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
 </td>
     </tr><tr>
-    <td>[init.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td></td>
+    <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td><p>SPARQL Protocol operation</p>
+</td>
     </tr>  </tbody>
 </table>
 
 <a name="RawQuery+select"></a>
 
-### rawQuery.select(query, [init]) ⇒ <code>Promise.&lt;Response&gt;</code>
-Performs a SELECT query
-By default uses HTTP GET with query string
+### rawQuery.select(query, [options]) ⇒ <code>Promise.&lt;Response&gt;</code>
+Sends a request for a SELECT query
 
 **Kind**: instance method of [<code>RawQuery</code>](#RawQuery)  
 <table>
@@ -467,23 +444,23 @@ By default uses HTTP GET with query string
   </thead>
   <tbody>
 <tr>
-    <td>query</td><td><code>string</code></td><td></td><td><p>SPARQL query</p>
+    <td>query</td><td><code>string</code></td><td></td><td><p>SELECT query</p>
 </td>
     </tr><tr>
-    <td>[init]</td><td><code>Object</code></td><td></td><td></td>
+    <td>[options]</td><td><code>Object</code></td><td></td><td></td>
     </tr><tr>
-    <td>[init.headers]</td><td><code>HeadersInit</code></td><td></td><td><p>HTTP request headers</p>
+    <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
 </td>
     </tr><tr>
-    <td>[init.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td></td>
+    <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td><p>SPARQL Protocol operation</p>
+</td>
     </tr>  </tbody>
 </table>
 
 <a name="RawQuery+update"></a>
 
-### rawQuery.update(query, [init]) ⇒ <code>Promise.&lt;Response&gt;</code>
-Performs a SELECT query
-By default uses HTTP POST with form-encoded body
+### rawQuery.update(query, [options]) ⇒ <code>Promise.&lt;Response&gt;</code>
+Sends a request for an update query
 
 **Kind**: instance method of [<code>RawQuery</code>](#RawQuery)  
 <table>
@@ -494,28 +471,49 @@ By default uses HTTP POST with form-encoded body
   </thead>
   <tbody>
 <tr>
-    <td>query</td><td><code>string</code></td><td></td><td><p>SPARQL query</p>
+    <td>query</td><td><code>string</code></td><td></td><td><p>update query</p>
 </td>
     </tr><tr>
-    <td>[init]</td><td><code>Object</code></td><td></td><td></td>
+    <td>[options]</td><td><code>Object</code></td><td></td><td></td>
     </tr><tr>
-    <td>[init.headers]</td><td><code>HeadersInit</code></td><td></td><td><p>HTTP request headers</p>
+    <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
 </td>
     </tr><tr>
-    <td>[init.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;postUrlencoded&#x27;</code></td><td></td>
+    <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;postUrlencoded&#x27;</code></td><td><p>SPARQL Protocol operation</p>
+</td>
     </tr>  </tbody>
 </table>
 
 <a name="ResultParser"></a>
 
 ## ResultParser
-A stream which parses SPARQL SELECT bindings
+A Transform stream that parses JSON SPARQL results and emits one object per row with the variable names as keys and
+RDF/JS terms as values.
 
 **Kind**: global class  
+<a name="new_ResultParser_new"></a>
+
+### new ResultParser(options)
+<table>
+  <thead>
+    <tr>
+      <th>Param</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+<tr>
+    <td>options</td><td><code>Object</code></td><td></td>
+    </tr><tr>
+    <td>options.factory</td><td><code>DataFactory</code></td><td><p>RDF/JS DataFactory used to create the quads and terms</p>
+</td>
+    </tr>  </tbody>
+</table>
+
 <a name="SimpleClient"></a>
 
 ## SimpleClient
-A basic client implementation which uses RawQuery and no Store
+A client implementation based on [RawQuery](#RawQuery) that prepares URLs and headers for SPARQL queries and returns the
+raw fetch response. It does not provide a store interface.
 
 **Kind**: global class  
 **Properties**
@@ -529,8 +527,33 @@ A basic client implementation which uses RawQuery and no Store
   <tbody>
 <tr>
     <td>query</td><td><code><a href="#RawQuery">RawQuery</a></code></td>
+    </tr><tr>
+    <td>endpointUrl</td><td><code>string</code></td>
+    </tr><tr>
+    <td>factory</td><td><code><a href="#RawQuery">RawQuery</a></code></td>
+    </tr><tr>
+    <td>fetch</td><td><code>factory</code></td>
+    </tr><tr>
+    <td>headers</td><td><code>Headers</code></td>
+    </tr><tr>
+    <td>password</td><td><code>string</code></td>
+    </tr><tr>
+    <td>storeUrl</td><td><code>string</code></td>
+    </tr><tr>
+    <td>updateUrl</td><td><code>string</code></td>
+    </tr><tr>
+    <td>user</td><td><code>string</code></td>
+    </tr><tr>
+    <td>updateUrl</td><td><code>string</code></td>
     </tr>  </tbody>
 </table>
+
+
+* [SimpleClient](#SimpleClient)
+    * [new SimpleClient(options)](#new_SimpleClient_new)
+    * [.get(query, options)](#SimpleClient+get) ⇒ <code>Promise.&lt;Response&gt;</code>
+    * [.postDirect(query, options)](#SimpleClient+postDirect) ⇒ <code>Promise.&lt;Response&gt;</code>
+    * [.postUrlencoded(query, options)](#SimpleClient+postUrlencoded) ⇒ <code>Promise.&lt;Response&gt;</code>
 
 <a name="new_SimpleClient_new"></a>
 
@@ -545,38 +568,162 @@ A basic client implementation which uses RawQuery and no Store
 <tr>
     <td>options</td><td><code>Object</code></td><td></td><td></td>
     </tr><tr>
-    <td>options.endpointUrl</td><td><code>string</code></td><td></td><td><p>SPARQL Query endpoint URL</p>
+    <td>[options.endpointUrl]</td><td><code>string</code></td><td></td><td><p>SPARQL query endpoint URL</p>
+</td>
+    </tr><tr>
+    <td>[options.factory]</td><td><code>factory</code></td><td></td><td><p>RDF/JS factory</p>
 </td>
     </tr><tr>
     <td>[options.fetch]</td><td><code>fetch</code></td><td><code>nodeify-fetch</code></td><td><p>fetch implementation</p>
 </td>
     </tr><tr>
-    <td>[options.headers]</td><td><code>HeadersInit</code></td><td></td><td><p>HTTP headers to send with every endpoint request</p>
+    <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>headers sent with every request</p>
 </td>
     </tr><tr>
     <td>[options.password]</td><td><code>string</code></td><td></td><td><p>password used for basic authentication</p>
 </td>
     </tr><tr>
-    <td>[options.storeUrl]</td><td><code>string</code></td><td></td><td><p>Graph Store URL</p>
+    <td>[options.storeUrl]</td><td><code>string</code></td><td></td><td><p>SPARQL Graph Store URL</p>
 </td>
     </tr><tr>
-    <td>[options.updateUrl]</td><td><code>string</code></td><td></td><td><p>SPARQL Update endpoint URL</p>
+    <td>[options.updateUrl]</td><td><code>string</code></td><td></td><td><p>SPARQL update endpoint URL</p>
 </td>
     </tr><tr>
     <td>[options.user]</td><td><code>string</code></td><td></td><td><p>user used for basic authentication</p>
 </td>
     </tr><tr>
-    <td>[options.factory]</td><td><code>factory</code></td><td></td><td><p>RDF/JS DataFactory</p>
+    <td>[options.Query]</td><td><code>Query</code></td><td></td><td><p>Constructor of a query implementation</p>
+</td>
+    </tr><tr>
+    <td>[options.Store]</td><td><code>Store</code></td><td></td><td><p>Constructor of a store implementation</p>
+</td>
+    </tr>  </tbody>
+</table>
+
+**Example**  
+```js
+// read the height of the Eiffel Tower from Wikidata with a SELECT query
+
+import SparqlClient from 'sparql-http-client/SimpleClient.js'
+
+const endpointUrl = 'https://query.wikidata.org/sparql'
+const query = `
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX p: <http://www.wikidata.org/prop/>
+PREFIX ps: <http://www.wikidata.org/prop/statement/>
+PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
+
+SELECT ?value WHERE {
+  wd:Q243 p:P2048 ?height.
+
+  ?height pq:P518 wd:Q24192182;
+    ps:P2048 ?value .
+}`
+
+const client = new SparqlClient({ endpointUrl })
+const res = await client.query.select(query)
+
+if (!res.ok) {
+return console.error(res.statusText)
+}
+
+const content = await res.json()
+
+console.log(JSON.stringify(content, null, 2))
+```
+<a name="SimpleClient+get"></a>
+
+### simpleClient.get(query, options) ⇒ <code>Promise.&lt;Response&gt;</code>
+Sends a GET request as defined in the
+[SPARQL Protocol specification](https://www.w3.org/TR/2013/REC-sparql11-protocol-20130321/#query-via-get).
+
+**Kind**: instance method of [<code>SimpleClient</code>](#SimpleClient)  
+<table>
+  <thead>
+    <tr>
+      <th>Param</th><th>Type</th><th>Default</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+<tr>
+    <td>query</td><td><code>string</code></td><td></td><td><p>SPARQL query</p>
+</td>
+    </tr><tr>
+    <td>options</td><td><code>Object</code></td><td></td><td></td>
+    </tr><tr>
+    <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
+</td>
+    </tr><tr>
+    <td>[options.update]</td><td><code>boolean</code></td><td><code>false</code></td><td><p>send the request to the updateUrl</p>
+</td>
+    </tr>  </tbody>
+</table>
+
+<a name="SimpleClient+postDirect"></a>
+
+### simpleClient.postDirect(query, options) ⇒ <code>Promise.&lt;Response&gt;</code>
+Sends a POST directly request as defined in the
+[SPARQL Protocol specification](https://www.w3.org/TR/2013/REC-sparql11-protocol-20130321/#query-via-post-direct).
+
+**Kind**: instance method of [<code>SimpleClient</code>](#SimpleClient)  
+<table>
+  <thead>
+    <tr>
+      <th>Param</th><th>Type</th><th>Default</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+<tr>
+    <td>query</td><td><code>string</code></td><td></td><td><p>SPARQL query</p>
+</td>
+    </tr><tr>
+    <td>options</td><td><code>Object</code></td><td></td><td></td>
+    </tr><tr>
+    <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
+</td>
+    </tr><tr>
+    <td>[options.update]</td><td><code>boolean</code></td><td><code>false</code></td><td><p>send the request to the updateUrl</p>
+</td>
+    </tr>  </tbody>
+</table>
+
+<a name="SimpleClient+postUrlencoded"></a>
+
+### simpleClient.postUrlencoded(query, options) ⇒ <code>Promise.&lt;Response&gt;</code>
+Sends a POST URL-encoded request as defined in the
+[SPARQL Protocol specification](https://www.w3.org/TR/2013/REC-sparql11-protocol-20130321/#query-via-post-urlencoded).
+
+**Kind**: instance method of [<code>SimpleClient</code>](#SimpleClient)  
+<table>
+  <thead>
+    <tr>
+      <th>Param</th><th>Type</th><th>Default</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+<tr>
+    <td>query</td><td><code>string</code></td><td></td><td><p>SPARQL query</p>
+</td>
+    </tr><tr>
+    <td>options</td><td><code>Object</code></td><td></td><td></td>
+    </tr><tr>
+    <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
+</td>
+    </tr><tr>
+    <td>[options.update]</td><td><code>boolean</code></td><td><code>false</code></td><td><p>send the request to the updateUrl</p>
 </td>
     </tr>  </tbody>
 </table>
 
 <a name="StreamClient"></a>
 
-## StreamClient
-The default client implementation which returns SPARQL response as RDF/JS streams
+## StreamClient ⇐ [<code>SimpleClient</code>](#SimpleClient)
+The default client implementation based on [StreamQuery](#StreamQuery) and [StreamStore](#StreamStore) parses SPARQL results into
+Readable streams of RDF/JS Quad objects (CONSTRUCT/DESCRIBE) or Readable streams of objects (SELECT). Graph Store
+read and write operations are handled using Readable streams.
 
 **Kind**: global class  
+**Extends**: [<code>SimpleClient</code>](#SimpleClient)  
 **Properties**
 
 <table>
@@ -593,6 +740,13 @@ The default client implementation which returns SPARQL response as RDF/JS stream
     </tr>  </tbody>
 </table>
 
+
+* [StreamClient](#StreamClient) ⇐ [<code>SimpleClient</code>](#SimpleClient)
+    * [new StreamClient(options)](#new_StreamClient_new)
+    * [.get(query, options)](#SimpleClient+get) ⇒ <code>Promise.&lt;Response&gt;</code>
+    * [.postDirect(query, options)](#SimpleClient+postDirect) ⇒ <code>Promise.&lt;Response&gt;</code>
+    * [.postUrlencoded(query, options)](#SimpleClient+postUrlencoded) ⇒ <code>Promise.&lt;Response&gt;</code>
+
 <a name="new_StreamClient_new"></a>
 
 ### new StreamClient(options)
@@ -606,74 +760,192 @@ The default client implementation which returns SPARQL response as RDF/JS stream
 <tr>
     <td>options</td><td><code>Object</code></td><td></td><td></td>
     </tr><tr>
-    <td>options.endpointUrl</td><td><code>string</code></td><td></td><td><p>SPARQL Query endpoint URL</p>
+    <td>[options.endpointUrl]</td><td><code>string</code></td><td></td><td><p>SPARQL query endpoint URL</p>
+</td>
+    </tr><tr>
+    <td>[options.factory]</td><td><code>factory</code></td><td></td><td><p>RDF/JS factory</p>
 </td>
     </tr><tr>
     <td>[options.fetch]</td><td><code>fetch</code></td><td><code>nodeify-fetch</code></td><td><p>fetch implementation</p>
 </td>
     </tr><tr>
-    <td>[options.headers]</td><td><code>HeadersInit</code></td><td></td><td><p>HTTP headers to send with every endpoint request</p>
+    <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>headers sent with every request</p>
 </td>
     </tr><tr>
     <td>[options.password]</td><td><code>string</code></td><td></td><td><p>password used for basic authentication</p>
 </td>
     </tr><tr>
-    <td>[options.storeUrl]</td><td><code>string</code></td><td></td><td><p>Graph Store URL</p>
+    <td>[options.storeUrl]</td><td><code>string</code></td><td></td><td><p>SPARQL Graph Store URL</p>
 </td>
     </tr><tr>
-    <td>[options.updateUrl]</td><td><code>string</code></td><td></td><td><p>SPARQL Update endpoint URL</p>
+    <td>[options.updateUrl]</td><td><code>string</code></td><td></td><td><p>SPARQL update endpoint URL</p>
 </td>
     </tr><tr>
     <td>[options.user]</td><td><code>string</code></td><td></td><td><p>user used for basic authentication</p>
 </td>
+    </tr>  </tbody>
+</table>
+
+**Example**  
+```js
+// read the height of the Eiffel Tower from Wikidata with a SELECT query
+
+import SparqlClient from 'sparql-http-client'
+
+const endpointUrl = 'https://query.wikidata.org/sparql'
+const query = `
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX p: <http://www.wikidata.org/prop/>
+PREFIX ps: <http://www.wikidata.org/prop/statement/>
+PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
+
+SELECT ?value WHERE {
+  wd:Q243 p:P2048 ?height.
+
+  ?height pq:P518 wd:Q24192182;
+    ps:P2048 ?value .
+}`
+
+const client = new SparqlClient({ endpointUrl })
+const stream = client.query.select(query)
+
+stream.on('data', row => {
+  for (const [key, value] of Object.entries(row)) {
+    console.log(`${key}: ${value.value} (${value.termType})`)
+  }
+})
+
+stream.on('error', err => {
+  console.error(err)
+})
+```
+**Example**  
+```js
+// read all quads from a local triplestore using the Graph Store protocol
+
+import rdf from 'rdf-ext'
+import SparqlClient from 'sparql-http-client'
+
+const client = new SparqlClient({
+  storeUrl: 'http://localhost:3030/test/data',
+  factory: rdf
+})
+
+const stream = local.store.get(rdf.defaultGraph())
+
+stream.on('data', quad => {
+  console.log(`${quad.subject} ${quad.predicate} ${quad.object}`)
+})
+```
+<a name="SimpleClient+get"></a>
+
+### streamClient.get(query, options) ⇒ <code>Promise.&lt;Response&gt;</code>
+Sends a GET request as defined in the
+[SPARQL Protocol specification](https://www.w3.org/TR/2013/REC-sparql11-protocol-20130321/#query-via-get).
+
+**Kind**: instance method of [<code>StreamClient</code>](#StreamClient)  
+**Overrides**: [<code>get</code>](#SimpleClient+get)  
+<table>
+  <thead>
+    <tr>
+      <th>Param</th><th>Type</th><th>Default</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+<tr>
+    <td>query</td><td><code>string</code></td><td></td><td><p>SPARQL query</p>
+</td>
     </tr><tr>
-    <td>[options.factory]</td><td><code>factory</code></td><td></td><td><p>RDF/JS DataFactory</p>
+    <td>options</td><td><code>Object</code></td><td></td><td></td>
+    </tr><tr>
+    <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
+</td>
+    </tr><tr>
+    <td>[options.update]</td><td><code>boolean</code></td><td><code>false</code></td><td><p>send the request to the updateUrl</p>
+</td>
+    </tr>  </tbody>
+</table>
+
+<a name="SimpleClient+postDirect"></a>
+
+### streamClient.postDirect(query, options) ⇒ <code>Promise.&lt;Response&gt;</code>
+Sends a POST directly request as defined in the
+[SPARQL Protocol specification](https://www.w3.org/TR/2013/REC-sparql11-protocol-20130321/#query-via-post-direct).
+
+**Kind**: instance method of [<code>StreamClient</code>](#StreamClient)  
+**Overrides**: [<code>postDirect</code>](#SimpleClient+postDirect)  
+<table>
+  <thead>
+    <tr>
+      <th>Param</th><th>Type</th><th>Default</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+<tr>
+    <td>query</td><td><code>string</code></td><td></td><td><p>SPARQL query</p>
+</td>
+    </tr><tr>
+    <td>options</td><td><code>Object</code></td><td></td><td></td>
+    </tr><tr>
+    <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
+</td>
+    </tr><tr>
+    <td>[options.update]</td><td><code>boolean</code></td><td><code>false</code></td><td><p>send the request to the updateUrl</p>
+</td>
+    </tr>  </tbody>
+</table>
+
+<a name="SimpleClient+postUrlencoded"></a>
+
+### streamClient.postUrlencoded(query, options) ⇒ <code>Promise.&lt;Response&gt;</code>
+Sends a POST URL-encoded request as defined in the
+[SPARQL Protocol specification](https://www.w3.org/TR/2013/REC-sparql11-protocol-20130321/#query-via-post-urlencoded).
+
+**Kind**: instance method of [<code>StreamClient</code>](#StreamClient)  
+**Overrides**: [<code>postUrlencoded</code>](#SimpleClient+postUrlencoded)  
+<table>
+  <thead>
+    <tr>
+      <th>Param</th><th>Type</th><th>Default</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+<tr>
+    <td>query</td><td><code>string</code></td><td></td><td><p>SPARQL query</p>
+</td>
+    </tr><tr>
+    <td>options</td><td><code>Object</code></td><td></td><td></td>
+    </tr><tr>
+    <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
+</td>
+    </tr><tr>
+    <td>[options.update]</td><td><code>boolean</code></td><td><code>false</code></td><td><p>send the request to the updateUrl</p>
 </td>
     </tr>  </tbody>
 </table>
 
 <a name="StreamQuery"></a>
 
-## StreamQuery
-Extends RawQuery by wrapping response body streams as RDF/JS Streams
+## StreamQuery ⇐ [<code>RawQuery</code>](#RawQuery)
+A query implementation based on [RawQuery](#RawQuery) that parses SPARQL results into Readable streams of RDF/JS Quad
+objects (CONSTRUCT/DESCRIBE) or Readable streams of objects (SELECT).
 
 **Kind**: global class  
+**Extends**: [<code>RawQuery</code>](#RawQuery)  
 
-* [StreamQuery](#StreamQuery)
-    * [new StreamQuery(init)](#new_StreamQuery_new)
-    * [.factory](#StreamQuery+factory) : <code>DataFactory</code>
-    * [.ask(query, [init])](#StreamQuery+ask) ⇒ <code>Promise.&lt;boolean&gt;</code>
-    * [.construct(query, [init])](#StreamQuery+construct) ⇒ <code>Promise.&lt;Stream&gt;</code>
-    * [.select(query, [init])](#StreamQuery+select) ⇒ <code>Promise.&lt;Stream&gt;</code>
-    * [.update(query, [init])](#StreamQuery+update) ⇒ <code>Promise.&lt;void&gt;</code>
+* [StreamQuery](#StreamQuery) ⇐ [<code>RawQuery</code>](#RawQuery)
+    * [.ask(query, [options])](#StreamQuery+ask) ⇒ <code>Promise.&lt;boolean&gt;</code>
+    * [.construct(query, [options])](#StreamQuery+construct) ⇒ <code>Readable</code>
+    * [.select(query, [options])](#StreamQuery+select) ⇒ <code>Readable</code>
+    * [.update(query, [options])](#StreamQuery+update) ⇒ <code>Promise.&lt;void&gt;</code>
 
-<a name="new_StreamQuery_new"></a>
-
-### new StreamQuery(init)
-<table>
-  <thead>
-    <tr>
-      <th>Param</th><th>Type</th><th>Default</th>
-    </tr>
-  </thead>
-  <tbody>
-<tr>
-    <td>init</td><td><code>Object</code></td><td></td>
-    </tr><tr>
-    <td>init.endpoint</td><td><code><a href="#Endpoint">Endpoint</a></code></td><td></td>
-    </tr><tr>
-    <td>[init.factory]</td><td><code>DataFactory</code></td><td><code>@rdfjs/data-model</code></td>
-    </tr>  </tbody>
-</table>
-
-<a name="StreamQuery+factory"></a>
-
-### streamQuery.factory : <code>DataFactory</code>
-**Kind**: instance property of [<code>StreamQuery</code>](#StreamQuery)  
 <a name="StreamQuery+ask"></a>
 
-### streamQuery.ask(query, [init]) ⇒ <code>Promise.&lt;boolean&gt;</code>
+### streamQuery.ask(query, [options]) ⇒ <code>Promise.&lt;boolean&gt;</code>
+Sends a request for a ASK query
+
 **Kind**: instance method of [<code>StreamQuery</code>](#StreamQuery)  
+**Overrides**: [<code>ask</code>](#RawQuery+ask)  
 <table>
   <thead>
     <tr>
@@ -682,22 +954,26 @@ Extends RawQuery by wrapping response body streams as RDF/JS Streams
   </thead>
   <tbody>
 <tr>
-    <td>query</td><td><code>string</code></td><td></td><td><p>SPARQL ASK query</p>
+    <td>query</td><td><code>string</code></td><td></td><td><p>ASK query</p>
 </td>
     </tr><tr>
-    <td>[init]</td><td><code>Object</code></td><td></td><td></td>
+    <td>[options]</td><td><code>Object</code></td><td></td><td></td>
     </tr><tr>
-    <td>[init.headers]</td><td><code>HeadersInit</code></td><td></td><td><p>HTTP request headers</p>
+    <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
 </td>
     </tr><tr>
-    <td>[init.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td></td>
+    <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td><p>SPARQL Protocol operation</p>
+</td>
     </tr>  </tbody>
 </table>
 
 <a name="StreamQuery+construct"></a>
 
-### streamQuery.construct(query, [init]) ⇒ <code>Promise.&lt;Stream&gt;</code>
+### streamQuery.construct(query, [options]) ⇒ <code>Readable</code>
+Sends a request for a CONSTRUCT or DESCRIBE query
+
 **Kind**: instance method of [<code>StreamQuery</code>](#StreamQuery)  
+**Overrides**: [<code>construct</code>](#RawQuery+construct)  
 <table>
   <thead>
     <tr>
@@ -706,22 +982,26 @@ Extends RawQuery by wrapping response body streams as RDF/JS Streams
   </thead>
   <tbody>
 <tr>
-    <td>query</td><td><code>string</code></td><td></td><td><p>SPARQL query</p>
+    <td>query</td><td><code>string</code></td><td></td><td><p>CONSTRUCT or DESCRIBE query</p>
 </td>
     </tr><tr>
-    <td>[init]</td><td><code>Object</code></td><td></td><td></td>
+    <td>[options]</td><td><code>Object</code></td><td></td><td></td>
     </tr><tr>
-    <td>[init.headers]</td><td><code>HeadersInit</code></td><td></td><td><p>HTTP request headers</p>
+    <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
 </td>
     </tr><tr>
-    <td>[init.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td></td>
+    <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td><p>SPARQL Protocol operation</p>
+</td>
     </tr>  </tbody>
 </table>
 
 <a name="StreamQuery+select"></a>
 
-### streamQuery.select(query, [init]) ⇒ <code>Promise.&lt;Stream&gt;</code>
+### streamQuery.select(query, [options]) ⇒ <code>Readable</code>
+Sends a request for a SELECT query
+
 **Kind**: instance method of [<code>StreamQuery</code>](#StreamQuery)  
+**Overrides**: [<code>select</code>](#RawQuery+select)  
 <table>
   <thead>
     <tr>
@@ -730,22 +1010,26 @@ Extends RawQuery by wrapping response body streams as RDF/JS Streams
   </thead>
   <tbody>
 <tr>
-    <td>query</td><td><code>string</code></td><td></td><td><p>SPARQL query</p>
+    <td>query</td><td><code>string</code></td><td></td><td><p>SELECT query</p>
 </td>
     </tr><tr>
-    <td>[init]</td><td><code>Object</code></td><td></td><td></td>
+    <td>[options]</td><td><code>Object</code></td><td></td><td></td>
     </tr><tr>
-    <td>[init.headers]</td><td><code>HeadersInit</code></td><td></td><td><p>HTTP request headers</p>
+    <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
 </td>
     </tr><tr>
-    <td>[init.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td></td>
+    <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td><p>SPARQL Protocol operation</p>
+</td>
     </tr>  </tbody>
 </table>
 
 <a name="StreamQuery+update"></a>
 
-### streamQuery.update(query, [init]) ⇒ <code>Promise.&lt;void&gt;</code>
+### streamQuery.update(query, [options]) ⇒ <code>Promise.&lt;void&gt;</code>
+Sends a request for an update query
+
 **Kind**: instance method of [<code>StreamQuery</code>](#StreamQuery)  
+**Overrides**: [<code>update</code>](#RawQuery+update)  
 <table>
   <thead>
     <tr>
@@ -754,103 +1038,168 @@ Extends RawQuery by wrapping response body streams as RDF/JS Streams
   </thead>
   <tbody>
 <tr>
-    <td>query</td><td><code>string</code></td><td></td><td><p>SPARQL query</p>
+    <td>query</td><td><code>string</code></td><td></td><td><p>update query</p>
 </td>
     </tr><tr>
-    <td>[init]</td><td><code>Object</code></td><td></td><td></td>
+    <td>[options]</td><td><code>Object</code></td><td></td><td></td>
     </tr><tr>
-    <td>[init.headers]</td><td><code>HeadersInit</code></td><td></td><td><p>HTTP request headers</p>
+    <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
 </td>
     </tr><tr>
-    <td>[init.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;postUrlencoded&#x27;</code></td><td></td>
+    <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;postUrlencoded&#x27;</code></td><td><p>SPARQL Protocol operation</p>
+</td>
     </tr>  </tbody>
 </table>
 
 <a name="StreamStore"></a>
 
 ## StreamStore
-Accesses stores with SPARQL Graph Protocol
+A store implementation that parses and serializes SPARQL Graph Store responses and requests into/from Readable
+streams.
 
 **Kind**: global class  
 
 * [StreamStore](#StreamStore)
-    * [new StreamStore(init, [maxQuadsPerRequest])](#new_StreamStore_new)
-    * [.get(graph)](#StreamStore+get) ⇒ <code>Promise.&lt;Stream&gt;</code>
-    * [.post(stream)](#StreamStore+post) ⇒ <code>Promise.&lt;void&gt;</code>
-    * [.put(stream)](#StreamStore+put) ⇒ <code>Promise.&lt;void&gt;</code>
+    * [new StreamStore(options)](#new_StreamStore_new)
+    * [.get([graph])](#StreamStore+get) ⇒ <code>Promise.&lt;Readable&gt;</code>
+    * [.post(stream, [options])](#StreamStore+post) ⇒ <code>Promise.&lt;void&gt;</code>
+    * [.put(stream, [options])](#StreamStore+put) ⇒ <code>Promise.&lt;void&gt;</code>
+    * [.read([options])](#StreamStore+read) ⇒ <code>Readable</code>
+    * [.write([options], [graph], method, stream)](#StreamStore+write) ⇒ <code>Promise.&lt;void&gt;</code>
 
 <a name="new_StreamStore_new"></a>
 
-### new StreamStore(init, [maxQuadsPerRequest])
+### new StreamStore(options)
 <table>
   <thead>
     <tr>
-      <th>Param</th><th>Type</th><th>Default</th>
+      <th>Param</th><th>Type</th><th>Description</th>
     </tr>
   </thead>
   <tbody>
 <tr>
-    <td>init</td><td><code>Object</code></td><td></td>
+    <td>options</td><td><code>Object</code></td><td></td>
     </tr><tr>
-    <td>init.endpoint</td><td><code><a href="#Endpoint">Endpoint</a></code></td><td></td>
-    </tr><tr>
-    <td>[init.factory]</td><td><code>DataFactory</code></td><td><code>@rdfjs/data-model</code></td>
-    </tr><tr>
-    <td>[maxQuadsPerRequest]</td><td><code>number</code></td><td></td>
+    <td>options.client</td><td><code><a href="#SimpleClient">SimpleClient</a></code></td><td><p>client that provides the HTTP I/O</p>
+</td>
     </tr>  </tbody>
 </table>
 
 <a name="StreamStore+get"></a>
 
-### streamStore.get(graph) ⇒ <code>Promise.&lt;Stream&gt;</code>
-Gets a graph triples from the store
+### streamStore.get([graph]) ⇒ <code>Promise.&lt;Readable&gt;</code>
+Sends a GET request to the Graph Store
 
 **Kind**: instance method of [<code>StreamStore</code>](#StreamStore)  
 <table>
   <thead>
     <tr>
-      <th>Param</th><th>Type</th>
+      <th>Param</th><th>Type</th><th>Description</th>
     </tr>
   </thead>
   <tbody>
 <tr>
-    <td>graph</td><td><code>NamedNode</code></td>
+    <td>[graph]</td><td><code>NamedNode</code></td><td><p>source graph</p>
+</td>
     </tr>  </tbody>
 </table>
 
 <a name="StreamStore+post"></a>
 
-### streamStore.post(stream) ⇒ <code>Promise.&lt;void&gt;</code>
-Adds triples to a graph
+### streamStore.post(stream, [options]) ⇒ <code>Promise.&lt;void&gt;</code>
+Sends a POST request to the Graph Store
 
 **Kind**: instance method of [<code>StreamStore</code>](#StreamStore)  
 <table>
   <thead>
     <tr>
-      <th>Param</th><th>Type</th>
+      <th>Param</th><th>Type</th><th>Description</th>
     </tr>
   </thead>
   <tbody>
 <tr>
-    <td>stream</td><td><code>Stream</code></td>
+    <td>stream</td><td><code>Readable</code></td><td><p>triples/quads to write</p>
+</td>
+    </tr><tr>
+    <td>[options]</td><td><code>Object</code></td><td></td>
+    </tr><tr>
+    <td>[options.graph]</td><td><code>Term</code></td><td><p>target graph</p>
+</td>
     </tr>  </tbody>
 </table>
 
 <a name="StreamStore+put"></a>
 
-### streamStore.put(stream) ⇒ <code>Promise.&lt;void&gt;</code>
-Replaces graph with triples
+### streamStore.put(stream, [options]) ⇒ <code>Promise.&lt;void&gt;</code>
+Sends a PUT request to the Graph Store
 
 **Kind**: instance method of [<code>StreamStore</code>](#StreamStore)  
 <table>
   <thead>
     <tr>
-      <th>Param</th><th>Type</th>
+      <th>Param</th><th>Type</th><th>Description</th>
     </tr>
   </thead>
   <tbody>
 <tr>
-    <td>stream</td><td><code>Stream</code></td>
+    <td>stream</td><td><code>Readable</code></td><td><p>triples/quads to write</p>
+</td>
+    </tr><tr>
+    <td>[options]</td><td><code>Object</code></td><td></td>
+    </tr><tr>
+    <td>[options.graph]</td><td><code>Term</code></td><td><p>target graph</p>
+</td>
+    </tr>  </tbody>
+</table>
+
+<a name="StreamStore+read"></a>
+
+### streamStore.read([options]) ⇒ <code>Readable</code>
+Generic read request to the Graph Store
+
+**Kind**: instance method of [<code>StreamStore</code>](#StreamStore)  
+<table>
+  <thead>
+    <tr>
+      <th>Param</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+<tr>
+    <td>[options]</td><td><code>Object</code></td><td></td>
+    </tr><tr>
+    <td>[options.graph]</td><td><code>Term</code></td><td><p>source graph</p>
+</td>
+    </tr><tr>
+    <td>options.method</td><td><code>string</code></td><td><p>HTTP method</p>
+</td>
+    </tr>  </tbody>
+</table>
+
+<a name="StreamStore+write"></a>
+
+### streamStore.write([options], [graph], method, stream) ⇒ <code>Promise.&lt;void&gt;</code>
+Generic write request to the Graph Store
+
+**Kind**: instance method of [<code>StreamStore</code>](#StreamStore)  
+<table>
+  <thead>
+    <tr>
+      <th>Param</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+<tr>
+    <td>[options]</td><td><code>Object</code></td><td></td>
+    </tr><tr>
+    <td>[graph]</td><td><code>Term</code></td><td><p>target graph</p>
+</td>
+    </tr><tr>
+    <td>method</td><td><code>string</code></td><td><p>HTTP method</p>
+</td>
+    </tr><tr>
+    <td>stream</td><td><code>Readable</code></td><td><p>triples/quads to write</p>
+</td>
     </tr>  </tbody>
 </table>
 

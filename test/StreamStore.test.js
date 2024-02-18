@@ -1,34 +1,50 @@
-const { deepStrictEqual, notStrictEqual, rejects, strictEqual } = require('assert')
-const getStream = require('get-stream')
-const intoStream = require('into-stream')
-const { describe, it } = require('mocha')
-const fetch = require('nodeify-fetch')
-const { toCanonical } = require('rdf-dataset-ext')
-const rdf = require('@rdfjs/data-model')
-const namespace = require('@rdfjs/namespace')
-const { quadToNTriples } = require('@rdfjs/to-ntriples')
-const testFactory = require('./support/testFactory')
-const withServer = require('./support/withServer')
-const Endpoint = require('../Endpoint')
-const StreamStore = require('../StreamStore')
-
-const ns = {
-  ex: namespace('http://example.org/')
-}
+import { deepStrictEqual, rejects, strictEqual } from 'node:assert'
+import withServer from 'express-as-promise/withServer.js'
+import { isReadableStream, isWritableStream } from 'is-stream'
+import { describe, it } from 'mocha'
+import rdf from 'rdf-ext'
+import { datasetEqual } from 'rdf-test/assert.js'
+import { Readable } from 'readable-stream'
+import chunks from 'stream-chunks/chunks.js'
+import decode from 'stream-chunks/decode.js'
+import SimpleClient from '../SimpleClient.js'
+import StreamStore from '../StreamStore.js'
+import { graph, message, quads } from './support/examples.js'
+import isServerError from './support/isServerError.js'
+import isSocketError from './support/isSocketError.js'
+import * as ns from './support/namespaces.js'
+import testFactory from './support/testFactory.js'
 
 describe('StreamStore', () => {
   describe('.read', () => {
     it('should be a method', () => {
-      const endpoint = new Endpoint({ fetch })
-      const store = new StreamStore({ endpoint })
+      const store = new StreamStore({})
 
       strictEqual(typeof store.read, 'function')
+    })
+
+    it('should return a Readable stream object', async () => {
+      await withServer(async server => {
+        server.app.get('/', async (req, res) => {
+          res.status(204).end()
+        })
+
+        const storeUrl = await server.listen()
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
+
+        const result = store.read({ method: 'GET', graph })
+
+        strictEqual(isReadableStream(result), true)
+        strictEqual(isWritableStream(result), false)
+
+        await chunks(result)
+      })
     })
 
     it('should use the given method', async () => {
       await withServer(async server => {
         let called = false
-        const graph = ns.ex.graph1
 
         server.app.get('/', async (req, res) => {
           called = true
@@ -37,11 +53,11 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
-        const stream = await store.read({ method: 'GET', graph })
-        await getStream.array(stream)
+        const stream = store.read({ method: 'GET', graph })
+        await chunks(stream)
 
         strictEqual(called, true)
       })
@@ -50,7 +66,6 @@ describe('StreamStore', () => {
     it('should send the requested graph as a query parameter', async () => {
       await withServer(async server => {
         let graphParameter = null
-        const graph = ns.ex.graph1
 
         server.app.get('/', async (req, res) => {
           graphParameter = req.query.graph
@@ -59,11 +74,11 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
-        const stream = await store.read({ method: 'GET', graph })
-        await getStream.array(stream)
+        const stream = store.read({ method: 'GET', graph })
+        await chunks(stream)
 
         strictEqual(graphParameter, graph.value)
       })
@@ -72,7 +87,6 @@ describe('StreamStore', () => {
     it('should not send the graph query parameter if the default graph is requested', async () => {
       await withServer(async server => {
         let graphParameter = null
-        const graph = rdf.defaultGraph()
 
         server.app.get('/', async (req, res) => {
           graphParameter = req.query.graph
@@ -81,21 +95,19 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const stream = store.read({ method: 'GET', graph: rdf.defaultGraph() })
+        await chunks(stream)
 
-        const stream = await store.read({ method: 'GET', graph })
-        await getStream.array(stream)
-
-        strictEqual(typeof graphParameter, 'undefined')
+        strictEqual(graphParameter, undefined)
       })
     })
 
-    it('should request content with media type application/n-triples from the server', async () => {
+    it('should request content with media type application/n-triples', async () => {
       await withServer(async server => {
         let mediaType = null
-        const graph = ns.ex.graph1
 
         server.app.get('/', async (req, res) => {
           mediaType = req.get('accept')
@@ -104,86 +116,69 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
-        const stream = await store.read({ method: 'GET', graph })
-        await getStream.array(stream)
+        const stream = store.read({ method: 'GET', graph })
+        await chunks(stream)
 
         strictEqual(mediaType, 'application/n-triples')
       })
     })
 
-    it('should parse the N-Triples from the server and provide them as a quad stream', async () => {
+    it('should parse the N-Triples and return them as a quad stream', async () => {
       await withServer(async server => {
-        const graph = ns.ex.graph1
-        const expected = [
-          rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, graph),
-          rdf.quad(ns.ex.subject2, ns.ex.predicate2, ns.ex.object2, graph),
-          rdf.quad(ns.ex.subject3, ns.ex.predicate3, ns.ex.object3, graph),
-          rdf.quad(ns.ex.subject4, ns.ex.predicate4, ns.ex.object4, graph)
-        ]
-        const content = expected.map(quad => {
-          return quadToNTriples(rdf.quad(quad.subject, quad.predicate, quad.object)) + '\n'
-        }).join('')
-
         server.app.get('/', async (req, res) => {
-          res.end(content)
+          res.end(quads.toString())
         })
 
         const storeUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
-        const stream = await store.read({ method: 'GET', graph })
-        const quads = await getStream.array(stream)
+        const stream = store.read({ method: 'GET', graph })
+        const result = await chunks(stream)
 
-        strictEqual(toCanonical(quads), toCanonical(expected))
+        datasetEqual(result, rdf.dataset(quads, graph))
       })
     })
 
     it('should not send the graph query parameter if the default graph is requested', async () => {
       await withServer(async server => {
-        let error = null
-        const graph = ns.ex.graph1
-
         server.app.get('/', async (req, res) => {
-          res.status(500).end()
+          res.status(500).end(message)
         })
 
         const storeUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
-        try {
-          await store.read({ method: 'GET', graph })
-        } catch (err) {
-          error = err
-        }
-
-        notStrictEqual(error, null)
+        await rejects(async () => {
+          const stream = store.read({ method: 'GET', graph })
+          await chunks(stream)
+        }, err => {
+          return isServerError(err, message)
+        })
       })
     })
 
     it('should use the given factory', async () => {
       await withServer(async server => {
-        const graph = ns.ex.graph1
-        const expected = [rdf.quad(rdf.blankNode(), ns.ex.predicate1, rdf.literal('test'), graph)]
-        const content = expected.map(quad => {
-          return quadToNTriples(rdf.quad(quad.subject, quad.predicate, quad.object)) + '\n'
-        }).join('')
+        const quads = rdf.dataset([
+          rdf.quad(rdf.blankNode(), ns.ex.predicate1, rdf.literal('test'), graph)
+        ])
         const factory = testFactory()
 
         server.app.get('/', async (req, res) => {
-          res.end(content)
+          res.end(quads.toString())
         })
 
         const storeUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ factory, endpoint })
+        const client = new SimpleClient({ factory, storeUrl })
+        const store = new StreamStore({ client })
 
-        const stream = await store.read({ method: 'GET', graph })
-        await getStream.array(stream)
+        const stream = store.read({ method: 'GET', graph })
+        await chunks(stream)
 
         deepStrictEqual(factory.used, {
           blankNode: true,
@@ -198,7 +193,6 @@ describe('StreamStore', () => {
     it('should use the given user and password', async () => {
       await withServer(async server => {
         let authorization = null
-        const graph = ns.ex.graph1
 
         server.app.get('/', async (req, res) => {
           authorization = req.headers.authorization
@@ -207,47 +201,54 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, storeUrl, user: 'abc', password: 'def' })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl, user: 'abc', password: 'def' })
+        const store = new StreamStore({ client })
 
-        const stream = await store.read({ method: 'GET', graph })
-        await getStream.array(stream)
+        const stream = store.read({ method: 'GET', graph })
+        await chunks(stream)
 
         strictEqual(authorization, 'Basic YWJjOmRlZg==')
       })
     })
 
+    it('should handle server socket errors', async () => {
+      await withServer(async server => {
+        server.app.get('/', async (req, res) => {
+          req.client.destroy()
+        })
+
+        const storeUrl = await server.listen()
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
+
+        await rejects(async () => {
+          const stream = store.read({ method: 'GET', graph })
+          await chunks(stream)
+        }, err => isSocketError(err))
+      })
+    })
+
     it('should handle server errors', async () => {
       await withServer(async server => {
-        const message = 'test message'
-        const graph = ns.ex.graph1
-
         server.app.get('/', async (req, res) => {
           res.status(500).end(message)
         })
 
         const storeUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
         await rejects(async () => {
-          const stream = await store.read({ method: 'GET', graph })
-          await getStream.array(stream)
-        }, err => {
-          strictEqual(err.message.includes('Internal Server Error'), true)
-          strictEqual(err.message.includes('500'), true)
-          strictEqual(err.message.includes(message), true)
-
-          return true
-        })
+          const stream = store.read({ method: 'GET', graph })
+          await chunks(stream)
+        }, err => isServerError(err, message))
       })
     })
   })
 
   describe('.write', () => {
     it('should be a method', () => {
-      const endpoint = new Endpoint({ fetch })
-      const store = new StreamStore({ endpoint })
+      const store = new StreamStore({})
 
       strictEqual(typeof store.write, 'function')
     })
@@ -255,7 +256,6 @@ describe('StreamStore', () => {
     it('should use the given method', async () => {
       await withServer(async server => {
         let called = false
-        const quad = rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1)
 
         server.app.post('/', async (req, res) => {
           called = true
@@ -264,20 +264,18 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const stream = intoStream.object([quad])
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
-        await store.write({ method: 'POST', stream })
+        await store.write({ method: 'POST', stream: quads.toStream() })
 
         strictEqual(called, true)
       })
     })
 
-    it('should send content with media type application/n-triples to the server', async () => {
+    it('should send content with media type application/n-triples', async () => {
       await withServer(async server => {
         let mediaType = null
-        const quad = rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1)
 
         server.app.post('/', async (req, res) => {
           mediaType = req.get('content-type')
@@ -286,276 +284,52 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const stream = intoStream.object([quad])
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
-        await store.write({ method: 'POST', stream })
+        await store.write({ method: 'POST', stream: quads.toStream() })
 
         strictEqual(mediaType, 'application/n-triples')
       })
     })
 
-    it('should send the quad stream as N-Triples to the server', async () => {
+    it('should send the quad stream as N-Triples', async () => {
       await withServer(async server => {
-        const content = {}
-        const quads = [
-          rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1),
-          rdf.quad(ns.ex.subject2, ns.ex.predicate2, ns.ex.object2, ns.ex.graph1),
-          rdf.quad(ns.ex.subject3, ns.ex.predicate3, ns.ex.object3, ns.ex.graph1),
-          rdf.quad(ns.ex.subject4, ns.ex.predicate4, ns.ex.object4, ns.ex.graph1)
-        ]
-        const expected = quads.map(quad => {
-          return quadToNTriples(rdf.quad(quad.subject, quad.predicate, quad.object)) + '\n'
-        }).join('')
+        let content
 
         server.app.post('/', async (req, res) => {
-          content[req.query.graph] = await getStream(req)
+          content = await decode(req)
 
           res.status(204).end()
         })
 
         const storeUrl = await server.listen()
-        const stream = intoStream.object(quads)
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
-        await store.write({ method: 'POST', stream })
+        await store.write({ method: 'POST', stream: quads.toStream() })
 
-        strictEqual(content[quads[0].graph.value], expected)
-      })
-    })
-
-    it('should support default graph', async () => {
-      await withServer(async server => {
-        let graph = true
-        let content = {}
-        const quads = [
-          rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1),
-          rdf.quad(ns.ex.subject2, ns.ex.predicate2, ns.ex.object2),
-          rdf.quad(ns.ex.subject3, ns.ex.predicate3, ns.ex.object3),
-          rdf.quad(ns.ex.subject4, ns.ex.predicate4, ns.ex.object4)
-        ]
-        const expected = quads.map(quad => {
-          return quadToNTriples(rdf.quad(quad.subject, quad.predicate, quad.object)) + '\n'
-        }).join('')
-
-        server.app.post('/', async (req, res) => {
-          graph = req.query.graph
-          content = await getStream(req)
-
-          res.status(204).end()
-        })
-
-        const storeUrl = await server.listen()
-        const stream = intoStream.object(quads)
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
-
-        await store.write({ method: 'POST', stream })
-
-        strictEqual(typeof graph, 'undefined')
-        strictEqual(content, expected)
-      })
-    })
-
-    it('should use multiple requests to send multiple graphs', async () => {
-      await withServer(async server => {
-        const content = {}
-        const quads = [
-          rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1),
-          rdf.quad(ns.ex.subject2, ns.ex.predicate2, ns.ex.object2, ns.ex.graph1),
-          rdf.quad(ns.ex.subject3, ns.ex.predicate3, ns.ex.object3),
-          rdf.quad(ns.ex.subject4, ns.ex.predicate4, ns.ex.object4),
-          rdf.quad(ns.ex.subject5, ns.ex.predicate5, ns.ex.object5, ns.ex.graph2),
-          rdf.quad(ns.ex.subject6, ns.ex.predicate6, ns.ex.object6, ns.ex.graph2)
-        ]
-        const expected = quads.reduce((expected, quad) => {
-          const graphIri = quad.graph.value || ''
-
-          expected[graphIri] = (expected[graphIri] || '') +
-            quadToNTriples(rdf.quad(quad.subject, quad.predicate, quad.object)) + '\n'
-
-          return expected
-        }, {})
-
-        server.app.post('/', async (req, res) => {
-          content[typeof req.query.graph === 'string' ? req.query.graph : ''] = await getStream(req)
-
-          res.status(204).end()
-        })
-
-        const storeUrl = await server.listen()
-        const stream = intoStream.object(quads)
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
-
-        await store.write({ method: 'POST', stream })
-
-        Object.entries(expected).forEach(([graphIri, graphContent]) => {
-          strictEqual(graphContent, content[graphIri])
-        })
-      })
-    })
-
-    it('should use multiple requests if maxQuadsPerRequest is reached', async () => {
-      await withServer(async server => {
-        const content = []
-        const quads = [
-          rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1),
-          rdf.quad(ns.ex.subject2, ns.ex.predicate2, ns.ex.object2),
-          rdf.quad(ns.ex.subject3, ns.ex.predicate3, ns.ex.object3),
-          rdf.quad(ns.ex.subject4, ns.ex.predicate4, ns.ex.object4)
-        ]
-        const expected = [
-          quadToNTriples(quads[0]) + '\n' + quadToNTriples(quads[1]) + '\n',
-          quadToNTriples(quads[2]) + '\n' + quadToNTriples(quads[3]) + '\n'
-        ]
-
-        server.app.post('/', async (req, res) => {
-          content.push(await getStream(req))
-
-          res.status(204).end()
-        })
-
-        const storeUrl = await server.listen()
-        const stream = intoStream.object(quads)
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint, maxQuadsPerRequest: 2 })
-
-        await store.write({ method: 'POST', stream })
-
-        deepStrictEqual(content, expected)
+        strictEqual(content, quads.toString())
       })
     })
 
     it('should handle streams with no data', async () => {
       await withServer(async server => {
-        const quads = []
-
-        const storeUrl = await server.listen()
-        const stream = intoStream.object(quads)
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
-
-        await store.write({ method: 'POST', stream })
-      })
-    })
-
-    it('should handle server socket errors', async () => {
-      await withServer(async server => {
-        const quad = rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1)
-
-        server.app.post('/', async req => {
-          req.client.destroy()
-        })
-
-        const storeUrl = await server.listen()
-        const stream = intoStream.object([quad])
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
-
-        await rejects(async () => {
-          await store.write({ method: 'POST', stream })
-        }, err => {
-          strictEqual(err.message.includes('socket hang up'), true)
-
-          return true
-        })
-      })
-    })
-
-    it('should handle server errors', async () => {
-      await withServer(async server => {
-        const message = 'test message'
-
-        const quad = rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1)
-
         server.app.post('/', async (req, res) => {
-          res.status(500).end(message)
-        })
-
-        const storeUrl = await server.listen()
-        const stream = intoStream.object([quad])
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
-
-        await rejects(async () => {
-          await store.write({ method: 'POST', stream })
-        }, err => {
-          strictEqual(err.message.includes('Internal Server Error'), true)
-          strictEqual(err.message.includes('500'), true)
-          strictEqual(err.message.includes(message), true)
-
-          return true
-        })
-      })
-    })
-
-    it('should handle server socket errors in separated requests', async () => {
-      await withServer(async server => {
-        const quad1 = rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1)
-        const quad2 = rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph2)
-
-        server.app.post('/', async (req, res) => {
-          if (req.query.graph === quad2.graph.value) {
-            return req.client.destroy()
-          }
-
           res.status(204).end()
         })
 
         const storeUrl = await server.listen()
-        const stream = intoStream.object([quad1, quad2])
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
-        await rejects(async () => {
-          await store.write({ method: 'POST', stream })
-        }, err => {
-          strictEqual(err.message.includes('socket hang up'), true)
-
-          return true
-        })
-      })
-    })
-
-    it('should handle server errors in separated requests', async () => {
-      await withServer(async server => {
-        const message = 'test message'
-
-        const quad1 = rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1)
-        const quad2 = rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph2)
-
-        server.app.post('/', async (req, res) => {
-          if (req.query.graph === quad2.graph.value) {
-            return res.status(500).end(message)
-          }
-
-          res.status(204).end()
-        })
-
-        const storeUrl = await server.listen()
-        const stream = intoStream.object([quad1, quad2])
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
-
-        await rejects(async () => {
-          await store.write({ method: 'POST', stream })
-        }, err => {
-          strictEqual(err.message.includes('Internal Server Error'), true)
-          strictEqual(err.message.includes('500'), true)
-          strictEqual(err.message.includes(message), true)
-
-          return true
-        })
+        await store.write({ method: 'POST', stream: Readable.from([]) })
       })
     })
 
     it('should use the given user and password', async () => {
       await withServer(async server => {
         let authorization = null
-        const quad = rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1)
 
         server.app.post('/', async (req, res) => {
           authorization = req.headers.authorization
@@ -564,29 +338,77 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const stream = intoStream.object([quad])
-        const endpoint = new Endpoint({ fetch, storeUrl, user: 'abc', password: 'def' })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl, user: 'abc', password: 'def' })
+        const store = new StreamStore({ client })
 
-        await store.write({ method: 'POST', stream })
+        await store.write({ method: 'POST', stream: quads.toStream() })
 
         strictEqual(authorization, 'Basic YWJjOmRlZg==')
+      })
+    })
+
+    it('should handle server socket errors', async () => {
+      await withServer(async server => {
+        server.app.post('/', async req => {
+          req.client.destroy()
+        })
+
+        const storeUrl = await server.listen()
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
+
+        await rejects(async () => {
+          await store.write({ method: 'POST', stream: quads.toStream() })
+        }, err => isSocketError(err))
+      })
+    })
+
+    it('should handle server errors', async () => {
+      await withServer(async server => {
+        server.app.post('/', async (req, res) => {
+          res.status(500).end(message)
+        })
+
+        const storeUrl = await server.listen()
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
+
+        await rejects(async () => {
+          await store.write({ method: 'POST', stream: quads.toStream() })
+        }, err => isServerError(err, message))
       })
     })
   })
 
   describe('.get', () => {
     it('should be a method', () => {
-      const endpoint = new Endpoint({ fetch })
-      const store = new StreamStore({ endpoint })
+      const store = new StreamStore({})
 
       strictEqual(typeof store.get, 'function')
+    })
+
+    it('should return a Readable stream object', async () => {
+      await withServer(async server => {
+        server.app.get('/', async (req, res) => {
+          res.status(204).end()
+        })
+
+        const storeUrl = await server.listen()
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
+
+        const result = store.get(graph)
+
+        strictEqual(isReadableStream(result), true)
+        strictEqual(isWritableStream(result), false)
+
+        await chunks(result)
+      })
     })
 
     it('should send a GET request', async () => {
       await withServer(async server => {
         let called = false
-        const graph = ns.ex.graph1
 
         server.app.get('/', async (req, res) => {
           called = true
@@ -595,11 +417,11 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
-        const stream = await store.get(graph)
-        await getStream.array(stream)
+        const stream = store.get(graph)
+        await chunks(stream)
 
         strictEqual(called, true)
       })
@@ -608,7 +430,6 @@ describe('StreamStore', () => {
     it('should send the requested graph as a query parameter', async () => {
       await withServer(async server => {
         let graphParameter = null
-        const graph = ns.ex.graph1
 
         server.app.get('/', async (req, res) => {
           graphParameter = req.query.graph
@@ -617,11 +438,11 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
-        const stream = await store.get(graph)
-        await getStream.array(stream)
+        const stream = store.get(graph)
+        await chunks(stream)
 
         strictEqual(graphParameter, graph.value)
       })
@@ -630,7 +451,6 @@ describe('StreamStore', () => {
     it('should not send the graph query parameter if the default graph is requested', async () => {
       await withServer(async server => {
         let graphParameter = null
-        const graph = rdf.defaultGraph()
 
         server.app.get('/', async (req, res) => {
           graphParameter = req.query.graph
@@ -639,21 +459,19 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const stream = store.get(rdf.defaultGraph())
+        await chunks(stream)
 
-        const stream = await store.get(graph)
-        await getStream.array(stream)
-
-        strictEqual(typeof graphParameter, 'undefined')
+        strictEqual(graphParameter, undefined)
       })
     })
 
-    it('should request content with media type application/n-triples from the server', async () => {
+    it('should request content with media type application/n-triples', async () => {
       await withServer(async server => {
         let mediaType = null
-        const graph = ns.ex.graph1
 
         server.app.get('/', async (req, res) => {
           mediaType = req.get('accept')
@@ -662,72 +480,54 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
-        const stream = await store.get(graph)
-        await getStream.array(stream)
+        const stream = store.get(graph)
+        await chunks(stream)
 
         strictEqual(mediaType, 'application/n-triples')
       })
     })
 
-    it('should parse the N-Triples from the server and provide them as a quad stream', async () => {
+    it('should parse the N-Triples and return them as a quad stream', async () => {
       await withServer(async server => {
-        const graph = ns.ex.graph1
-        const expected = [
-          rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, graph),
-          rdf.quad(ns.ex.subject2, ns.ex.predicate2, ns.ex.object2, graph),
-          rdf.quad(ns.ex.subject3, ns.ex.predicate3, ns.ex.object3, graph),
-          rdf.quad(ns.ex.subject4, ns.ex.predicate4, ns.ex.object4, graph)
-        ]
-        const content = expected.map(quad => {
-          return quadToNTriples(rdf.quad(quad.subject, quad.predicate, quad.object)) + '\n'
-        }).join('')
-
         server.app.get('/', async (req, res) => {
-          res.end(content)
+          res.end(quads.toString())
         })
 
         const storeUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
-        const stream = await store.get(graph)
-        const quads = await getStream.array(stream)
+        const stream = store.get(graph)
+        const result = await chunks(stream)
 
-        strictEqual(toCanonical(quads), toCanonical(expected))
+        datasetEqual(result, rdf.dataset(quads, graph))
       })
     })
 
-    it('should not send the graph query parameter if the default graph is requested', async () => {
+    it('should handle server errors', async () => {
       await withServer(async server => {
-        let error = null
-        const graph = ns.ex.graph1
-
         server.app.get('/', async (req, res) => {
-          res.status(500).end()
+          res.status(500).end(message)
         })
 
         const storeUrl = await server.listen()
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
-        try {
-          await store.get(graph)
-        } catch (err) {
-          error = err
-        }
-
-        notStrictEqual(error, null)
+        await rejects(async () => {
+          const stream = store.get(graph)
+          await chunks(stream)
+        }, err => isServerError(err, message))
       })
     })
   })
 
   describe('.post', () => {
     it('should be a method', () => {
-      const endpoint = new Endpoint({ fetch })
-      const store = new StreamStore({ endpoint })
+      const store = new StreamStore({})
 
       strictEqual(typeof store.post, 'function')
     })
@@ -735,7 +535,6 @@ describe('StreamStore', () => {
     it('should send a POST request', async () => {
       await withServer(async server => {
         let called = false
-        const quad = rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1)
 
         server.app.post('/', async (req, res) => {
           called = true
@@ -744,20 +543,21 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const stream = intoStream.object([quad])
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
-        await store.post(stream)
+        await store.post(quads.toStream())
 
         strictEqual(called, true)
       })
     })
 
-    it('should send content with media type application/n-triples to the server', async () => {
+    it('should send content with media type application/n-triples', async () => {
       await withServer(async server => {
         let mediaType = null
-        const quad = rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1)
+        const quads = rdf.dataset([
+          rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1)
+        ])
 
         server.app.post('/', async (req, res) => {
           mediaType = req.get('content-type')
@@ -766,179 +566,78 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const stream = intoStream.object([quad])
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
-        await store.post(stream)
+        await store.post(quads.toStream())
 
         strictEqual(mediaType, 'application/n-triples')
       })
     })
 
-    it('should send the quad stream as N-Triples to the server', async () => {
+    it('should send the quad stream as N-Triples', async () => {
       await withServer(async server => {
-        const content = {}
-        const quads = [
-          rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1),
-          rdf.quad(ns.ex.subject2, ns.ex.predicate2, ns.ex.object2, ns.ex.graph1),
-          rdf.quad(ns.ex.subject3, ns.ex.predicate3, ns.ex.object3, ns.ex.graph1),
-          rdf.quad(ns.ex.subject4, ns.ex.predicate4, ns.ex.object4, ns.ex.graph1)
-        ]
-        const expected = quads.map(quad => {
-          return quadToNTriples(rdf.quad(quad.subject, quad.predicate, quad.object)) + '\n'
-        }).join('')
+        let content
 
         server.app.post('/', async (req, res) => {
-          content[req.query.graph] = await getStream(req)
+          content = await decode(req)
 
           res.status(204).end()
         })
 
         const storeUrl = await server.listen()
-        const stream = intoStream.object(quads)
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
-        await store.post(stream)
+        await store.post(quads.toStream())
 
-        strictEqual(content[quads[0].graph.value], expected)
+        strictEqual(content, quads.toString())
       })
     })
 
     it('should support default graph', async () => {
       await withServer(async server => {
         let graph = true
-        let content = {}
-        const quads = [
-          rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1),
-          rdf.quad(ns.ex.subject2, ns.ex.predicate2, ns.ex.object2),
-          rdf.quad(ns.ex.subject3, ns.ex.predicate3, ns.ex.object3),
-          rdf.quad(ns.ex.subject4, ns.ex.predicate4, ns.ex.object4)
-        ]
-        const expected = quads.map(quad => {
-          return quadToNTriples(rdf.quad(quad.subject, quad.predicate, quad.object)) + '\n'
-        }).join('')
+        let content
 
         server.app.post('/', async (req, res) => {
           graph = req.query.graph
-          content = await getStream(req)
+          content = await decode(req)
 
           res.status(204).end()
         })
 
         const storeUrl = await server.listen()
-        const stream = intoStream.object(quads)
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
-        await store.post(stream)
+        await store.post(quads.toStream())
 
-        strictEqual(typeof graph, 'undefined')
-        strictEqual(content, expected)
-      })
-    })
-
-    it('should use multiple requests to send multiple graphs', async () => {
-      await withServer(async server => {
-        const content = {}
-        const quads = [
-          rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1),
-          rdf.quad(ns.ex.subject2, ns.ex.predicate2, ns.ex.object2, ns.ex.graph1),
-          rdf.quad(ns.ex.subject3, ns.ex.predicate3, ns.ex.object3),
-          rdf.quad(ns.ex.subject4, ns.ex.predicate4, ns.ex.object4),
-          rdf.quad(ns.ex.subject5, ns.ex.predicate5, ns.ex.object5, ns.ex.graph2),
-          rdf.quad(ns.ex.subject6, ns.ex.predicate6, ns.ex.object6, ns.ex.graph2)
-        ]
-        const expected = quads.reduce((expected, quad) => {
-          const graphIri = quad.graph.value || ''
-
-          expected[graphIri] = (expected[graphIri] || '') +
-            quadToNTriples(rdf.quad(quad.subject, quad.predicate, quad.object)) + '\n'
-
-          return expected
-        }, {})
-
-        server.app.post('/', async (req, res) => {
-          content[typeof req.query.graph === 'string' ? req.query.graph : ''] = await getStream(req)
-
-          res.status(204).end()
-        })
-
-        const storeUrl = await server.listen()
-        const stream = intoStream.object(quads)
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
-
-        await store.post(stream)
-
-        Object.entries(expected).forEach(([graphIri, graphContent]) => {
-          strictEqual(graphContent, content[graphIri])
-        })
-      })
-    })
-
-    it('should use multiple requests if maxQuadsPerRequest is reached', async () => {
-      await withServer(async server => {
-        const content = []
-        const quads = [
-          rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1),
-          rdf.quad(ns.ex.subject2, ns.ex.predicate2, ns.ex.object2),
-          rdf.quad(ns.ex.subject3, ns.ex.predicate3, ns.ex.object3),
-          rdf.quad(ns.ex.subject4, ns.ex.predicate4, ns.ex.object4)
-        ]
-        const expected = [
-          quadToNTriples(quads[0]) + '\n' + quadToNTriples(quads[1]) + '\n',
-          quadToNTriples(quads[2]) + '\n' + quadToNTriples(quads[3]) + '\n'
-        ]
-
-        server.app.post('/', async (req, res) => {
-          content.push(await getStream(req))
-
-          res.status(204).end()
-        })
-
-        const storeUrl = await server.listen()
-        const stream = intoStream.object(quads)
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint, maxQuadsPerRequest: 2 })
-
-        await store.post(stream)
-
-        deepStrictEqual(content, expected)
+        strictEqual(graph, undefined)
+        strictEqual(content, quads.toString())
       })
     })
 
     it('should handle server errors', async () => {
       await withServer(async server => {
-        const quad = rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1)
-
         server.app.post('/', async (req, res) => {
-          res.status(500).end()
+          res.status(500).end(message)
         })
 
         const storeUrl = await server.listen()
-        const stream = intoStream.object([quad])
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
-        let error = null
-
-        try {
-          await store.post(stream)
-        } catch (err) {
-          error = err
-        }
-
-        notStrictEqual(error, null)
+        await rejects(async () => {
+          await store.post(quads.toStream())
+        }, err => isServerError(err, message))
       })
     })
   })
 
   describe('.put', () => {
     it('should be a method', () => {
-      const endpoint = new Endpoint({ fetch })
-      const store = new StreamStore({ endpoint })
+      const store = new StreamStore({})
 
       strictEqual(typeof store.put, 'function')
     })
@@ -946,7 +645,6 @@ describe('StreamStore', () => {
     it('should send a PUT request', async () => {
       await withServer(async server => {
         let called = false
-        const quad = rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1)
 
         server.app.put('/', async (req, res) => {
           called = true
@@ -955,20 +653,18 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const stream = intoStream.object([quad])
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
-        await store.put(stream)
+        await store.put(quads.toStream())
 
         strictEqual(called, true)
       })
     })
 
-    it('should send content with media type application/n-triples to the server', async () => {
+    it('should send content with media type application/n-triples', async () => {
       await withServer(async server => {
         let mediaType = null
-        const quad = rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1)
 
         server.app.put('/', async (req, res) => {
           mediaType = req.get('content-type')
@@ -977,177 +673,71 @@ describe('StreamStore', () => {
         })
 
         const storeUrl = await server.listen()
-        const stream = intoStream.object([quad])
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
-        await store.put(stream)
+        await store.put(quads.toStream())
 
         strictEqual(mediaType, 'application/n-triples')
       })
     })
 
-    it('should send the quad stream as N-Triples to the server', async () => {
+    it('should send the quad stream as N-Triples', async () => {
       await withServer(async server => {
-        const content = {}
-        const quads = [
-          rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1),
-          rdf.quad(ns.ex.subject2, ns.ex.predicate2, ns.ex.object2, ns.ex.graph1),
-          rdf.quad(ns.ex.subject3, ns.ex.predicate3, ns.ex.object3, ns.ex.graph1),
-          rdf.quad(ns.ex.subject4, ns.ex.predicate4, ns.ex.object4, ns.ex.graph1)
-        ]
-        const expected = quads.map(quad => {
-          return quadToNTriples(rdf.quad(quad.subject, quad.predicate, quad.object)) + '\n'
-        }).join('')
+        let content
 
         server.app.put('/', async (req, res) => {
-          content[req.query.graph] = await getStream(req)
+          content = await decode(req)
 
           res.status(204).end()
         })
 
         const storeUrl = await server.listen()
-        const stream = intoStream.object(quads)
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
-        await store.put(stream)
+        await store.put(quads.toStream())
 
-        strictEqual(content[quads[0].graph.value], expected)
+        strictEqual(content, quads.toString())
       })
     })
 
     it('should support default graph', async () => {
       await withServer(async server => {
         let graph = true
-        let content = {}
-        const quads = [
-          rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1),
-          rdf.quad(ns.ex.subject2, ns.ex.predicate2, ns.ex.object2),
-          rdf.quad(ns.ex.subject3, ns.ex.predicate3, ns.ex.object3),
-          rdf.quad(ns.ex.subject4, ns.ex.predicate4, ns.ex.object4)
-        ]
-        const expected = quads.map(quad => {
-          return quadToNTriples(rdf.quad(quad.subject, quad.predicate, quad.object)) + '\n'
-        }).join('')
+        let content
 
         server.app.put('/', async (req, res) => {
           graph = req.query.graph
-          content = await getStream(req)
+          content = await decode(req)
 
           res.status(204).end()
         })
 
         const storeUrl = await server.listen()
-        const stream = intoStream.object(quads)
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
-        await store.put(stream)
+        await store.put(quads.toStream())
 
-        strictEqual(typeof graph, 'undefined')
-        strictEqual(content, expected)
-      })
-    })
-
-    it('should use multiple requests to send multiple graphs', async () => {
-      await withServer(async server => {
-        const content = {}
-        const quads = [
-          rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1),
-          rdf.quad(ns.ex.subject2, ns.ex.predicate2, ns.ex.object2, ns.ex.graph1),
-          rdf.quad(ns.ex.subject3, ns.ex.predicate3, ns.ex.object3),
-          rdf.quad(ns.ex.subject4, ns.ex.predicate4, ns.ex.object4),
-          rdf.quad(ns.ex.subject5, ns.ex.predicate5, ns.ex.object5, ns.ex.graph2),
-          rdf.quad(ns.ex.subject6, ns.ex.predicate6, ns.ex.object6, ns.ex.graph2)
-        ]
-        const expected = quads.reduce((expected, quad) => {
-          const graphIri = quad.graph.value || ''
-
-          expected[graphIri] = (expected[graphIri] || '') +
-            quadToNTriples(rdf.quad(quad.subject, quad.predicate, quad.object)) + '\n'
-
-          return expected
-        }, {})
-
-        server.app.put('/', async (req, res) => {
-          content[typeof req.query.graph === 'string' ? req.query.graph : ''] = await getStream(req)
-
-          res.status(204).end()
-        })
-
-        const storeUrl = await server.listen()
-        const stream = intoStream.object(quads)
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
-
-        await store.put(stream)
-
-        Object.entries(expected).forEach(([graphIri, graphContent]) => {
-          strictEqual(graphContent, content[graphIri])
-        })
-      })
-    })
-
-    it('should use PUT and POST methods to combine multiple requests split by maxQuadsPerRequest', async () => {
-      await withServer(async server => {
-        const contentPut = []
-        const contentPost = []
-        const quads = [
-          rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1),
-          rdf.quad(ns.ex.subject2, ns.ex.predicate2, ns.ex.object2),
-          rdf.quad(ns.ex.subject3, ns.ex.predicate3, ns.ex.object3),
-          rdf.quad(ns.ex.subject4, ns.ex.predicate4, ns.ex.object4)
-        ]
-        const expectedPut = [quadToNTriples(quads[0]) + '\n' + quadToNTriples(quads[1]) + '\n']
-        const expectedPost = [quadToNTriples(quads[2]) + '\n' + quadToNTriples(quads[3]) + '\n']
-
-        server.app.post('/', async (req, res) => {
-          contentPost.push(await getStream(req))
-
-          res.status(204).end()
-        })
-
-        server.app.put('/', async (req, res) => {
-          contentPut.push(await getStream(req))
-
-          res.status(204).end()
-        })
-
-        const storeUrl = await server.listen()
-        const stream = intoStream.object(quads)
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint, maxQuadsPerRequest: 2 })
-
-        await store.put(stream)
-
-        deepStrictEqual(contentPut, expectedPut)
-        deepStrictEqual(contentPost, expectedPost)
+        strictEqual(graph, undefined)
+        strictEqual(content, quads.toString())
       })
     })
 
     it('should handle server errors', async () => {
       await withServer(async server => {
-        const quad = rdf.quad(ns.ex.subject1, ns.ex.predicate1, ns.ex.object1, ns.ex.graph1)
-
         server.app.put('/', async (req, res) => {
-          res.status(500).end()
+          res.status(500).end(message)
         })
 
         const storeUrl = await server.listen()
-        const stream = intoStream.object([quad])
-        const endpoint = new Endpoint({ fetch, storeUrl })
-        const store = new StreamStore({ endpoint })
+        const client = new SimpleClient({ storeUrl })
+        const store = new StreamStore({ client })
 
-        let error = null
-
-        try {
-          await store.put(stream)
-        } catch (err) {
-          error = err
-        }
-
-        notStrictEqual(error, null)
+        await rejects(async () => {
+          await store.put(quads.toStream())
+        }, err => isServerError(err, message))
       })
     })
   })

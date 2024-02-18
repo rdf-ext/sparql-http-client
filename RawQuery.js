@@ -1,95 +1,92 @@
+import mergeHeaders from './lib/mergeHeaders.js'
+
 /**
- * A base query class which performs HTTP requests for the different SPARQL query forms
+ * A query implementation that prepares URLs and headers for SPARQL queries and returns the raw fetch response.
  */
 class RawQuery {
   /**
-   * @param {Object} init
-   * @param {Endpoint} init.endpoint
+   * @param {Object} options
+   * @param {SimpleClient} options.client client that provides the HTTP I/O
    */
-  constructor ({ endpoint }) {
-    /** @member {Endpoint} */
-    this.endpoint = endpoint
+  constructor ({ client }) {
+    this.client = client
   }
 
   /**
-   * Performs an ASK query
-   * By default uses HTTP GET with query string
+   * Sends a request for a ASK query
    *
-   * @param {string} query SPARQL ASK query
-   * @param {Object} [init]
-   * @param {HeadersInit} [init.headers] HTTP request headers
-   * @param {'get'|'postUrlencoded'|'postDirect'} [init.operation='get']
+   * @param {string} query ASK query
+   * @param {Object} [options]
+   * @param {Headers} [options.headers] additional request headers
+   * @param {'get'|'postUrlencoded'|'postDirect'} [options.operation='get'] SPARQL Protocol operation
    * @return {Promise<Response>}
    */
   async ask (query, { headers, operation = 'get' } = {}) {
-    headers = this.endpoint.mergeHeaders(headers)
+    headers = mergeHeaders(headers)
 
     if (!headers.has('accept')) {
       headers.set('accept', 'application/sparql-results+json')
     }
 
-    return this.endpoint[operation](query, { headers })
+    return this.client[operation](query, { headers })
   }
 
   /**
-   * Performs a CONSTRUCT/DESCRIBE query
-   * By default uses HTTP GET with query string
+   * Sends a request for a CONSTRUCT or DESCRIBE query
    *
-   * @param {string} query SPARQL query
-   * @param {Object} [init]
-   * @param {HeadersInit} [init.headers] HTTP request headers
-   * @param {'get'|'postUrlencoded'|'postDirect'} [init.operation='get']
+   * @param {string} query CONSTRUCT or DESCRIBE query
+   * @param {Object} [options]
+   * @param {Headers} [options.headers] additional request headers
+   * @param {'get'|'postUrlencoded'|'postDirect'} [options.operation='get'] SPARQL Protocol operation
    * @return {Promise<Response>}
    */
   async construct (query, { headers, operation = 'get' } = {}) {
-    headers = new this.endpoint.fetch.Headers(headers)
+    headers = mergeHeaders(headers)
 
     if (!headers.has('accept')) {
       headers.set('accept', 'application/n-triples')
     }
 
-    return this.endpoint[operation](query, { headers })
+    return this.client[operation](query, { headers })
   }
 
   /**
-   * Performs a SELECT query
-   * By default uses HTTP GET with query string
+   * Sends a request for a SELECT query
    *
-   * @param {string} query SPARQL query
-   * @param {Object} [init]
-   * @param {HeadersInit} [init.headers] HTTP request headers
-   * @param {'get'|'postUrlencoded'|'postDirect'} [init.operation='get']
+   * @param {string} query SELECT query
+   * @param {Object} [options]
+   * @param {Headers} [options.headers] additional request headers
+   * @param {'get'|'postUrlencoded'|'postDirect'} [options.operation='get'] SPARQL Protocol operation
    * @return {Promise<Response>}
    */
   async select (query, { headers, operation = 'get' } = {}) {
-    headers = this.endpoint.mergeHeaders(headers)
+    headers = mergeHeaders(headers)
 
     if (!headers.has('accept')) {
       headers.set('accept', 'application/sparql-results+json')
     }
 
-    return this.endpoint[operation](query, { headers })
+    return this.client[operation](query, { headers })
   }
 
   /**
-   * Performs a SELECT query
-   * By default uses HTTP POST with form-encoded body
+   * Sends a request for an update query
    *
-   * @param {string} query SPARQL query
-   * @param {Object} [init]
-   * @param {HeadersInit} [init.headers] HTTP request headers
-   * @param {'get'|'postUrlencoded'|'postDirect'} [init.operation='postUrlencoded']
+   * @param {string} query update query
+   * @param {Object} [options]
+   * @param {Headers} [options.headers] additional request headers
+   * @param {'get'|'postUrlencoded'|'postDirect'} [options.operation='postUrlencoded'] SPARQL Protocol operation
    * @return {Promise<Response>}
    */
   async update (query, { headers, operation = 'postUrlencoded' } = {}) {
-    headers = new this.endpoint.fetch.Headers(headers)
+    headers = mergeHeaders(headers)
 
     if (!headers.has('accept')) {
       headers.set('accept', '*/*')
     }
 
-    return this.endpoint[operation](query, { headers, update: true })
+    return this.client[operation](query, { headers, update: true })
   }
 }
 
-module.exports = RawQuery
+export default RawQuery

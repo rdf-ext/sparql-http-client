@@ -17,13 +17,13 @@ The following steps are required:
 
 */
 
-const namespace = require('@rdfjs/namespace')
-const SparqlClient = require('..')
+import rdf from 'rdf-ext'
+import SparqlClient from '../StreamClient.js'
 
 const ns = {
-  rdf: namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#'),
-  rdfs: namespace('http://www.w3.org/2000/01/rdf-schema#'),
-  wd: namespace('http://www.wikidata.org/entity/')
+  rdf: rdf.namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#'),
+  rdfs: rdf.namespace('http://www.w3.org/2000/01/rdf-schema#'),
+  wd: rdf.namespace('http://www.wikidata.org/entity/')
 }
 
 const dbpedia = new SparqlClient({ endpointUrl: 'https://query.wikidata.org/sparql' })
@@ -37,13 +37,13 @@ const selectQuery = `SELECT ?label WHERE { ?s <${ns.rdfs.label.value}> ?label . 
 
 async function main () {
   // read all triples related to Eiffel Tower via describe construct query as a quad stream
-  const input = await dbpedia.query.construct(describeQuery)
+  const input = dbpedia.query.construct(describeQuery)
 
   // import the quad stream into a local store (remove literals with empty language strings)
   await local.store.put(input)
 
   // run a select query on the local store that will return all labels
-  const result = await local.query.select(selectQuery)
+  const result = local.query.select(selectQuery)
 
   // write all labels + language to the console
   result.on('data', row => {

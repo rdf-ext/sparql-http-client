@@ -4,7 +4,7 @@ This example uses the SimpleClient to make a SELECT query using a URL encoded PO
 
 */
 
-const SparqlClient = require('../SimpleClient')
+import SparqlClient from '../SimpleClient.js'
 
 const endpointUrl = 'https://query.wikidata.org/sparql'
 const query = `
@@ -31,9 +31,9 @@ async function main () {
   const content = await res.json()
 
   for (const row of content.results.bindings) {
-    Object.entries(row).forEach(([key, value]) => {
-      console.log(`${key}: ${value.value} (${value.type})`)
-    })
+    for (const [key, value] of Object.entries(row)) {
+      console.log(`${key}: ${value.value}`)
+    }
   }
 }
 
