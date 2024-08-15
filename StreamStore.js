@@ -67,6 +67,8 @@ class StreamStore {
 
       if (graph && graph.termType !== 'DefaultGraph') {
         url.searchParams.append('graph', graph.value)
+      } else {
+        url.searchParams.append('default', '')
       }
 
       const res = await this.client.fetch(url, {
@@ -97,6 +99,8 @@ class StreamStore {
 
     if (graph && graph.termType !== 'DefaultGraph') {
       url.searchParams.append('graph', graph.value)
+    } else {
+      url.searchParams.append('default', '')
     }
 
     const serialize = new Transform({

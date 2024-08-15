@@ -84,11 +84,13 @@ describe('StreamStore', () => {
       })
     })
 
-    it('should not send the graph query parameter if the default graph is requested', async () => {
+    it('should send the default parameter if the default graph is requested', async () => {
       await withServer(async server => {
+        let defaultParameter = null
         let graphParameter = null
 
         server.app.get('/', async (req, res) => {
+          defaultParameter = req.query.default
           graphParameter = req.query.graph
 
           res.status(204).end()
@@ -101,6 +103,7 @@ describe('StreamStore', () => {
         const stream = store.read({ method: 'GET', graph: rdf.defaultGraph() })
         await chunks(stream)
 
+        strictEqual(defaultParameter, '')
         strictEqual(graphParameter, undefined)
       })
     })
