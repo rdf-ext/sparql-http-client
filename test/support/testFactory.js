@@ -27,6 +27,10 @@ function testFactory () {
       factory.used.quad = true
       return dataModelFactory.quad(s, p, o, g)
     },
+    variable: value => {
+      factory.used.variable = true
+      return dataModelFactory.variable(value)
+    },
     used: {}
   }
 
