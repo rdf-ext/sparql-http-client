@@ -46,6 +46,8 @@ class ParsingClient extends SimpleClient {
   /**
    * @param {Object} options
    * @param {string} [options.endpointUrl] SPARQL query endpoint URL
+   * @param {string[]} [options.defaultGraphUri] 
+   * @param {string[]} [options.namedGraphUri]
    * @param {factory} [options.factory] RDF/JS factory
    * @param {fetch} [options.fetch=nodeify-fetch] fetch implementation
    * @param {Headers} [options.headers] headers sent with every request
@@ -54,8 +56,10 @@ class ParsingClient extends SimpleClient {
    * @param {string} [options.updateUrl] SPARQL update endpoint URL
    * @param {string} [options.user] user used for basic authentication
    */
-  constructor ({
+  constructor({
     endpointUrl,
+    defaultGraphUri,
+    namedGraphUri,
     factory = defaultFactory,
     fetch,
     headers,
@@ -66,6 +70,8 @@ class ParsingClient extends SimpleClient {
   }) {
     super({
       endpointUrl,
+      defaultGraphUri,
+      namedGraphUri,
       factory,
       fetch,
       headers,

@@ -51,6 +51,8 @@ class SimpleClient {
   /**
    * @param {Object} options
    * @param {string} [options.endpointUrl] SPARQL query endpoint URL
+   * @param {string[]} [options.defaultGraphUri] 
+   * @param {string[]} [options.namedGraphUri]
    * @param {factory} [options.factory] RDF/JS factory
    * @param {fetch} [options.fetch=nodeify-fetch] fetch implementation
    * @param {Headers} [options.headers] headers sent with every request
@@ -61,8 +63,10 @@ class SimpleClient {
    * @param {Query} [options.Query] Constructor of a query implementation
    * @param {Store} [options.Store] Constructor of a store implementation
    */
-  constructor ({
+  constructor({
     endpointUrl,
+    defaultGraphUri,
+    namedGraphUri,
     factory,
     fetch = defaultFetch,
     headers,
@@ -78,6 +82,8 @@ class SimpleClient {
     }
 
     this.endpointUrl = endpointUrl
+    this.defaultGraphUri = defaultGraphUri
+    this.namedGraphUri = namedGraphUri
     this.factory = factory
     this.fetch = fetch
     this.headers = new Headers(headers)
@@ -103,7 +109,7 @@ class SimpleClient {
    * @param {boolean} [options.update=false] send the request to the updateUrl
    * @return {Promise<Response>}
    */
-  async get (query, { headers, update = false } = {}) {
+  async get(query, { headers, update = false } = {}) {
     let url = null
 
     if (!update) {
@@ -112,6 +118,18 @@ class SimpleClient {
     } else {
       url = new URL(this.updateUrl)
       url.searchParams.append('update', query)
+    }
+
+    if (this.defaultGraphUri) {
+      for (let uri of this.defaultGraphUri) {
+        url.searchParams.append('default-graph-uri', uri)
+      }
+    }
+
+    if (this.namedGraphUri) {
+      for (let uri of this.namedGraphUri) {
+        url.searchParams.append('named-graph-uri', uri)
+      }
     }
 
     return this.fetch(url.toString().replace(/\+/g, '%20'), {
@@ -131,13 +149,25 @@ class SimpleClient {
    * @param {boolean} [options.update=false] send the request to the updateUrl
    * @return {Promise<Response>}
    */
-  async postDirect (query, { headers, update = false } = {}) {
+  async postDirect(query, { headers, update = false } = {}) {
     let url = null
 
     if (!update) {
       url = new URL(this.endpointUrl)
     } else {
       url = new URL(this.updateUrl)
+    }
+
+    if (this.defaultGraphUri) {
+      for (let uri of this.defaultGraphUri) {
+        url.searchParams.append('default-graph-uri', uri)
+      }
+    }
+
+    if (this.namedGraphUri) {
+      for (let uri of this.namedGraphUri) {
+        url.searchParams.append('named-graph-uri', uri)
+      }
     }
 
     headers = mergeHeaders(this.headers, headers)
@@ -163,7 +193,7 @@ class SimpleClient {
    * @param {boolean} [options.update=false] send the request to the updateUrl
    * @return {Promise<Response>}
    */
-  async postUrlencoded (query, { headers, update = false } = {}) {
+  async postUrlencoded(query, { headers, update = false } = {}) {
     let url = null
     let body = null
 
@@ -173,6 +203,28 @@ class SimpleClient {
     } else {
       url = new URL(this.updateUrl)
       body = `update=${encodeURIComponent(query)}`
+    }
+
+    if (this.defaultGraphUri) {
+      let index = 0
+      for (let uri of this.defaultGraphUri) {
+        if (index++ === 0) {
+          body += `default-graph-uri=${uri}`
+        } else {
+          body += `&&default-graph-uri=${uri}`
+        }
+      }
+    }
+
+    if (this.namedGraphUri) {
+      let index = 0
+      for (let uri of this.namedGraphUri) {
+        if (index++ === 0) {
+          body += `default-graph-uri=${uri}`
+        } else {
+          body += `&&default-graph-uri=${uri}`
+        }
+      }
     }
 
     headers = mergeHeaders(this.headers, headers)
