@@ -1,19 +1,9 @@
-import { deepStrictEqual, rejects, strictEqual } from 'node:assert'
-import factory from '@rdfjs/data-model'
-import express from 'express'
-import withServer from 'express-as-promise/withServer.js'
-import { isReadableStream, isWritableStream } from 'is-stream'
+import { strictEqual } from 'node:assert'
 import { describe, it } from 'mocha'
-import rdf from 'rdf-ext'
-import { datasetEqual } from 'rdf-test/assert.js'
 import chunks from 'stream-chunks/chunks.js'
-import SimpleClient from '../SimpleClient.js'
 import StreamQuery from '../StreamQuery.js'
-import { message, quads, askQuery, constructQuery, selectQuery, updateQuery } from './support/examples.js'
-import isServerError from './support/isServerError.js'
-import isSocketError from './support/isSocketError.js'
-import * as ns from './support/namespaces.js'
-import testFactory from './support/testFactory.js'
+import { askQuery, constructQuery, selectQuery, updateQuery } from './support/examples.js'
+import * as queryTests from './support/streamQueryTests.js'
 
 describe('StreamQuery', () => {
   describe('.ask', () => {
@@ -23,134 +13,32 @@ describe('StreamQuery', () => {
       strictEqual(typeof query.ask, 'function')
     })
 
-    it('should return a boolean value', async () => {
-      await withServer(async server => {
-        server.app.get('/', async (req, res) => {
-          res.json({
-            boolean: true
-          })
-        })
+    queryTests.shouldForwardQueryString(async (query, expected) => {
+      await query.ask(expected)
+    }, { method: 'ask' })
 
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-        const query = new StreamQuery({ client })
+    queryTests.shouldForwardHeaders(async (query, expected) => {
+      await query.ask(askQuery, { headers: expected })
+    }, { method: 'ask' })
 
-        const result = await query.ask(askQuery)
+    queryTests.shouldForwardOperation(async (query, expected) => {
+      await query.ask(askQuery, { operation: expected })
+    }, { method: 'ask' })
 
-        strictEqual(typeof result, 'boolean')
-      })
+    queryTests.shouldForwardParameters(async (query, expected) => {
+      await query.ask(askQuery, { parameters: expected })
+    }, { method: 'ask' })
+
+    queryTests.shouldReturnBoolean(async query => {
+      return await query.ask(askQuery)
     })
 
-    it('should parse the SPARQL JSON result', async () => {
-      await withServer(async server => {
-        server.app.get('/', async (req, res) => {
-          res.json({
-            boolean: true
-          })
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-        const query = new StreamQuery({ client })
-
-        const result = await query.ask(askQuery)
-
-        strictEqual(result, true)
-      })
+    queryTests.shouldParseBooleanSparqlJson(async query => {
+      return await query.ask(askQuery)
     })
 
-    it('should send a GET request', async () => {
-      await withServer(async server => {
-        let called = false
-
-        server.app.get('/', async (req, res) => {
-          called = true
-
-          res.end('{}')
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-        const query = new StreamQuery({ client })
-
-        await query.ask(askQuery)
-
-        strictEqual(called, true)
-      })
-    })
-
-    it('should send the query string as query parameter', async () => {
-      await withServer(async server => {
-        let parameter = null
-
-        server.app.get('/', async (req, res) => {
-          parameter = req.query.query
-
-          res.end('{}')
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-        const query = new StreamQuery({ client })
-
-        await query.ask(askQuery)
-
-        strictEqual(parameter, askQuery)
-      })
-    })
-
-    it('should use the given operation for the request', async () => {
-      await withServer(async server => {
-        let parameter = null
-
-        server.app.post('/', express.urlencoded({ extended: false }), async (req, res) => {
-          parameter = req.body.query
-
-          res.json({
-            boolean: true
-          })
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-        const query = new StreamQuery({ client })
-
-        await query.ask(askQuery, { operation: 'postUrlencoded' })
-
-        strictEqual(parameter, askQuery)
-      })
-    })
-
-    it('should handle server socket errors', async () => {
-      await withServer(async server => {
-        server.app.get('/', async (req, res) => {
-          req.destroy()
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-        const query = new StreamQuery({ client })
-
-        await rejects(async () => {
-          await query.ask(askQuery)
-        }, err => isSocketError(err))
-      })
-    })
-
-    it('should handle server errors', async () => {
-      await withServer(async server => {
-        server.app.get('/', async (req, res) => {
-          res.status(500).end(message)
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-        const query = new StreamQuery({ client })
-
-        await rejects(async () => {
-          await query.ask(askQuery)
-        }, err => isServerError(err, message))
-      })
+    queryTests.shouldCheckResponseStatus(async query => {
+      return await query.ask(askQuery)
     })
   })
 
@@ -161,186 +49,36 @@ describe('StreamQuery', () => {
       strictEqual(typeof query.construct, 'function')
     })
 
-    it('should return a Readable stream object', async () => {
-      await withServer(async server => {
-        server.app.get('/', async (req, res) => {
-          res.status(204).end()
-        })
+    queryTests.shouldForwardQueryString(async (query, expected) => {
+      await chunks(await query.construct(expected))
+    }, { method: 'construct' })
 
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-        const query = new StreamQuery({ client })
+    queryTests.shouldForwardHeaders(async (query, expected) => {
+      await chunks(await query.construct(constructQuery, { headers: expected }))
+    }, { method: 'construct' })
 
-        const result = query.construct(constructQuery)
+    queryTests.shouldForwardOperation(async (query, expected) => {
+      await chunks(await query.construct(constructQuery, { operation: expected }))
+    }, { method: 'construct' })
 
-        strictEqual(isReadableStream(result), true)
-        strictEqual(isWritableStream(result), false)
+    queryTests.shouldForwardParameters(async (query, expected) => {
+      await chunks(await query.construct(constructQuery, { parameters: expected }))
+    }, { method: 'construct' })
 
-        await chunks(result)
-      })
+    queryTests.shouldReturnReadableStream(async query => {
+      return await query.construct(constructQuery)
+    }, { method: 'construct' })
+
+    queryTests.shouldParseNTriples(async query => {
+      return await query.construct(constructQuery)
     })
 
-    it('should parse the N-Triples', async () => {
-      await withServer(async server => {
-        server.app.get('/', async (req, res) => {
-          res.end(quads.toString())
-        })
+    queryTests.shouldCheckStreamResponseStatus(async query => {
+      return await query.construct(constructQuery)
+    }, { method: 'construct' })
 
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-        const query = new StreamQuery({ client })
-
-        const stream = query.construct(constructQuery)
-        const result = await chunks(stream)
-
-        datasetEqual(result, quads)
-      })
-    })
-
-    it('should send a GET request', async () => {
-      await withServer(async server => {
-        let called = false
-
-        server.app.get('/', async (req, res) => {
-          called = true
-
-          res.status(204).end()
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-        const query = new StreamQuery({ client })
-
-        const stream = query.construct(constructQuery)
-        await chunks(stream)
-
-        strictEqual(called, true)
-      })
-    })
-
-    it('should send the query string as query parameter', async () => {
-      await withServer(async server => {
-        let parameter = null
-
-        server.app.get('/', async (req, res) => {
-          parameter = req.query.query
-
-          res.status(204).end()
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-        const query = new StreamQuery({ client })
-
-        const stream = query.construct(constructQuery)
-        await chunks(stream)
-
-        strictEqual(parameter, constructQuery)
-      })
-    })
-
-    it('should use the given factory', async () => {
-      await withServer(async server => {
-        const quads = rdf.dataset([
-          rdf.quad(rdf.blankNode(), ns.ex.predicate, rdf.literal('test'))
-        ])
-        const factory = testFactory()
-
-        server.app.get('/', async (req, res) => {
-          res.end(quads.toString())
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl, factory })
-        const query = new StreamQuery({ client })
-
-        const stream = query.construct(constructQuery)
-        await chunks(stream)
-
-        deepStrictEqual(factory.used, {
-          blankNode: true,
-          defaultGraph: true,
-          literal: true,
-          namedNode: true,
-          quad: true
-        })
-      })
-    })
-
-    it('should use the given operation for the request', async () => {
-      await withServer(async server => {
-        let parameter = null
-
-        server.app.post('/', express.urlencoded({ extended: false }), async (req, res) => {
-          parameter = req.body.query
-
-          res.status(204).end()
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-        const query = new StreamQuery({ client })
-
-        const stream = query.construct(constructQuery, { operation: 'postUrlencoded' })
-        await chunks(stream)
-
-        strictEqual(parameter, constructQuery)
-      })
-    })
-
-    it('should send an accept header with the value application/n-triples, text/turtle', async () => {
-      await withServer(async server => {
-        let accept = null
-
-        server.app.get('/', async (req, res) => {
-          accept = req.headers.accept
-
-          res.end()
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-        const query = new StreamQuery({ client })
-
-        const stream = query.construct(constructQuery)
-        await chunks(stream)
-
-        strictEqual(accept, 'application/n-triples, text/turtle')
-      })
-    })
-
-    it('should handle server socket errors', async () => {
-      await withServer(async server => {
-        server.app.get('/', async (req, res) => {
-          req.destroy()
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-        const query = new StreamQuery({ client })
-
-        await rejects(async () => {
-          const stream = query.construct(constructQuery)
-          await chunks(stream)
-        }, err => isSocketError(err))
-      })
-    })
-
-    it('should handle server errors', async () => {
-      await withServer(async server => {
-        server.app.get('/', async (req, res) => {
-          res.status(500).end(message)
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-        const query = new StreamQuery({ client })
-
-        await rejects(async () => {
-          const stream = query.construct(constructQuery)
-          await chunks(stream)
-        }, err => isServerError(err, message))
-      })
+    queryTests.shouldUseCustomConstructFactory(async query => {
+      return await query.construct(constructQuery)
     })
   })
 
@@ -351,184 +89,36 @@ describe('StreamQuery', () => {
       strictEqual(typeof query.select, 'function')
     })
 
-    it('should return a Readable stream object', async () => {
-      await withServer(async server => {
-        server.app.get('/', async (req, res) => {
-          res.status(204).end()
-        })
+    queryTests.shouldForwardQueryString(async (query, expected) => {
+      await chunks(await query.select(expected))
+    }, { method: 'select' })
 
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-        const query = new StreamQuery({ client })
+    queryTests.shouldForwardHeaders(async (query, expected) => {
+      await chunks(await query.select(selectQuery, { headers: expected }))
+    }, { method: 'select' })
 
-        const result = query.select(selectQuery)
+    queryTests.shouldForwardOperation(async (query, expected) => {
+      await chunks(await query.select(selectQuery, { operation: expected }))
+    }, { method: 'select' })
 
-        strictEqual(isReadableStream(result), true)
-        strictEqual(isWritableStream(result), false)
+    queryTests.shouldForwardParameters(async (query, expected) => {
+      await chunks(await query.select(selectQuery, { parameters: expected }))
+    }, { method: 'select' })
 
-        await chunks(result)
-      })
+    queryTests.shouldReturnReadableStream(async query => {
+      return await query.select(selectQuery)
+    }, { method: 'select' })
+
+    queryTests.shouldParseTableSparqlJson(async query => {
+      return await query.select(selectQuery)
     })
 
-    it('should parse the SPARQL JSON result', async () => {
-      await withServer(async server => {
-        const content = {
-          results: {
-            bindings: [{
-              a: { type: 'uri', value: 'http://example.org/0' }
-            }, {
-              a: { type: 'uri', value: 'http://example.org/1' }
-            }]
-          }
-        }
+    queryTests.shouldCheckStreamResponseStatus(async query => {
+      return await query.select(selectQuery)
+    }, { method: 'select' })
 
-        server.app.get('/', async (req, res) => {
-          res.end(JSON.stringify(content))
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl, factory })
-        const query = new StreamQuery({ client })
-
-        const stream = query.select(selectQuery)
-        const result = await chunks(stream)
-
-        strictEqual(result[0].a.termType, 'NamedNode')
-        strictEqual(result[0].a.value, content.results.bindings[0].a.value)
-        strictEqual(result[1].a.termType, 'NamedNode')
-        strictEqual(result[1].a.value, content.results.bindings[1].a.value)
-      })
-    })
-
-    it('should send a GET request', async () => {
-      await withServer(async server => {
-        let called = false
-
-        server.app.get('/', async (req, res) => {
-          called = true
-
-          res.status(204).end()
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-        const query = new StreamQuery({ client })
-
-        const stream = query.select(selectQuery)
-        await chunks(stream)
-
-        strictEqual(called, true)
-      })
-    })
-
-    it('should send the query string as query parameter', async () => {
-      await withServer(async server => {
-        let parameter = null
-
-        server.app.get('/', async (req, res) => {
-          parameter = req.query.query
-
-          res.status(204).end()
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-        const query = new StreamQuery({ client })
-
-        const stream = query.construct(selectQuery)
-        await chunks(stream)
-
-        strictEqual(parameter, selectQuery)
-      })
-    })
-
-    it('should use the given factory', async () => {
-      await withServer(async server => {
-        const content = {
-          results: {
-            bindings: [{
-              a: { type: 'bnode', value: 'b0' }
-            }, {
-              a: { type: 'literal', value: '0' }
-            }, {
-              a: { type: 'uri', value: 'http://example.org/0' }
-            }]
-          }
-        }
-        const factory = testFactory()
-
-        server.app.get('/', async (req, res) => {
-          res.end(JSON.stringify(content))
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl, factory })
-        const query = new StreamQuery({ client })
-
-        const stream = query.select(selectQuery)
-        await chunks(stream)
-
-        deepStrictEqual(factory.used, {
-          blankNode: true,
-          literal: true,
-          namedNode: true
-        })
-      })
-    })
-
-    it('should use the given operation for the request', async () => {
-      await withServer(async server => {
-        let parameter = null
-
-        server.app.post('/', express.urlencoded({ extended: false }), async (req, res) => {
-          parameter = req.body.query
-
-          res.status(204).end()
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-        const query = new StreamQuery({ client })
-
-        const stream = query.select(selectQuery, { operation: 'postUrlencoded' })
-        await chunks(stream)
-
-        strictEqual(parameter, selectQuery)
-      })
-    })
-
-    it('should handle server socket errors', async () => {
-      await withServer(async server => {
-        server.app.get('/', async (req, res) => {
-          req.destroy()
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-        const query = new StreamQuery({ client })
-
-        await rejects(async () => {
-          const stream = query.select(selectQuery)
-          await chunks(stream)
-        }, err => isSocketError(err))
-      })
-    })
-
-    it('should handle server errors', async () => {
-      await withServer(async server => {
-        server.app.get('/', async (req, res) => {
-          res.status(500).end(message)
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-        const query = new StreamQuery({ client })
-
-        await rejects(async () => {
-          const stream = query.select(selectQuery)
-          await chunks(stream)
-        }, err => isServerError(err, message))
-      })
+    queryTests.shouldUseCustomSelectFactory(async query => {
+      return await query.select(selectQuery)
     })
   })
 
@@ -539,96 +129,24 @@ describe('StreamQuery', () => {
       strictEqual(typeof query.update, 'function')
     })
 
-    it('should send a POST request', async () => {
-      await withServer(async server => {
-        let called = false
+    queryTests.shouldForwardQueryString(async (query, expected) => {
+      await query.update(expected)
+    }, { method: 'update' })
 
-        server.app.post('/', async (req, res) => {
-          called = true
+    queryTests.shouldForwardHeaders(async (query, expected) => {
+      await query.update(updateQuery, { headers: expected })
+    }, { method: 'update' })
 
-          res.status(204).end()
-        })
+    queryTests.shouldForwardOperation(async (query, expected) => {
+      await query.update(updateQuery, { operation: expected })
+    }, { method: 'update' })
 
-        const updateUrl = await server.listen()
-        const client = new SimpleClient({ updateUrl })
-        const query = new StreamQuery({ client })
+    queryTests.shouldForwardParameters(async (query, expected) => {
+      await query.update(updateQuery, { parameters: expected })
+    }, { method: 'update' })
 
-        await query.update(updateQuery)
-
-        strictEqual(called, true)
-      })
-    })
-
-    it('should send the query string urlencoded in the request body', async () => {
-      await withServer(async server => {
-        let parameter = null
-
-        server.app.post('/', express.urlencoded({ extended: false }), async (req, res) => {
-          parameter = req.body.update
-
-          res.status(204).end()
-        })
-
-        const updateUrl = await server.listen()
-        const client = new SimpleClient({ updateUrl })
-        const query = new StreamQuery({ client })
-
-        await query.update(updateQuery)
-
-        strictEqual(parameter, updateQuery)
-      })
-    })
-
-    it('should use the given operation for the request', async () => {
-      await withServer(async server => {
-        let content = null
-
-        server.app.post('/', express.text({ type: '*/*' }), async (req, res) => {
-          content = req.body
-
-          res.status(204).end()
-        })
-
-        const updateUrl = await server.listen()
-        const client = new SimpleClient({ updateUrl })
-        const query = new StreamQuery({ client })
-
-        await query.update(updateQuery, { operation: 'postDirect' })
-
-        strictEqual(content, updateQuery)
-      })
-    })
-
-    it('should handle server socket errors', async () => {
-      await withServer(async server => {
-        server.app.post('/', async (req, res) => {
-          req.destroy()
-        })
-
-        const updateUrl = await server.listen()
-        const client = new SimpleClient({ updateUrl })
-        const query = new StreamQuery({ client })
-
-        await rejects(async () => {
-          await query.update(updateQuery)
-        }, err => isSocketError(err))
-      })
-    })
-
-    it('should handle server errors', async () => {
-      await withServer(async server => {
-        server.app.post('/', async (req, res) => {
-          res.status(500).end(message)
-        })
-
-        const updateUrl = await server.listen()
-        const client = new SimpleClient({ updateUrl })
-        const query = new StreamQuery({ client })
-
-        await rejects(async () => {
-          await query.update(updateQuery)
-        }, err => isServerError(err, message))
-      })
-    })
+    queryTests.shouldCheckStreamResponseStatus(async query => {
+      return await query.update(updateQuery)
+    }, { method: 'update' })
   })
 })

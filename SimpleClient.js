@@ -55,6 +55,7 @@ class SimpleClient {
    * @param {fetch} [options.fetch=nodeify-fetch] fetch implementation
    * @param {Headers} [options.headers] headers sent with every request
    * @param {string} [options.password] password used for basic authentication
+   * @param {Object} [options.parameters] parameters sent with every request
    * @param {string} [options.storeUrl] SPARQL Graph Store URL
    * @param {string} [options.updateUrl] SPARQL update endpoint URL
    * @param {string} [options.user] user used for basic authentication
@@ -66,6 +67,7 @@ class SimpleClient {
     factory,
     fetch = defaultFetch,
     headers,
+    parameters,
     password,
     storeUrl,
     updateUrl,
@@ -81,6 +83,7 @@ class SimpleClient {
     this.factory = factory
     this.fetch = fetch
     this.headers = new Headers(headers)
+    this.parameters = parameters
     this.password = password
     this.storeUrl = storeUrl
     this.updateUrl = updateUrl
@@ -100,10 +103,11 @@ class SimpleClient {
    * @param {string} query SPARQL query
    * @param {Object} options
    * @param {Headers} [options.headers] additional request headers
+   * @param {Object} [options.parameters] additional request parameters
    * @param {boolean} [options.update=false] send the request to the updateUrl
    * @return {Promise<Response>}
    */
-  async get (query, { headers, update = false } = {}) {
+  async get (query, { headers, parameters, update = false } = {}) {
     let url = null
 
     if (!update) {
@@ -112,6 +116,12 @@ class SimpleClient {
     } else {
       url = new URL(this.updateUrl)
       url.searchParams.append('update', query)
+    }
+
+    parameters = { ...this.parameters, ...parameters }
+
+    for (const [key, value] of Object.entries(parameters)) {
+      url.searchParams.append(key, value)
     }
 
     return this.fetch(url.toString().replace(/\+/g, '%20'), {
@@ -128,10 +138,11 @@ class SimpleClient {
    * @param {string} query SPARQL query
    * @param {Object} options
    * @param {Headers} [options.headers] additional request headers
+   * @param {Object} [options.parameters] additional request parameters
    * @param {boolean} [options.update=false] send the request to the updateUrl
    * @return {Promise<Response>}
    */
-  async postDirect (query, { headers, update = false } = {}) {
+  async postDirect (query, { headers, parameters, update = false } = {}) {
     let url = null
 
     if (!update) {
@@ -144,6 +155,12 @@ class SimpleClient {
 
     if (!headers.has('content-type')) {
       headers.set('content-type', 'application/sparql-query; charset=utf-8')
+    }
+
+    parameters = { ...this.parameters, ...parameters }
+
+    for (const [key, value] of Object.entries(parameters)) {
+      url.searchParams.append(key, value)
     }
 
     return this.fetch(url, {
@@ -160,19 +177,20 @@ class SimpleClient {
    * @param {string} query SPARQL query
    * @param {Object} options
    * @param {Headers} [options.headers] additional request headers
+   * @param {Object} [options.parameters] additional request parameters
    * @param {boolean} [options.update=false] send the request to the updateUrl
    * @return {Promise<Response>}
    */
-  async postUrlencoded (query, { headers, update = false } = {}) {
+  async postUrlencoded (query, { headers, parameters, update = false } = {}) {
     let url = null
-    let body = null
+    const body = new URLSearchParams()
 
     if (!update) {
       url = new URL(this.endpointUrl)
-      body = `query=${encodeURIComponent(query)}`
+      body.append('query', query)
     } else {
       url = new URL(this.updateUrl)
-      body = `update=${encodeURIComponent(query)}`
+      body.append('update', query)
     }
 
     headers = mergeHeaders(this.headers, headers)
@@ -181,10 +199,16 @@ class SimpleClient {
       headers.set('content-type', 'application/x-www-form-urlencoded')
     }
 
+    parameters = { ...this.parameters, ...parameters }
+
+    for (const [key, value] of Object.entries(parameters)) {
+      body.append(key, value)
+    }
+
     return this.fetch(url, {
       method: 'POST',
       headers,
-      body
+      body: body.toString()
     })
   }
 }
