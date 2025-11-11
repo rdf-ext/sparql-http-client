@@ -156,6 +156,9 @@ Sends a GET request as defined in the
     <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
 </td>
     </tr><tr>
+    <td>[options.parameters]</td><td><code>Object</code></td><td></td><td><p>additional request parameters</p>
+</td>
+    </tr><tr>
     <td>[options.update]</td><td><code>boolean</code></td><td><code>false</code></td><td><p>send the request to the updateUrl</p>
 </td>
     </tr>  </tbody>
@@ -185,6 +188,9 @@ Sends a POST directly request as defined in the
     <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
 </td>
     </tr><tr>
+    <td>[options.parameters]</td><td><code>Object</code></td><td></td><td><p>additional request parameters</p>
+</td>
+    </tr><tr>
     <td>[options.update]</td><td><code>boolean</code></td><td><code>false</code></td><td><p>send the request to the updateUrl</p>
 </td>
     </tr>  </tbody>
@@ -212,6 +218,9 @@ Sends a POST URL-encoded request as defined in the
     <td>options</td><td><code>Object</code></td><td></td><td></td>
     </tr><tr>
     <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
+</td>
+    </tr><tr>
+    <td>[options.parameters]</td><td><code>Object</code></td><td></td><td><p>additional request parameters</p>
 </td>
     </tr><tr>
     <td>[options.update]</td><td><code>boolean</code></td><td><code>false</code></td><td><p>send the request to the updateUrl</p>
@@ -259,6 +268,9 @@ Sends a request for a CONSTRUCT or DESCRIBE query
     </tr><tr>
     <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td><p>SPARQL Protocol operation</p>
 </td>
+    </tr><tr>
+    <td>[options.parameters]</td><td><code>Object</code></td><td></td><td><p>additional request parameters</p>
+</td>
     </tr>  </tbody>
 </table>
 
@@ -287,6 +299,9 @@ Sends a request for a SELECT query
     </tr><tr>
     <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td><p>SPARQL Protocol operation</p>
 </td>
+    </tr><tr>
+    <td>[options.parameters]</td><td><code>Object</code></td><td></td><td><p>additional request parameters</p>
+</td>
     </tr>  </tbody>
 </table>
 
@@ -314,6 +329,9 @@ Sends a request for a ASK query
     </tr><tr>
     <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td><p>SPARQL Protocol operation</p>
 </td>
+    </tr><tr>
+    <td>[options.parameters]</td><td><code>Object</code></td><td></td><td><p>additional request parameters</p>
+</td>
     </tr>  </tbody>
 </table>
 
@@ -340,6 +358,9 @@ Sends a request for an update query
 </td>
     </tr><tr>
     <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;postUrlencoded&#x27;</code></td><td><p>SPARQL Protocol operation</p>
+</td>
+    </tr><tr>
+    <td>[options.parameters]</td><td><code>Object</code></td><td></td><td><p>additional request parameters</p>
 </td>
     </tr>  </tbody>
 </table>
@@ -395,10 +416,19 @@ Sends a request for a ASK query
     </tr><tr>
     <td>[options]</td><td><code>Object</code></td><td></td><td></td>
     </tr><tr>
+    <td>[options.defaultGraph]</td><td><code>Array.&lt;string&gt;</code></td><td></td><td><p>default graph URI parameter</p>
+</td>
+    </tr><tr>
     <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
 </td>
     </tr><tr>
+    <td>[options.namedGraph]</td><td><code>Array.&lt;string&gt;</code></td><td></td><td><p>named graph URI parameter</p>
+</td>
+    </tr><tr>
     <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td><p>SPARQL Protocol operation</p>
+</td>
+    </tr><tr>
+    <td>[options.parameters]</td><td><code>Object</code></td><td></td><td><p>additional request parameters</p>
 </td>
     </tr>  </tbody>
 </table>
@@ -422,10 +452,19 @@ Sends a request for a CONSTRUCT or DESCRIBE query
     </tr><tr>
     <td>[options]</td><td><code>Object</code></td><td></td><td></td>
     </tr><tr>
+    <td>[options.defaultGraph]</td><td><code>Array.&lt;string&gt;</code></td><td></td><td><p>default graph URI parameter</p>
+</td>
+    </tr><tr>
     <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
 </td>
     </tr><tr>
+    <td>[options.namedGraph]</td><td><code>Array.&lt;string&gt;</code></td><td></td><td><p>named graph URI parameter</p>
+</td>
+    </tr><tr>
     <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td><p>SPARQL Protocol operation</p>
+</td>
+    </tr><tr>
+    <td>[options.parameters]</td><td><code>Object</code></td><td></td><td><p>additional request parameters</p>
 </td>
     </tr>  </tbody>
 </table>
@@ -449,10 +488,19 @@ Sends a request for a SELECT query
     </tr><tr>
     <td>[options]</td><td><code>Object</code></td><td></td><td></td>
     </tr><tr>
+    <td>[options.defaultGraph]</td><td><code>Array.&lt;string&gt;</code></td><td></td><td><p>default graph URI parameter</p>
+</td>
+    </tr><tr>
     <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
 </td>
     </tr><tr>
+    <td>[options.namedGraph]</td><td><code>Array.&lt;string&gt;</code></td><td></td><td><p>named graph URI parameter</p>
+</td>
+    </tr><tr>
     <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td><p>SPARQL Protocol operation</p>
+</td>
+    </tr><tr>
+    <td>[options.parameters]</td><td><code>Object</code></td><td></td><td><p>additional request parameters</p>
 </td>
     </tr>  </tbody>
 </table>
@@ -480,6 +528,15 @@ Sends a request for an update query
 </td>
     </tr><tr>
     <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;postUrlencoded&#x27;</code></td><td><p>SPARQL Protocol operation</p>
+</td>
+    </tr><tr>
+    <td>[options.parameters]</td><td><code>Object</code></td><td></td><td><p>additional request parameters</p>
+</td>
+    </tr><tr>
+    <td>[options.usingGraph]</td><td><code>Array.&lt;string&gt;</code></td><td></td><td><p>using graph URI parameter</p>
+</td>
+    </tr><tr>
+    <td>[options.usingNamedGraph]</td><td><code>Array.&lt;string&gt;</code></td><td></td><td><p>using named graph URI parameter</p>
 </td>
     </tr>  </tbody>
 </table>
@@ -538,6 +595,8 @@ raw fetch response. It does not provide a store interface.
     </tr><tr>
     <td>password</td><td><code>string</code></td>
     </tr><tr>
+    <td>parameters</td><td><code>Object</code></td>
+    </tr><tr>
     <td>storeUrl</td><td><code>string</code></td>
     </tr><tr>
     <td>updateUrl</td><td><code>string</code></td>
@@ -581,6 +640,9 @@ raw fetch response. It does not provide a store interface.
 </td>
     </tr><tr>
     <td>[options.password]</td><td><code>string</code></td><td></td><td><p>password used for basic authentication</p>
+</td>
+    </tr><tr>
+    <td>[options.parameters]</td><td><code>Object</code></td><td></td><td><p>parameters sent with every request</p>
 </td>
     </tr><tr>
     <td>[options.storeUrl]</td><td><code>string</code></td><td></td><td><p>SPARQL Graph Store URL</p>
@@ -654,6 +716,9 @@ Sends a GET request as defined in the
     <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
 </td>
     </tr><tr>
+    <td>[options.parameters]</td><td><code>Object</code></td><td></td><td><p>additional request parameters</p>
+</td>
+    </tr><tr>
     <td>[options.update]</td><td><code>boolean</code></td><td><code>false</code></td><td><p>send the request to the updateUrl</p>
 </td>
     </tr>  </tbody>
@@ -682,6 +747,9 @@ Sends a POST directly request as defined in the
     <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
 </td>
     </tr><tr>
+    <td>[options.parameters]</td><td><code>Object</code></td><td></td><td><p>additional request parameters</p>
+</td>
+    </tr><tr>
     <td>[options.update]</td><td><code>boolean</code></td><td><code>false</code></td><td><p>send the request to the updateUrl</p>
 </td>
     </tr>  </tbody>
@@ -708,6 +776,9 @@ Sends a POST URL-encoded request as defined in the
     <td>options</td><td><code>Object</code></td><td></td><td></td>
     </tr><tr>
     <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
+</td>
+    </tr><tr>
+    <td>[options.parameters]</td><td><code>Object</code></td><td></td><td><p>additional request parameters</p>
 </td>
     </tr><tr>
     <td>[options.update]</td><td><code>boolean</code></td><td><code>false</code></td><td><p>send the request to the updateUrl</p>
@@ -861,6 +932,9 @@ Sends a GET request as defined in the
     <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
 </td>
     </tr><tr>
+    <td>[options.parameters]</td><td><code>Object</code></td><td></td><td><p>additional request parameters</p>
+</td>
+    </tr><tr>
     <td>[options.update]</td><td><code>boolean</code></td><td><code>false</code></td><td><p>send the request to the updateUrl</p>
 </td>
     </tr>  </tbody>
@@ -890,6 +964,9 @@ Sends a POST directly request as defined in the
     <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
 </td>
     </tr><tr>
+    <td>[options.parameters]</td><td><code>Object</code></td><td></td><td><p>additional request parameters</p>
+</td>
+    </tr><tr>
     <td>[options.update]</td><td><code>boolean</code></td><td><code>false</code></td><td><p>send the request to the updateUrl</p>
 </td>
     </tr>  </tbody>
@@ -917,6 +994,9 @@ Sends a POST URL-encoded request as defined in the
     <td>options</td><td><code>Object</code></td><td></td><td></td>
     </tr><tr>
     <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
+</td>
+    </tr><tr>
+    <td>[options.parameters]</td><td><code>Object</code></td><td></td><td><p>additional request parameters</p>
 </td>
     </tr><tr>
     <td>[options.update]</td><td><code>boolean</code></td><td><code>false</code></td><td><p>send the request to the updateUrl</p>
@@ -964,6 +1044,9 @@ Sends a request for a ASK query
     </tr><tr>
     <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td><p>SPARQL Protocol operation</p>
 </td>
+    </tr><tr>
+    <td>[options.parameters]</td><td><code>Object</code></td><td></td><td><p>additional request parameters</p>
+</td>
     </tr>  </tbody>
 </table>
 
@@ -991,6 +1074,9 @@ Sends a request for a CONSTRUCT or DESCRIBE query
 </td>
     </tr><tr>
     <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td><p>SPARQL Protocol operation</p>
+</td>
+    </tr><tr>
+    <td>[options.parameters]</td><td><code>Object</code></td><td></td><td><p>additional request parameters</p>
 </td>
     </tr>  </tbody>
 </table>
@@ -1020,6 +1106,9 @@ Sends a request for a SELECT query
     </tr><tr>
     <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td><p>SPARQL Protocol operation</p>
 </td>
+    </tr><tr>
+    <td>[options.parameters]</td><td><code>Object</code></td><td></td><td><p>additional request parameters</p>
+</td>
     </tr>  </tbody>
 </table>
 
@@ -1047,6 +1136,9 @@ Sends a request for an update query
 </td>
     </tr><tr>
     <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;postUrlencoded&#x27;</code></td><td><p>SPARQL Protocol operation</p>
+</td>
+    </tr><tr>
+    <td>[options.parameters]</td><td><code>Object</code></td><td></td><td><p>additional request parameters</p>
 </td>
     </tr>  </tbody>
 </table>

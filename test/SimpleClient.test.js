@@ -1,11 +1,9 @@
-import { rejects, strictEqual, throws } from 'node:assert'
-import express from 'express'
-import withServer from 'express-as-promise/withServer.js'
+import { strictEqual, throws } from 'node:assert'
 import { describe, it } from 'mocha'
 import RawQuery from '../RawQuery.js'
 import SimpleClient from '../SimpleClient.js'
-import { message, selectQuery, updateQuery } from './support/examples.js'
-import isSocketError from './support/isSocketError.js'
+import { selectQuery, updateQuery } from './support/examples.js'
+import * as simpleClientTests from './support/simpleClientTests.js'
 
 describe('SimpleClient', () => {
   it('should be a constructor', () => {
@@ -67,200 +65,92 @@ describe('SimpleClient', () => {
       strictEqual(typeof client.get, 'function')
     })
 
-    it('should return a response object', async () => {
-      await withServer(async server => {
-        server.app.get('/', async (req, res) => {
-          res.end()
-        })
+    simpleClientTests.shouldReturnResponseObject(async endpointUrl => {
+      const client = new SimpleClient({ endpointUrl })
 
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-
-        const res = await client.get(selectQuery)
-
-        strictEqual(typeof res, 'object')
-        strictEqual(typeof res.text, 'function')
-      })
+      return await client.postUrlencoded(selectQuery)
     })
 
-    it('should send a GET request', async () => {
-      await withServer(async server => {
-        let called = false
+    simpleClientTests.shouldSendGetRequest(async endpointUrl => {
+      const client = new SimpleClient({ endpointUrl })
 
-        server.app.get('/', async (req, res) => {
-          called = true
-
-          res.end()
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-
-        await client.get(selectQuery)
-
-        strictEqual(called, true)
-      })
+      await client.get(selectQuery)
     })
 
-    it('should send the query string as query parameter', async () => {
-      await withServer(async server => {
-        let parameter = null
+    simpleClientTests.shouldSendQueryStringAsParameter(async (endpointUrl, expected) => {
+      const client = new SimpleClient({ endpointUrl })
 
-        server.app.get('/', async (req, res) => {
-          parameter = req.query.query
-
-          res.end()
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-
-        await client.get(selectQuery)
-
-        strictEqual(parameter, selectQuery)
-      })
+      await client.get(expected)
     })
 
-    it('should keep existing query params', async () => {
-      await withServer(async server => {
-        let parameters = null
-        const key = 'auth_token'
-        const value = '12345'
+    simpleClientTests.shouldKeepExistingQueryParameters(async (endpointUrl, expected) => {
+      const [key, value] = Object.entries(expected)[0]
+      const client = new SimpleClient({ endpointUrl: `${endpointUrl}?${key}=${value}` })
 
-        server.app.get('/', async (req, res) => {
-          parameters = req.query
-
-          res.end()
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl: `${endpointUrl}?${key}=${value}` })
-
-        await client.get(selectQuery)
-
-        strictEqual(parameters[key], value)
-      })
+      await client.get(selectQuery)
     })
 
-    it('should merge the headers given in the method call', async () => {
-      await withServer(async server => {
-        let header = null
-        const value = 'Bearer foo'
+    simpleClientTests.shouldSendConstructorHeaders(async (endpointUrl, expected) => {
+      const client = new SimpleClient({ endpointUrl, headers: expected })
 
-        server.app.get('/', async (req, res) => {
-          header = req.headers.authorization
-
-          res.end()
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-
-        await client.get(selectQuery, {
-          headers: {
-            authorization: value
-          }
-        })
-
-        strictEqual(header, value)
-      })
+      await client.get(selectQuery)
     })
 
-    it('should prioritize the headers from the method call', async () => {
-      await withServer(async server => {
-        let header = null
-        const value = 'Bearer foo'
+    simpleClientTests.shouldSendMethodHeaders(async (endpointUrl, expected) => {
+      const client = new SimpleClient({ endpointUrl })
 
-        server.app.get('/', async (req, res) => {
-          header = req.headers.authorization
-
-          res.end()
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({
-          endpointUrl,
-          headers: {
-            authorization: 'Bearer bar'
-          }
-        })
-
-        await client.get(selectQuery, {
-          headers: {
-            authorization: value
-          }
-        })
-
-        strictEqual(header, value)
-      })
+      await client.get(selectQuery, { headers: expected })
     })
 
-    it('should use the updateUrl and update param if update is true', async () => {
-      await withServer(async server => {
-        let parameters = null
+    simpleClientTests.shouldPrioritizeMethodHeaders(async (endpointUrl, expected) => {
+      const [key, value] = Object.entries(expected)[0]
+      const client = new SimpleClient({ endpointUrl, headers: { [key]: `${value} bar` } })
 
-        server.app.get('/', async (req, res) => {
-          parameters = req.query
-
-          res.end()
-        })
-
-        const updateUrl = await server.listen()
-        const client = new SimpleClient({ updateUrl })
-
-        await client.get(updateQuery, { update: true })
-
-        strictEqual(parameters.update, updateQuery)
-      })
+      await client.get(selectQuery, { headers: expected })
     })
 
-    it('should keep existing update query params', async () => {
-      await withServer(async server => {
-        let parameters = null
-        const key = 'auth_token'
-        const value = '12345'
+    simpleClientTests.shouldSendConstructorParameters(async (endpointUrl, expected) => {
+      const client = new SimpleClient({ endpointUrl, parameters: expected })
 
-        server.app.get('/', async (req, res) => {
-          parameters = req.query
-
-          res.end()
-        })
-
-        const updateUrl = await server.listen()
-        const client = new SimpleClient({ updateUrl: `${updateUrl}?${key}=${value}` })
-
-        await client.get(updateQuery, { update: true })
-
-        strictEqual(parameters[key], value)
-      })
+      await client.get(selectQuery)
     })
 
-    it('should handle server socket errors', async () => {
-      await withServer(async server => {
-        server.app.get('/', async (req, res) => {
-          req.client.destroy()
-        })
+    simpleClientTests.shouldSendMethodParameters(async (endpointUrl, expected) => {
+      const client = new SimpleClient({ endpointUrl })
 
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-
-        await rejects(async () => {
-          await client.get(selectQuery)
-        }, err => isSocketError(err))
-      })
+      await client.get(selectQuery, { parameters: expected })
     })
 
-    it('should not handle server errors', async () => {
-      await withServer(async server => {
-        server.app.get('/', async (req, res) => {
-          res.status(500).end(message)
-        })
+    simpleClientTests.shouldMergeMethodParameters(async (endpointUrl, expected) => {
+      const [key, value] = Object.entries(expected)[0]
+      const client = new SimpleClient({ endpointUrl, parameters: { [key]: `${value} bar` } })
 
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
+      await client.get(selectQuery, { parameters: expected })
+    })
 
-        await client.get(selectQuery)
-      })
+    simpleClientTests.shouldSendUpdateStringAsParameter(async (updateUrl, expected) => {
+      const client = new SimpleClient({ updateUrl })
+
+      await client.get(expected, { update: true })
+    })
+
+    simpleClientTests.shouldKeepExistingUpdateParameters(async (updateUrl, expected) => {
+      const [key, value] = Object.entries(expected)[0]
+      const client = new SimpleClient({ updateUrl: `${updateUrl}?${key}=${value}` })
+
+      await client.get(updateQuery, { update: true })
+    })
+
+    simpleClientTests.shouldHandlerServerSocketErrors(async endpointUrl => {
+      const client = new SimpleClient({ endpointUrl })
+
+      await client.get(selectQuery)
+    })
+
+    simpleClientTests.shouldNotHandleServerHttpErrors(async endpointUrl => {
+      const client = new SimpleClient({ endpointUrl })
+
+      await client.get(selectQuery)
     })
   })
 
@@ -271,178 +161,93 @@ describe('SimpleClient', () => {
       strictEqual(typeof client.postDirect, 'function')
     })
 
-    it('should return a response object', async () => {
-      await withServer(async server => {
-        server.app.post('/', async (req, res) => {
-          res.end()
-        })
+    simpleClientTests.shouldReturnResponseObject(async endpointUrl => {
+      const client = new SimpleClient({ endpointUrl })
 
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
+      return await client.postUrlencoded(selectQuery)
+    }, { operation: 'postDirect' })
 
-        const res = await client.postDirect(selectQuery)
+    simpleClientTests.shouldSendPostRequest(async endpointUrl => {
+      const client = new SimpleClient({ endpointUrl })
 
-        strictEqual(typeof res, 'object')
-        strictEqual(typeof res.text, 'function')
-      })
+      await client.postDirect(selectQuery)
     })
 
-    it('should send a POST request', async () => {
-      await withServer(async server => {
-        let called = false
+    simpleClientTests.shouldSendQueryContent(async (endpointUrl, expected) => {
+      const client = new SimpleClient({ endpointUrl })
 
-        server.app.post('/', async (req, res) => {
-          called = true
-
-          res.end()
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-
-        await client.postDirect(selectQuery)
-
-        strictEqual(called, true)
-      })
+      await client.postDirect(expected)
     })
 
-    it('should send a content type header with the value application/sparql-query & charset utf-8', async () => {
-      await withServer(async server => {
-        let contentType = null
+    simpleClientTests.shouldKeepExistingQueryParameters(async (endpointUrl, expected) => {
+      const [key, value] = Object.entries(expected)[0]
+      const client = new SimpleClient({ endpointUrl: `${endpointUrl}?${key}=${value}` })
 
-        server.app.post('/', async (req, res) => {
-          contentType = req.headers['content-type']
+      await client.postDirect(selectQuery)
+    }, { operation: 'postDirect' })
 
-          res.end()
-        })
+    simpleClientTests.shouldSendConstructorHeaders(async (endpointUrl, expected) => {
+      const client = new SimpleClient({ endpointUrl, headers: expected })
 
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
+      await client.postDirect(selectQuery)
+    }, { operation: 'postDirect' })
 
-        await client.postDirect(selectQuery)
+    simpleClientTests.shouldSendMethodHeaders(async (endpointUrl, expected) => {
+      const client = new SimpleClient({ endpointUrl })
 
-        strictEqual(contentType, 'application/sparql-query; charset=utf-8')
-      })
-    })
+      await client.postDirect(selectQuery, { headers: expected })
+    }, { operation: 'postDirect' })
 
-    it('should send the query string in the request body', async () => {
-      await withServer(async server => {
-        let content = null
+    simpleClientTests.shouldPrioritizeMethodHeaders(async (endpointUrl, expected) => {
+      const [key, value] = Object.entries(expected)[0]
+      const client = new SimpleClient({ endpointUrl, headers: { [key]: `${value} bar` } })
 
-        server.app.post('/', express.text({ type: '*/*' }), async (req, res) => {
-          content = req.body
+      await client.postDirect(selectQuery, { headers: expected })
+    }, { operation: 'postDirect' })
 
-          res.end()
-        })
+    simpleClientTests.shouldSendConstructorParameters(async (endpointUrl, expected) => {
+      const client = new SimpleClient({ endpointUrl, parameters: expected })
 
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
+      await client.postDirect(selectQuery)
+    }, { operation: 'postDirect' })
 
-        await client.postDirect(selectQuery)
+    simpleClientTests.shouldSendMethodParameters(async (endpointUrl, expected) => {
+      const client = new SimpleClient({ endpointUrl })
 
-        strictEqual(content, selectQuery)
-      })
-    })
+      await client.postDirect(selectQuery, { parameters: expected })
+    }, { operation: 'postDirect' })
 
-    it('should merge the headers given in the method call', async () => {
-      await withServer(async server => {
-        let header = null
-        const value = 'Bearer foo'
+    simpleClientTests.shouldMergeMethodParameters(async (endpointUrl, expected) => {
+      const [key, value] = Object.entries(expected)[0]
+      const client = new SimpleClient({ endpointUrl, parameters: { [key]: `${value} bar` } })
 
-        server.app.post('/', async (req, res) => {
-          header = req.headers.authorization
+      await client.postDirect(selectQuery, { parameters: expected })
+    }, { operation: 'postDirect' })
 
-          res.end()
-        })
+    simpleClientTests.shouldSendUpdateContent(async (updateUrl, expected) => {
+      const client = new SimpleClient({ updateUrl })
 
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
+      await client.postDirect(expected, { update: true })
+    }, { operation: 'postDirect' })
 
-        await client.postDirect(selectQuery, {
-          headers: {
-            authorization: value
-          }
-        })
+    simpleClientTests.shouldKeepExistingUpdateParameters(async (updateUrl, expected) => {
+      const [key, value] = Object.entries(expected)[0]
+      const client = new SimpleClient({ updateUrl: `${updateUrl}?${key}=${value}` })
 
-        strictEqual(header, value)
-      })
-    })
+      await client.postDirect(updateQuery, { update: true })
+    }, { operation: 'postDirect' })
 
-    it('should prioritize the headers from the method call', async () => {
-      await withServer(async server => {
-        let header = null
-        const value = 'Bearer foo'
+    simpleClientTests.shouldHandlerServerSocketErrors(async endpointUrl => {
+      const client = new SimpleClient({ endpointUrl })
 
-        server.app.post('/', async (req, res) => {
-          header = req.headers.authorization
+      await client.postDirect(selectQuery)
+    }, { operation: 'postDirect' })
 
-          res.end()
-        })
+    simpleClientTests.shouldNotHandleServerHttpErrors(async endpointUrl => {
+      const client = new SimpleClient({ endpointUrl })
 
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({
-          endpointUrl,
-          headers: {
-            authorization: 'Bearer bar'
-          }
-        })
-
-        await client.postDirect(selectQuery, {
-          headers: {
-            authorization: value
-          }
-        })
-
-        strictEqual(header, value)
-      })
-    })
-
-    it('should use the updateUrl if update is true', async () => {
-      await withServer(async server => {
-        let called = false
-
-        server.app.post('/', async (req, res) => {
-          called = true
-
-          res.end()
-        })
-
-        const updateUrl = await server.listen()
-        const client = new SimpleClient({ updateUrl })
-
-        await client.postDirect(updateQuery, { update: true })
-
-        strictEqual(called, true)
-      })
-    })
-
-    it('should handle server socket errors', async () => {
-      await withServer(async server => {
-        server.app.post('/', async (req, res) => {
-          req.client.destroy()
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-
-        await rejects(async () => {
-          await client.postDirect(selectQuery)
-        }, err => isSocketError(err))
-      })
-    })
-
-    it('should not handle server errors', async () => {
-      await withServer(async server => {
-        server.app.post('/', async (req, res) => {
-          res.status(500).end(message)
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-
-        await client.postDirect(selectQuery)
-      })
-    })
+      await client.postDirect(selectQuery)
+    }, { operation: 'postDirect' })
   })
 
   describe('.postUrlencoded', () => {
@@ -452,177 +257,85 @@ describe('SimpleClient', () => {
       strictEqual(typeof client.postUrlencoded, 'function')
     })
 
-    it('should return a response object', async () => {
-      await withServer(async server => {
-        server.app.post('/', async (req, res) => {
-          res.end()
-        })
+    simpleClientTests.shouldReturnResponseObject(async endpointUrl => {
+      const client = new SimpleClient({ endpointUrl })
 
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
+      return await client.postUrlencoded(selectQuery)
+    }, { operation: 'postUrlencoded' })
 
-        const res = await client.postUrlencoded(selectQuery)
+    simpleClientTests.shouldSendPostRequest(async endpointUrl => {
+      const client = new SimpleClient({ endpointUrl })
 
-        strictEqual(typeof res, 'object')
-        strictEqual(typeof res.text, 'function')
-      })
+      await client.postUrlencoded(selectQuery)
     })
 
-    it('should send a POST request', async () => {
-      await withServer(async server => {
-        let called = false
+    simpleClientTests.shouldSendUrlEncodedQueryContent(async (endpointUrl, expected) => {
+      const client = new SimpleClient({ endpointUrl })
 
-        server.app.post('/', async (req, res) => {
-          called = true
-
-          res.end()
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-
-        await client.postUrlencoded(selectQuery)
-
-        strictEqual(called, true)
-      })
+      await client.postUrlencoded(expected)
     })
 
-    it('should send a content type header with the value application/x-www-form-urlencoded', async () => {
-      await withServer(async server => {
-        let contentType = null
+    simpleClientTests.shouldSendConstructorHeaders(async (endpointUrl, expected) => {
+      const client = new SimpleClient({ endpointUrl, headers: expected })
 
-        server.app.post('/', async (req, res) => {
-          contentType = req.headers['content-type']
+      await client.postUrlencoded(selectQuery)
+    }, { operation: 'postUrlencoded' })
 
-          res.end()
-        })
+    simpleClientTests.shouldSendMethodHeaders(async (endpointUrl, expected) => {
+      const client = new SimpleClient({ endpointUrl })
 
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
+      await client.postUrlencoded(selectQuery, { headers: expected })
+    }, { operation: 'postUrlencoded' })
 
-        await client.postUrlencoded(selectQuery)
+    simpleClientTests.shouldPrioritizeMethodHeaders(async (endpointUrl, expected) => {
+      const [key, value] = Object.entries(expected)[0]
+      const client = new SimpleClient({ endpointUrl, headers: { [key]: `${value} bar` } })
 
-        strictEqual(contentType, 'application/x-www-form-urlencoded')
-      })
-    })
+      await client.postUrlencoded(selectQuery, { headers: expected })
+    }, { operation: 'postUrlencoded' })
 
-    it('should send the query string urlencoded in the request body', async () => {
-      await withServer(async server => {
-        let parameter = null
+    simpleClientTests.shouldSendConstructorParameters(async (endpointUrl, expected) => {
+      const client = new SimpleClient({ endpointUrl, parameters: expected })
 
-        server.app.post('/', express.urlencoded({ extended: true }), async (req, res) => {
-          parameter = req.body.query
+      await client.postUrlencoded(selectQuery)
+    }, { operation: 'postUrlencoded' })
 
-          res.end()
-        })
+    simpleClientTests.shouldSendMethodParameters(async (endpointUrl, expected) => {
+      const client = new SimpleClient({ endpointUrl })
 
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
+      await client.postUrlencoded(selectQuery, { parameters: expected })
+    }, { operation: 'postUrlencoded' })
 
-        await client.postUrlencoded(selectQuery)
+    simpleClientTests.shouldMergeMethodParameters(async (endpointUrl, expected) => {
+      const [key, value] = Object.entries(expected)[0]
+      const client = new SimpleClient({ endpointUrl, parameters: { [key]: `${value} bar` } })
 
-        strictEqual(parameter, selectQuery)
-      })
-    })
+      await client.postUrlencoded(selectQuery, { parameters: expected })
+    }, { operation: 'postUrlencoded' })
 
-    it('should merge the headers given in the method call', async () => {
-      await withServer(async server => {
-        let header = null
-        const value = 'Bearer foo'
+    simpleClientTests.shouldSendUrlEncodedUpdateContent(async (updateUrl, expected) => {
+      const client = new SimpleClient({ updateUrl })
 
-        server.app.post('/', async (req, res) => {
-          header = req.headers.authorization
+      await client.postUrlencoded(expected, { update: true })
+    }, { operation: 'postUrlencoded' })
 
-          res.end()
-        })
+    simpleClientTests.shouldKeepExistingUpdateParameters(async (updateUrl, expected) => {
+      const [key, value] = Object.entries(expected)[0]
+      const client = new SimpleClient({ updateUrl: `${updateUrl}?${key}=${value}` })
 
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
+      await client.postUrlencoded(updateQuery, { update: true })
+    }, { operation: 'postUrlencoded' })
 
-        await client.postUrlencoded(selectQuery, {
-          headers: {
-            authorization: value
-          }
-        })
+    simpleClientTests.shouldHandlerServerSocketErrors(async endpointUrl => {
+      const client = new SimpleClient({ endpointUrl })
 
-        strictEqual(header, value)
-      })
-    })
+      await client.postUrlencoded(selectQuery)
+    }, { operation: 'postUrlencoded' })
 
-    it('should prioritize the headers from the method call', async () => {
-      await withServer(async server => {
-        let header = null
-        const value = 'Bearer foo'
+    simpleClientTests.shouldNotHandleServerHttpErrors(async endpointUrl => {
+      const client = new SimpleClient({ endpointUrl })
 
-        server.app.post('/', async (req, res) => {
-          header = req.headers.authorization
-
-          res.end()
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({
-          endpointUrl,
-          headers: {
-            authorization: 'Bearer bar'
-          }
-        })
-
-        await client.postUrlencoded(selectQuery, {
-          headers: {
-            authorization: value
-          }
-        })
-
-        strictEqual(header, value)
-      })
-    })
-
-    it('should use the updateUrl if update is true', async () => {
-      await withServer(async server => {
-        let called = false
-
-        server.app.post('/', async (req, res) => {
-          called = true
-
-          res.end()
-        })
-
-        const updateUrl = await server.listen()
-        const client = new SimpleClient({ updateUrl })
-
-        await client.postUrlencoded(updateQuery, { update: true })
-
-        strictEqual(called, true)
-      })
-    })
-
-    it('should handle server socket errors', async () => {
-      await withServer(async server => {
-        server.app.post('/', async (req, res) => {
-          req.client.destroy()
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-
-        await rejects(async () => {
-          await client.postUrlencoded(selectQuery)
-        }, err => isSocketError(err))
-      })
-    })
-
-    it('should not handle server errors', async () => {
-      await withServer(async server => {
-        server.app.post('/', async (req, res) => {
-          res.status(500).end(message)
-        })
-
-        const endpointUrl = await server.listen()
-        const client = new SimpleClient({ endpointUrl })
-
-        await client.postUrlencoded(selectQuery)
-      })
-    })
+      await client.postUrlencoded(selectQuery)
+    }, { operation: 'postUrlencoded' })
   })
 })

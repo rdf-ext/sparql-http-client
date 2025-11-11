@@ -1,7 +1,6 @@
 import N3Parser from '@rdfjs/parser-n3'
 import asyncToReadabe from './lib/asyncToReadabe.js'
 import checkResponse from './lib/checkResponse.js'
-import mergeHeaders from './lib/mergeHeaders.js'
 import RawQuery from './RawQuery.js'
 import ResultParser from './ResultParser.js'
 
@@ -19,10 +18,11 @@ class StreamQuery extends RawQuery {
    * @param {Object} [options]
    * @param {Headers} [options.headers] additional request headers
    * @param {'get'|'postUrlencoded'|'postDirect'} [options.operation='get'] SPARQL Protocol operation
+   * @param {Object} [options.parameters] additional request parameters
    * @return {Promise<boolean>}
    */
-  async ask (query, { headers, operation } = {}) {
-    const res = await super.ask(query, { headers, operation })
+  async ask (query, { headers, operation, parameters } = {}) {
+    const res = await super.ask(query, { headers, operation, parameters })
 
     await checkResponse(res)
 
@@ -38,17 +38,12 @@ class StreamQuery extends RawQuery {
    * @param {Object} [options]
    * @param {Headers} [options.headers] additional request headers
    * @param {'get'|'postUrlencoded'|'postDirect'} [options.operation='get'] SPARQL Protocol operation
+   * @param {Object} [options.parameters] additional request parameters
    * @return {Readable}
    */
-  construct (query, { headers, operation } = {}) {
+  construct (query, { headers, operation, parameters } = {}) {
     return asyncToReadabe(async () => {
-      headers = mergeHeaders(headers)
-
-      if (!headers.has('accept')) {
-        headers.set('accept', 'application/n-triples, text/turtle')
-      }
-
-      const res = await super.construct(query, { headers, operation })
+      const res = await super.construct(query, { headers, operation, parameters })
 
       await checkResponse(res)
 
@@ -65,11 +60,12 @@ class StreamQuery extends RawQuery {
    * @param {Object} [options]
    * @param {Headers} [options.headers] additional request headers
    * @param {'get'|'postUrlencoded'|'postDirect'} [options.operation='get'] SPARQL Protocol operation
+   * @param {Object} [options.parameters] additional request parameters
    * @return {Readable}
    */
-  select (query, { headers, operation } = {}) {
+  select (query, { headers, operation, parameters } = {}) {
     return asyncToReadabe(async () => {
-      const res = await super.select(query, { headers, operation })
+      const res = await super.select(query, { headers, operation, parameters })
 
       await checkResponse(res)
 
@@ -86,10 +82,11 @@ class StreamQuery extends RawQuery {
    * @param {Object} [options]
    * @param {Headers} [options.headers] additional request headers
    * @param {'get'|'postUrlencoded'|'postDirect'} [options.operation='postUrlencoded'] SPARQL Protocol operation
+   * @param {Object} [options.parameters] additional request parameters
    * @return {Promise<void>}
    */
-  async update (query, { headers, operation } = {}) {
-    const res = await super.update(query, { headers, operation })
+  async update (query, { headers, operation, parameters } = {}) {
+    const res = await super.update(query, { headers, operation, parameters })
 
     await checkResponse(res)
   }

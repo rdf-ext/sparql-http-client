@@ -1,4 +1,5 @@
 import mergeHeaders from './lib/mergeHeaders.js'
+import mergeParameters from './lib/mergeParameters.js'
 
 /**
  * A query implementation that prepares URLs and headers for SPARQL queries and returns the raw fetch response.
@@ -17,18 +18,27 @@ class RawQuery {
    *
    * @param {string} query ASK query
    * @param {Object} [options]
+   * @param {string[]} [options.defaultGraph] default graph URI parameter
    * @param {Headers} [options.headers] additional request headers
+   * @param {string[]} [options.namedGraph] named graph URI parameter
    * @param {'get'|'postUrlencoded'|'postDirect'} [options.operation='get'] SPARQL Protocol operation
+   * @param {Object} [options.parameters] additional request parameters
    * @return {Promise<Response>}
    */
-  async ask (query, { headers, operation = 'get' } = {}) {
+  async ask (query, { defaultGraph, headers, namedGraph, operation = 'get', parameters } = {}) {
     headers = mergeHeaders(headers)
 
     if (!headers.has('accept')) {
       headers.set('accept', 'application/sparql-results+json')
     }
 
-    return this.client[operation](query, { headers })
+    parameters = mergeParameters(
+      parameters,
+      { 'default-graph-uri': defaultGraph },
+      { 'named-graph-uri': namedGraph }
+    )
+
+    return this.client[operation](query, { headers, parameters })
   }
 
   /**
@@ -36,18 +46,27 @@ class RawQuery {
    *
    * @param {string} query CONSTRUCT or DESCRIBE query
    * @param {Object} [options]
+   * @param {string[]} [options.defaultGraph] default graph URI parameter
    * @param {Headers} [options.headers] additional request headers
+   * @param {string[]} [options.namedGraph] named graph URI parameter
    * @param {'get'|'postUrlencoded'|'postDirect'} [options.operation='get'] SPARQL Protocol operation
+   * @param {Object} [options.parameters] additional request parameters
    * @return {Promise<Response>}
    */
-  async construct (query, { headers, operation = 'get' } = {}) {
+  async construct (query, { defaultGraph, headers, namedGraph, operation = 'get', parameters = {} } = {}) {
     headers = mergeHeaders(headers)
 
     if (!headers.has('accept')) {
-      headers.set('accept', 'application/n-triples')
+      headers.set('accept', 'application/n-triples, text/turtle')
     }
 
-    return this.client[operation](query, { headers })
+    parameters = mergeParameters(
+      parameters,
+      { 'default-graph-uri': defaultGraph },
+      { 'named-graph-uri': namedGraph }
+    )
+
+    return this.client[operation](query, { headers, operation, parameters })
   }
 
   /**
@@ -55,18 +74,27 @@ class RawQuery {
    *
    * @param {string} query SELECT query
    * @param {Object} [options]
+   * @param {string[]} [options.defaultGraph] default graph URI parameter
    * @param {Headers} [options.headers] additional request headers
+   * @param {string[]} [options.namedGraph] named graph URI parameter
    * @param {'get'|'postUrlencoded'|'postDirect'} [options.operation='get'] SPARQL Protocol operation
+   * @param {Object} [options.parameters] additional request parameters
    * @return {Promise<Response>}
    */
-  async select (query, { headers, operation = 'get' } = {}) {
+  async select (query, { defaultGraph, headers, namedGraph, operation = 'get', parameters = {} } = {}) {
     headers = mergeHeaders(headers)
 
     if (!headers.has('accept')) {
       headers.set('accept', 'application/sparql-results+json')
     }
 
-    return this.client[operation](query, { headers })
+    parameters = mergeParameters(
+      parameters,
+      { 'default-graph-uri': defaultGraph },
+      { 'named-graph-uri': namedGraph }
+    )
+
+    return this.client[operation](query, { headers, parameters })
   }
 
   /**
@@ -76,16 +104,25 @@ class RawQuery {
    * @param {Object} [options]
    * @param {Headers} [options.headers] additional request headers
    * @param {'get'|'postUrlencoded'|'postDirect'} [options.operation='postUrlencoded'] SPARQL Protocol operation
+   * @param {Object} [options.parameters] additional request parameters
+   * @param {string[]} [options.usingGraph] using graph URI parameter
+   * @param {string[]} [options.usingNamedGraph] using named graph URI parameter
    * @return {Promise<Response>}
    */
-  async update (query, { headers, operation = 'postUrlencoded' } = {}) {
+  async update (query, { headers, operation = 'postUrlencoded', parameters, usingGraph, usingNamedGraph } = {}) {
     headers = mergeHeaders(headers)
 
     if (!headers.has('accept')) {
       headers.set('accept', '*/*')
     }
 
-    return this.client[operation](query, { headers, update: true })
+    parameters = mergeParameters(
+      parameters,
+      { 'using-graph-uri': usingGraph },
+      { 'using-named-graph-uri': usingNamedGraph }
+    )
+
+    return this.client[operation](query, { headers, parameters, update: true })
   }
 }
 

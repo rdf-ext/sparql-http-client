@@ -15,10 +15,11 @@ class ParsingQuery extends StreamQuery {
    * @param {Object} options
    * @param {Headers} [options.headers] additional request headers
    * @param {'get'|'postUrlencoded'|'postDirect'} [options.operation='get'] SPARQL Protocol operation
+   * @param {Object} [options.parameters] additional request parameters
    * @return {Promise<DatasetCore>}
    */
-  async construct (query, { headers, operation } = {}) {
-    const quads = await chunks(await super.construct(query, { headers, operation }))
+  async construct (query, { headers, operation, parameters } = {}) {
+    const quads = await chunks(await super.construct(query, { headers, operation, parameters }))
 
     return this.client.factory.dataset(quads)
   }
@@ -30,10 +31,11 @@ class ParsingQuery extends StreamQuery {
    * @param {Object} [options]
    * @param {Headers} [options.headers] additional request headers
    * @param {'get'|'postUrlencoded'|'postDirect'} [options.operation='get'] SPARQL Protocol operation
+   * @param {Object} [options.parameters] additional request parameters
    * @return {Promise<Array<Object.<string, Term>>>}
    */
-  async select (query, { headers, operation } = {}) {
-    return chunks(await super.select(query, { headers, operation }))
+  async select (query, { headers, operation, parameters } = {}) {
+    return chunks(await super.select(query, { headers, operation, parameters }))
   }
 }
 
