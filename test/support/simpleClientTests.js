@@ -90,6 +90,32 @@ function shouldKeepExistingUpdateParameters (func, { operation } = {}) {
   })
 }
 
+function shouldMergeMethodParameters (func, { operation } = {}) {
+  it('should merge method call and constructor parameters', async () => {
+    await withServer(async server => {
+      const key = 'format'
+      const value = 'csv'
+      const expected = { [key]: value }
+
+      let parameters = null
+
+      createRoute(server, async (req, res) => {
+        if (operation === 'postUrlencoded') {
+          parameters = req.body
+        } else {
+          parameters = req.query
+        }
+
+        res.end()
+      }, { operation })
+
+      await func(await server.listen(), expected)
+
+      deepStrictEqual(parameters[key], [`${value} bar`, value])
+    })
+  })
+}
+
 function shouldNotHandleServerHttpErrors (func, { operation } = {}) {
   it('should not handle server HTTP errors', async () => {
     await withServer(async server => {
@@ -121,34 +147,6 @@ function shouldPrioritizeMethodHeaders (func, { operation } = {}) {
 
       for (const [key, value] of Object.entries(expected)) {
         strictEqual(headers[key], value)
-      }
-    })
-  })
-}
-
-function shouldPrioritizeMethodParameters (func, { operation } = {}) {
-  it('should prioritize method call parameters', async () => {
-    await withServer(async server => {
-      const key = 'format'
-      const value = 'csv'
-      const expected = { [key]: value }
-
-      let parameters = null
-
-      createRoute(server, async (req, res) => {
-        if (operation === 'postUrlencoded') {
-          parameters = req.body
-        } else {
-          parameters = req.query
-        }
-
-        res.end()
-      }, { operation })
-
-      await func(await server.listen(), expected)
-
-      for (const [key, value] of Object.entries(expected)) {
-        strictEqual(parameters[key], value)
       }
     })
   })
@@ -381,9 +379,9 @@ export {
   shouldHandlerServerSocketErrors,
   shouldKeepExistingQueryParameters,
   shouldKeepExistingUpdateParameters,
+  shouldMergeMethodParameters,
   shouldNotHandleServerHttpErrors,
   shouldPrioritizeMethodHeaders,
-  shouldPrioritizeMethodParameters,
   shouldReturnResponseObject,
   shouldSendConstructorHeaders,
   shouldSendConstructorParameters,

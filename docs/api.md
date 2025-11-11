@@ -416,7 +416,13 @@ Sends a request for a ASK query
     </tr><tr>
     <td>[options]</td><td><code>Object</code></td><td></td><td></td>
     </tr><tr>
+    <td>[options.defaultGraph]</td><td><code>Array.&lt;string&gt;</code></td><td></td><td><p>default graph URI parameter</p>
+</td>
+    </tr><tr>
     <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
+</td>
+    </tr><tr>
+    <td>[options.namedGraph]</td><td><code>Array.&lt;string&gt;</code></td><td></td><td><p>named graph URI parameter</p>
 </td>
     </tr><tr>
     <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td><p>SPARQL Protocol operation</p>
@@ -446,7 +452,13 @@ Sends a request for a CONSTRUCT or DESCRIBE query
     </tr><tr>
     <td>[options]</td><td><code>Object</code></td><td></td><td></td>
     </tr><tr>
+    <td>[options.defaultGraph]</td><td><code>Array.&lt;string&gt;</code></td><td></td><td><p>default graph URI parameter</p>
+</td>
+    </tr><tr>
     <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
+</td>
+    </tr><tr>
+    <td>[options.namedGraph]</td><td><code>Array.&lt;string&gt;</code></td><td></td><td><p>named graph URI parameter</p>
 </td>
     </tr><tr>
     <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td><p>SPARQL Protocol operation</p>
@@ -476,7 +488,13 @@ Sends a request for a SELECT query
     </tr><tr>
     <td>[options]</td><td><code>Object</code></td><td></td><td></td>
     </tr><tr>
+    <td>[options.defaultGraph]</td><td><code>Array.&lt;string&gt;</code></td><td></td><td><p>default graph URI parameter</p>
+</td>
+    </tr><tr>
     <td>[options.headers]</td><td><code>Headers</code></td><td></td><td><p>additional request headers</p>
+</td>
+    </tr><tr>
+    <td>[options.namedGraph]</td><td><code>Array.&lt;string&gt;</code></td><td></td><td><p>named graph URI parameter</p>
 </td>
     </tr><tr>
     <td>[options.operation]</td><td><code>&#x27;get&#x27;</code> | <code>&#x27;postUrlencoded&#x27;</code> | <code>&#x27;postDirect&#x27;</code></td><td><code>&#x27;get&#x27;</code></td><td><p>SPARQL Protocol operation</p>
@@ -513,6 +531,12 @@ Sends a request for an update query
 </td>
     </tr><tr>
     <td>[options.parameters]</td><td><code>Object</code></td><td></td><td><p>additional request parameters</p>
+</td>
+    </tr><tr>
+    <td>[options.usingGraph]</td><td><code>Array.&lt;string&gt;</code></td><td></td><td><p>using graph URI parameter</p>
+</td>
+    </tr><tr>
+    <td>[options.usingNamedGraph]</td><td><code>Array.&lt;string&gt;</code></td><td></td><td><p>using named graph URI parameter</p>
 </td>
     </tr>  </tbody>
 </table>
@@ -570,6 +594,8 @@ raw fetch response. It does not provide a store interface.
     <td>headers</td><td><code>Headers</code></td>
     </tr><tr>
     <td>password</td><td><code>string</code></td>
+    </tr><tr>
+    <td>parameters</td><td><code>Object</code></td>
     </tr><tr>
     <td>storeUrl</td><td><code>string</code></td>
     </tr><tr>

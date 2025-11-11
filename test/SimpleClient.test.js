@@ -121,7 +121,7 @@ describe('SimpleClient', () => {
       await client.get(selectQuery, { parameters: expected })
     })
 
-    simpleClientTests.shouldPrioritizeMethodParameters(async (endpointUrl, expected) => {
+    simpleClientTests.shouldMergeMethodParameters(async (endpointUrl, expected) => {
       const [key, value] = Object.entries(expected)[0]
       const client = new SimpleClient({ endpointUrl, parameters: { [key]: `${value} bar` } })
 
@@ -217,7 +217,7 @@ describe('SimpleClient', () => {
       await client.postDirect(selectQuery, { parameters: expected })
     }, { operation: 'postDirect' })
 
-    simpleClientTests.shouldPrioritizeMethodParameters(async (endpointUrl, expected) => {
+    simpleClientTests.shouldMergeMethodParameters(async (endpointUrl, expected) => {
       const [key, value] = Object.entries(expected)[0]
       const client = new SimpleClient({ endpointUrl, parameters: { [key]: `${value} bar` } })
 
@@ -306,7 +306,7 @@ describe('SimpleClient', () => {
       await client.postUrlencoded(selectQuery, { parameters: expected })
     }, { operation: 'postUrlencoded' })
 
-    simpleClientTests.shouldPrioritizeMethodParameters(async (endpointUrl, expected) => {
+    simpleClientTests.shouldMergeMethodParameters(async (endpointUrl, expected) => {
       const [key, value] = Object.entries(expected)[0]
       const client = new SimpleClient({ endpointUrl, parameters: { [key]: `${value} bar` } })
 

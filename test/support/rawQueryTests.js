@@ -1,4 +1,4 @@
-import { strictEqual } from 'node:assert'
+import { deepStrictEqual, strictEqual } from 'node:assert'
 import { it } from 'mocha'
 import SimpleClient from '../../SimpleClient.js'
 
@@ -35,7 +35,7 @@ function shouldForwardParameters (func, { operation } = {}) {
     const value = '12345'
     const client = createClient({
       [operation]: async (query, { parameters }) => {
-        strictEqual(parameters[key], value)
+        strictEqual(parameters.get(key), value)
       }
     })
 
@@ -85,7 +85,7 @@ function shouldNotOverwriteAcceptHeader (func, { operation } = {}) {
 }
 
 function shouldSetAcceptHeader (func, { mediaType, operation } = {}) {
-  it(`should set the accept headers to ${mediaType}`, async () => {
+  it(`should set the accept header to ${mediaType}`, async () => {
     const client = createClient({
       [operation]: async (query, { headers }) => {
         strictEqual(headers.get('accept'), mediaType)
@@ -93,6 +93,74 @@ function shouldSetAcceptHeader (func, { mediaType, operation } = {}) {
     })
 
     await func(client)
+  })
+}
+
+function shouldSetDefaultGraphParameter (func, { operation } = {}) {
+  it('should set the default graph uri parameter', async () => {
+    const expected = [
+      'http://example.org/',
+      'http://example.com/'
+    ]
+
+    const client = createClient({
+      [operation]: async (query, { parameters }) => {
+        deepStrictEqual(parameters.getAll('default-graph-uri'), expected)
+      }
+    })
+
+    await func(client, expected)
+  })
+}
+
+function shouldSetUsingGraphParameter (func, { operation } = {}) {
+  it('should set the default graph uri parameter', async () => {
+    const expected = [
+      'http://example.org/',
+      'http://example.com/'
+    ]
+
+    const client = createClient({
+      [operation]: async (query, { parameters }) => {
+        deepStrictEqual(parameters.getAll('using-graph-uri'), expected)
+      }
+    })
+
+    await func(client, expected)
+  })
+}
+
+function shouldSetUsingNamedGraphParameter (func, { operation } = {}) {
+  it('should set the default graph uri parameter', async () => {
+    const expected = [
+      'http://example.org/',
+      'http://example.com/'
+    ]
+
+    const client = createClient({
+      [operation]: async (query, { parameters }) => {
+        deepStrictEqual(parameters.getAll('using-named-graph-uri'), expected)
+      }
+    })
+
+    await func(client, expected)
+  })
+}
+
+function shouldSetNamedGraphParameter (func, { operation } = {}) {
+  it('should set the named graph parameter', async () => {
+    const expected = [
+      'http://example.org/',
+      'http://example.com/'
+    ]
+
+    const client = createClient({
+      [operation]: async (query, { parameters }) => {
+        deepStrictEqual(parameters.getAll('named-graph-uri'), expected)
+      }
+    })
+
+    await func(client, expected)
   })
 }
 
@@ -151,6 +219,10 @@ export {
   shouldForwardReturnObject,
   shouldNotOverwriteAcceptHeader,
   shouldSetAcceptHeader,
+  shouldSetDefaultGraphParameter,
+  shouldSetNamedGraphParameter,
+  shouldSetUsingGraphParameter,
+  shouldSetUsingNamedGraphParameter,
   shouldUseGetOperation,
   shouldUseGivenOperation,
   shouldUsePostUrlencodedOperation

@@ -58,6 +58,18 @@ describe('RawQuery', () => {
       await query.ask(askQuery, { parameters })
     }, { operation: 'get' })
 
+    queryTests.shouldSetDefaultGraphParameter(async (client, expected) => {
+      const query = new RawQuery({ client })
+
+      await query.ask(askQuery, { defaultGraph: expected })
+    }, { operation: 'get' })
+
+    queryTests.shouldSetNamedGraphParameter(async (client, expected) => {
+      const query = new RawQuery({ client })
+
+      await query.ask(askQuery, { namedGraph: expected })
+    }, { operation: 'get' })
+
     queryTests.shouldUseGivenOperation(async (client, operation) => {
       const query = new RawQuery({ client })
 
@@ -112,6 +124,18 @@ describe('RawQuery', () => {
       const query = new RawQuery({ client })
 
       await query.construct(constructQuery, { parameters })
+    }, { operation: 'get' })
+
+    queryTests.shouldSetDefaultGraphParameter(async (client, expected) => {
+      const query = new RawQuery({ client })
+
+      await query.construct(constructQuery, { defaultGraph: expected })
+    }, { operation: 'get' })
+
+    queryTests.shouldSetNamedGraphParameter(async (client, expected) => {
+      const query = new RawQuery({ client })
+
+      await query.construct(constructQuery, { namedGraph: expected })
     }, { operation: 'get' })
 
     queryTests.shouldUseGivenOperation(async (client, operation) => {
@@ -170,6 +194,18 @@ describe('RawQuery', () => {
       await query.select(selectQuery, { parameters })
     }, { operation: 'get' })
 
+    queryTests.shouldSetDefaultGraphParameter(async (client, expected) => {
+      const query = new RawQuery({ client })
+
+      await query.select(selectQuery, { defaultGraph: expected })
+    }, { operation: 'get' })
+
+    queryTests.shouldSetNamedGraphParameter(async (client, expected) => {
+      const query = new RawQuery({ client })
+
+      await query.select(selectQuery, { namedGraph: expected })
+    }, { operation: 'get' })
+
     queryTests.shouldUseGivenOperation(async (client, operation) => {
       const query = new RawQuery({ client })
 
@@ -224,6 +260,18 @@ describe('RawQuery', () => {
       const query = new RawQuery({ client })
 
       await query.update(updateQuery, { parameters })
+    }, { operation: 'postUrlencoded' })
+
+    queryTests.shouldSetUsingGraphParameter(async (client, expected) => {
+      const query = new RawQuery({ client })
+
+      await query.update(updateQuery, { usingGraph: expected })
+    }, { operation: 'postUrlencoded' })
+
+    queryTests.shouldSetUsingNamedGraphParameter(async (client, expected) => {
+      const query = new RawQuery({ client })
+
+      await query.update(updateQuery, { usingNamedGraph: expected })
     }, { operation: 'postUrlencoded' })
 
     queryTests.shouldUseGivenOperation(async (client, operation) => {

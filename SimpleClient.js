@@ -1,5 +1,6 @@
 import defaultFetch from 'nodeify-fetch'
 import mergeHeaders from './lib/mergeHeaders.js'
+import mergeParameters from './lib/mergeParameters.js'
 import RawQuery from './RawQuery.js'
 
 /**
@@ -12,6 +13,7 @@ import RawQuery from './RawQuery.js'
  * @property {factory} fetch
  * @property {Headers} headers
  * @property {string} password
+ * @property {Object} parameters
  * @property {string} storeUrl
  * @property {string} updateUrl
  * @property {string} user
@@ -118,9 +120,9 @@ class SimpleClient {
       url.searchParams.append('update', query)
     }
 
-    parameters = { ...this.parameters, ...parameters }
+    parameters = mergeParameters(this.parameters, parameters)
 
-    for (const [key, value] of Object.entries(parameters)) {
+    for (const [key, value] of parameters.entries()) {
       url.searchParams.append(key, value)
     }
 
@@ -157,9 +159,9 @@ class SimpleClient {
       headers.set('content-type', 'application/sparql-query; charset=utf-8')
     }
 
-    parameters = { ...this.parameters, ...parameters }
+    parameters = mergeParameters(this.parameters, parameters)
 
-    for (const [key, value] of Object.entries(parameters)) {
+    for (const [key, value] of parameters.entries()) {
       url.searchParams.append(key, value)
     }
 
@@ -199,9 +201,9 @@ class SimpleClient {
       headers.set('content-type', 'application/x-www-form-urlencoded')
     }
 
-    parameters = { ...this.parameters, ...parameters }
+    parameters = mergeParameters(this.parameters, parameters)
 
-    for (const [key, value] of Object.entries(parameters)) {
+    for (const [key, value] of parameters.entries()) {
       body.append(key, value)
     }
 
